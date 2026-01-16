@@ -33,7 +33,7 @@
             <span id="left-val">$0</span>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-            <div class="header-sub" id="left-desc">Last Synced: Never</div>
+            <div class="header-sub" id="left-desc">Working Copy: Never</div>
             <div style="display:flex; gap:10px;">
                 <label for="sync-upload" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↑ Sync File</label>
                 <div onclick="exportNewFile()" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↓ Create New</div>
@@ -94,43 +94,65 @@
     <div class="card" id="txn-list"></div>
 
     <script>
+        // Data Initialization
         let txns = JSON.parse(localStorage.getItem('m9_txns')) || [];
         let planInc = JSON.parse(localStorage.getItem('m9_p_inc')) || [];
         let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
 
         document.getElementById('txn-date').valueAsDate = new Date();
 
+        // 1. SAVE/EXPORT
         function exportNewFile() {
-            const dataStr = JSON.stringify(txns, null, 2);
+            const fullBackup = {
+                txns: txns,
+                planInc: planInc,
+                planExp: planExp,
+                version: "13.1",
+                exportedAt: new Date().toLocaleString()
+            };
+            const dataStr = JSON.stringify(fullBackup, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = "budget_backup.json";
+            link.download = "budget_working_copy.json";
             link.click();
-            alert("Backup Created! ✅");
+            alert("Working copy saved! ✅ Overwrite your old file with this one.");
         }
 
+        // 2. OPEN/SYNC (Replacement Logic)
         function syncFromFile(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const cloudData = JSON.parse(e.target.result);
-                    const incoming = Array.isArray(cloudData) ? cloudData : [];
-                    const combined = [...txns, ...incoming];
-                    txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
-                    localStorage.setItem('m9_last_sync', new Date().toLocaleString());
-                    saveAndRefresh();
-                    alert("Sync Success! ✅");
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Check if it's the new bundled format
+                    if (data.txns) {
+                        if (!confirm("This will replace your current app data with the file content. Continue?")) return;
+                        txns = data.txns || [];
+                        planInc = data.planInc || [];
+                        planExp = data.planExp || [];
+                        localStorage.setItem('m9_last_sync', data.exportedAt || new Date().toLocaleString());
+                        saveAndRefresh();
+                        alert("File Loaded! ✅ Working copy from: " + (data.exportedAt || "Unknown"));
+                    } else if (Array.isArray(data)) {
+                        // Support for the old simple list format
+                        if (confirm("Old format detected. Replace transaction list?")) {
+                            txns = data;
+                            saveAndRefresh();
+                        }
+                    }
                 } catch (err) {
-                    alert("Invalid File Format ❌");
+                    alert("Sync Failed: Invalid File ❌");
                 }
             };
             reader.readAsText(file);
         }
 
+        // 3. APP LOGIC
         function addTransaction() {
             const desc = document.getElementById('desc').value;
             const cat = document.getElementById('cat').value;
@@ -170,7 +192,7 @@
         function updateUI() {
             const txnListEl = document.getElementById('txn-list');
             const lastSync = localStorage.getItem('m9_last_sync') || "Never";
-            document.getElementById('left-desc').innerText = "Last Synced: " + lastSync;
+            document.getElementById('left-desc').innerText = "Working Copy: " + lastSync;
             document.getElementById('plan-inc-list').innerHTML = '';
             document.getElementById('plan-exp-list').innerHTML = '';
             txnListEl.innerHTML = '';
@@ -186,7 +208,6 @@
             planInc.forEach(i => { sumPInc += i.amt; document.getElementById('plan-inc-list').innerHTML += `<div>${i.name} $${i.amt} <button class="del-btn" onclick="deletePlan('inc', ${i.id})">×</button></div>`; });
             planExp.forEach(i => { sumPExp += i.amt; document.getElementById('plan-exp-list').innerHTML += `<div>${i.name} $${i.amt} <button class="del-btn" onclick="deletePlan('exp', ${i.id})">×</button></div>`; });
 
-            // Calculations
             const netVal = aInc - aExp;
             const remaining = sumPExp - aExp;
             const pct = sumPExp > 0 ? Math.min((aExp / sumPExp) * 100, 100) : 0;
