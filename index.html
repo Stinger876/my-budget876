@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v15.0.1</title>
+    <title>Monarch-Lite v15.0.3</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
         #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0; }
         .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; margin: auto; text-align: center; box-sizing: border-box; }
-        .wizard-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; text-align: left; }
-        @media (min-width: 600px) { .wizard-grid { grid-template-columns: 1fr 1fr; } }
-        .setup-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #2a2a2a; border-radius: 12px; border: 1px solid #333; }
         
         .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; transition: background 0.3s; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
@@ -25,15 +22,23 @@
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         .budget-label { font-size: 16px; font-weight: bold; margin: 15px 0 8px 0; display: flex; justify-content: space-between; align-items: center; color: var(--m-teal); }
-        .budget-col-headers { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; font-size: 10px; text-transform: uppercase; opacity: 0.6; margin-bottom: 5px; padding: 0 5px; }
         
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
         
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; }
         .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; height: 45px; box-sizing: border-box; }
-        .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; }
         
+        /* Unsaved state glow */
+        .unsaved-glow { 
+            background: var(--m-teal) !important; 
+            color: var(--m-blue) !important; 
+            border-color: white !important;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; }
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 20px; cursor: pointer; }
@@ -43,38 +48,30 @@
 
     <div id="startup-modal">
         <div class="modal-card" id="initial-choice">
-            <h2 style="color:var(--m-teal); margin-top:0;">Welcome Back</h2>
-            <p id="status-msg" style="font-size:14px; opacity:0.8; margin-bottom:25px;">Data ready.</p>
+            <h2 style="color:var(--m-teal); margin-top:0;">Welcome</h2>
+            <p id="status-msg" style="font-size:14px; opacity:0.8; margin-bottom:25px;">Initializing...</p>
             <button id="continue-btn" class="btn-track" onclick="closeModal()">Continue Session</button>
-            <label for="sync-upload-modal" class="btn-mgmt" style="width:100%; margin-top:10px;">Sync from File (CSV/JSON)</label>
-            <button class="btn-mgmt" onclick="showWizard()" style="width:100%; color:var(--m-red); margin-top:10px;">Start Fresh Setup</button>
+            <label for="sync-upload-modal" class="btn-mgmt" style="width:100%; margin-top:10px;">Import from File</label>
+            <button class="btn-mgmt" onclick="showWizard()" style="width:100%; color:var(--m-red); margin-top:10px;">Start Fresh</button>
             <input type="file" id="sync-upload-modal" accept=".json,.csv" style="display:none" onchange="syncFromFile(event)">
         </div>
 
         <div class="modal-card" id="wizard-view" style="display:none;">
             <h3>Categories</h3>
-            <div id="wizard-list" class="wizard-grid">
-                <div class="setup-row"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
-                <div class="setup-row"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
-                <div class="setup-row"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
-                <div class="setup-row"><span>🚗 Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
-                <div class="setup-row"><span>🍳 Dining</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
+            <div id="wizard-list" style="text-align:left;">
+                <div class="cf-row"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
+                <div class="cf-row"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
+                <div class="cf-row"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
+                <div class="cf-row"><span>🚗 Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
             </div>
-            <button class="btn-track" onclick="showInvWizard()">Next</button>
-        </div>
-
-        <div class="modal-card" id="wizard-inv-view" style="display:none;">
-            <h3>Investments</h3>
-            <div id="inv-setup-list"></div>
-            <button class="btn-mgmt" style="width:100%" onclick="addWizardInv()">+ Add Asset</button>
-            <button class="btn-track" onclick="finishWizard()">Finish</button>
+            <button class="btn-track" onclick="finishWizard()">Finish Setup</button>
         </div>
     </div>
 
     <div class="budget-header" id="main-header">
         <div class="header-main"><span id="header-label">Budget Surplus</span><span id="header-val">$0</span></div>
         <div style="font-size: 10px; margin-top:5px; display:flex; justify-content:space-between; opacity: 0.9;">
-            <span id="save-info">Last Saved: Never</span><span id="loc-info">Location: Browser Storage</span>
+            <span id="save-info">Last Saved: Never</span><span id="loc-info">Source: Browser</span>
         </div>
     </div>
 
@@ -92,11 +89,9 @@
         </div>
 
         <div class="budget-label">Income <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
-        <div class="budget-col-headers"><span>Category</span><span style="text-align:right">Plan</span><span style="text-align:right">Remain</span></div>
         <div class="card" id="income-list"></div>
 
         <div class="budget-label">Expenses <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
-        <div class="budget-col-headers"><span>Category</span><span style="text-align:right">Plan</span><span style="text-align:right">Remain</span></div>
         <div class="card" id="expense-list"></div>
 
         <div class="card">
@@ -116,9 +111,9 @@
     </div>
 
     <div class="card">
-        <b>Settings</b>
+        <b>Data Management</b>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-            <button class="btn-mgmt" onclick="exportToFile()">💾 Save to File</button>
+            <button id="save-btn" class="btn-mgmt" onclick="exportToFile()">💾 Save to File</button>
             <label for="sync-upload-main" class="btn-mgmt">🔄 Import Data</label>
             <input type="file" id="sync-upload-main" accept=".json,.csv" style="display:none" onchange="syncFromFile(event)">
         </div>
@@ -130,61 +125,33 @@
         let planInc = JSON.parse(localStorage.getItem('m_p_inc')) || [];
         let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [];
         let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
+        let hasUnsavedChanges = false;
         let activeTab = 'budget';
-
-        const rogersMap = {
-            "Quick Payment Service-Fast Food Restaurants": "Dining",
-            "Eating Places and Restaurants": "Dining",
-            "Grocery Stores and Supermarkets": "Groceries",
-            "Automotive Service Shops (Non-Dealer)": "Auto",
-            "Automated Fuel Dispensers": "Auto",
-            "Service Stations": "Auto"
-        };
 
         function syncFromFile(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
-            // Set location to the filename
             localStorage.setItem('m_data_loc', file.name);
-
             const reader = new FileReader();
             reader.onload = function(e) {
-                const content = e.target.result;
-                if (content.includes("Date,Posted Date,Reference Number")) {
-                    const rows = content.split('\n').filter(r => r.trim() !== "");
-                    const newEntries = [];
-                    for(let i = 1; i < rows.length; i++) {
-                        const cols = rows[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                        if (!cols || cols.length < 13) continue;
-                        const date = cols[0].trim();
-                        const rogersCat = cols[6].replace(/"/g, '').trim();
-                        const rawDesc = cols[7].replace(/"/g, '').trim();
-                        const rawAmt = cols[12].replace(/[$,"]/g, '').trim();
-                        const amt = parseFloat(rawAmt);
-                        if(!isNaN(amt)) {
-                            newEntries.push({ id: Date.now() + Math.random(), date, desc: rawDesc, cat: rogersMap[rogersCat] || "Imported", amt: -Math.abs(amt) });
-                        }
-                    }
-                    txns = [...newEntries, ...txns];
-                } else {
-                    try {
-                        const data = JSON.parse(content);
-                        txns = data.txns || []; planInc = data.planInc || []; 
-                        planExp = data.planExp || []; assets = data.assets || [];
-                    } catch (err) { alert("Format Error."); }
-                }
-                saveAndRefresh(); closeModal();
+                try {
+                    const data = JSON.parse(e.target.result);
+                    txns = data.txns || []; planInc = data.planInc || []; 
+                    planExp = data.planExp || []; assets = data.assets || [];
+                    hasUnsavedChanges = false;
+                    saveInternal();
+                    closeModal();
+                } catch (err) { alert("Please use a valid JSON budget file."); }
             };
             reader.readAsText(file);
         }
 
         window.onload = function() {
-            if (txns.length > 0 || planInc.length > 0 || assets.length > 0) {
-                document.getElementById('status-msg').innerText = "Session Active.";
+            if (txns.length > 0 || planInc.length > 0) {
+                document.getElementById('status-msg').innerText = "Session found.";
                 document.getElementById('continue-btn').style.display = 'block';
             } else { 
-                document.getElementById('status-msg').innerText = "No data found.";
+                document.getElementById('status-msg').innerText = "No local data.";
                 document.getElementById('continue-btn').style.display = 'none'; 
             }
             document.getElementById('txn-date').valueAsDate = new Date();
@@ -193,13 +160,25 @@
 
         function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
         
-        function saveAndRefresh() {
-            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        function saveInternal() {
             localStorage.setItem('m_txns', JSON.stringify(txns));
             localStorage.setItem('m_p_inc', JSON.stringify(planInc));
             localStorage.setItem('m_p_exp', JSON.stringify(planExp));
             localStorage.setItem('m_assets', JSON.stringify(assets));
+            updateUI();
+        }
+
+        function exportToFile() {
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             localStorage.setItem('m_last_save_time', now);
+            hasUnsavedChanges = false;
+            
+            const data = { txns, planInc, planExp, assets };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `budget_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
             updateUI();
         }
 
@@ -211,21 +190,19 @@
             txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
             assets.forEach((a, i) => {
                 totalAssets += a.amt;
-                invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" class="plan-input" style="width:100px;" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"></div>`;
+                invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" class="plan-input" style="width:100px;" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"></div>`;
             });
 
             planInc.forEach((p, i) => {
                 budIncT += p.amt;
-                const m = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 catS.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
-                incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="removeCat('inc', ${i})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="pos" style="text-align:right">$${(p.amt-m).toFixed(0)}</span></div>`;
+                incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="planInc.splice(${i},1); hasUnsavedChanges=true; saveInternal();">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span class="pos" style="text-align:right">$${p.amt}</span></div>`;
             });
 
             planExp.forEach((p, i) => {
                 budExpT += p.amt;
-                const m = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="removeCat('exp', ${i})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="${(p.amt-m)<0?'neg':'pos'}" style="text-align:right">$${(p.amt-m).toFixed(0)}</span></div>`;
+                expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="planExp.splice(${i},1); hasUnsavedChanges=true; saveInternal();">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span style="text-align:right">$${p.amt}</span></div>`;
             });
 
             const actSavings = actInc - actExp;
@@ -245,18 +222,19 @@
             }
             
             document.getElementById('save-info').innerText = "Last Saved: " + (localStorage.getItem('m_last_save_time') || "Never");
-            document.getElementById('loc-info').innerText = "Location: " + (localStorage.getItem('m_data_loc') || "Browser Storage");
+            document.getElementById('loc-info').innerText = "Source: " + (localStorage.getItem('m_data_loc') || "Browser");
             
-            txns.slice(0, 15).forEach(t => {
+            // Toggle glow
+            document.getElementById('save-btn').className = hasUnsavedChanges ? 'btn-mgmt unsaved-glow' : 'btn-mgmt';
+
+            txns.slice(0, 5).forEach(t => {
                 txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
                     <div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div>
-                    <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" style="font-size:14px" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
+                    <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div>
                 </div>`;
             });
         }
 
-        // Helpers
-        function removeCat(type, index) { if(confirm("Remove?")) { if(type==='inc') planInc.splice(index, 1); else planExp.splice(index, 1); saveAndRefresh(); } }
         function addTransaction() {
             const desc = document.getElementById('desc').value, cat = document.getElementById('cat-select').value;
             let amt = parseFloat(document.getElementById('amt').value);
@@ -264,17 +242,16 @@
             amt = (planInc.some(p => p.name === cat)) ? Math.abs(amt) : -Math.abs(amt);
             txns.unshift({ id: Date.now(), desc, cat, date: document.getElementById('txn-date').value, amt });
             document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
-            saveAndRefresh();
+            hasUnsavedChanges = true;
+            saveInternal();
         }
+
         function switchTab(t) { activeTab = t; updateUI(); document.getElementById('view-budget').style.display = t === 'budget' ? 'block' : 'none'; document.getElementById('view-invest').style.display = t === 'invest' ? 'block' : 'none'; }
-        function exportToFile() { const data = { txns, planInc, planExp, assets }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `budget_backup.json`; a.click(); }
-        function clearAllData() { if(confirm("Reset?")) { localStorage.clear(); location.reload(); } }
-        function addCustom(type) { const n = prompt("Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveAndRefresh(); } }
-        function addInvestItem() { const n = prompt("Name:"); if(n) { assets.push({name: n, amt: 0}); saveAndRefresh(); } }
+        function addCustom(type) { const n = prompt("Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); hasUnsavedChanges=true; saveInternal(); } }
+        function addInvestItem() { const n = prompt("Name:"); if(n) { assets.push({name: n, amt: 0}); hasUnsavedChanges=true; saveInternal(); } }
         function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
-        function showInvWizard() { document.getElementById('wizard-view').style.display = 'none'; document.getElementById('wizard-inv-view').style.display = 'block'; if(assets.length === 0) addWizardInv(); }
-        function addWizardInv() { const div = document.createElement('div'); div.innerHTML = `<div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" placeholder="Name" style="width:60%"><input type="number" placeholder="$" style="width:40%"></div>`; document.getElementById('inv-setup-list').appendChild(div); }
-        function finishWizard() { planInc = []; planExp = []; assets = []; txns = []; document.querySelectorAll('#wizard-list input:checked').forEach(c => { const name = c.getAttribute('data-cat'); if(c.getAttribute('data-type') === 'inc') planInc.push({name, amt: 0}); else planExp.push({name, amt: 0}); }); document.querySelectorAll('#inv-setup-list div input').forEach((inp, idx, arr) => { if(idx % 2 === 0 && inp.value) assets.push({name: inp.value, amt: parseFloat(arr[idx+1].value) || 0}); }); saveAndRefresh(); closeModal(); }
+        function finishWizard() { planInc = []; planExp = []; assets = []; txns = []; document.querySelectorAll('#wizard-list input:checked').forEach(c => { const name = c.getAttribute('data-cat'); if(c.getAttribute('data-type') === 'inc') planInc.push({name, amt: 0}); else planExp.push({name, amt: 0}); }); hasUnsavedChanges=true; saveInternal(); closeModal(); }
+        function clearAllData() { if(confirm("Clear all data?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>
