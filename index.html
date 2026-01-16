@@ -3,29 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.6</title>
+    <title>Monarch-Lite v14.2</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
-        /* Modal and Wizard Styling */
         #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0; }
         .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 85%; max-width: 400px; margin: auto; text-align: center; }
         
-        .setup-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; text-align: left; }
-        .setup-row input[type="checkbox"] { width: 22px; height: 22px; margin: 0; cursor: pointer; }
-
-        /* Header Styling */
-        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; transition: background 0.3s; }
+        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         
-        /* Layout Components */
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
-        .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         
-        .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; opacity: 0.6; color: white; }
-        .tab.active { background: var(--m-teal); color: var(--m-blue); opacity: 1; }
+        .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
+        .cf-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 10px; }
+        .cf-val { font-size: 1.2rem; font-weight: bold; }
 
         .budget-row { display: grid; grid-template-columns: 1fr 85px 85px 30px; gap: 5px; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         .budget-label { font-size: 18px; font-weight: bold; margin: 20px 0 10px 0; display: flex; justify-content: space-between; align-items: center;}
@@ -33,8 +26,12 @@
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .plan-input { text-align: right; border-color: #444; height: 32px; }
         
+        .setup-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333; text-align: left; }
+        .setup-item input[type="checkbox"] { width: 20px; height: 20px; }
+
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
-        .btn-fresh-alt { background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; text-decoration: none; }
+        .btn-sync-alt { background: var(--m-teal); color: var(--m-blue); padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; text-decoration: none; }
+        .btn-fresh-alt { background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 16px; cursor: pointer; text-align: right; }
         
         .pos { color: var(--m-green); }
@@ -45,114 +42,106 @@
 
     <div id="startup-modal">
         <div class="modal-card" id="initial-choice">
-            <h2 style="color:var(--m-teal); margin-top:0;">Welcome Back</h2>
+            <h2 style="margin-top:0; color:var(--m-teal);">Welcome Back</h2>
             <p id="status-msg" style="font-size:14px; opacity:0.8; margin-bottom:25px;">Budget data found in browser.</p>
-            <div id="continue-btn" class="btn-track" style="margin-bottom:10px" onclick="closeModal()">Continue Session</div>
-            <label for="sync-upload" class="btn-fresh-alt">Sync from File</label>
+            <div id="continue-btn" class="btn-sync-alt" onclick="closeModal()">Continue with Session</div>
+            <label for="sync-upload" class="btn-fresh-alt" style="background:#444;">Sync from File</label>
             <div class="btn-fresh-alt" onclick="showWizard()" style="color:var(--m-red); border:1px solid var(--m-red);">Start Fresh Setup</div>
-            <input type="file" id="sync-upload" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
 
         <div class="modal-card" id="wizard-view" style="display:none;">
-            <h3 style="color:var(--m-teal);">Step 1: Budget</h3>
-            <p style="font-size:12px; opacity:0.7;">Monthly Categories:</p>
-            <div id="wizard-list" style="margin-bottom:15px;">
-                <div class="setup-row"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
-                <div class="setup-row"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
-                <div class="setup-row"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
-                <div class="setup-row"><span>🚗 Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
-                <div class="setup-row"><span>🍳 Dining</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
-                <div class="setup-row"><span>🏋️ Gym & Snacks</span><input type="checkbox" checked data-cat="Gym & Snacks" data-type="exp"></div>
+            <h3 style="margin-top:0; color:var(--m-teal);">Budget Setup</h3>
+            <p style="font-size:12px; opacity:0.7;">Select common Canadian categories:</p>
+            
+            <div id="wizard-list">
+                <div class="setup-item"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
+                <div class="setup-item"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
+                <div class="setup-item"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
+                <div class="setup-item"><span>🚗 Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
+                <div class="setup-item"><span>🍳 Dining Out</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
+                <div class="setup-item"><span>🏋️ Gym & Snacks</span><input type="checkbox" checked data-cat="Gym & Snacks" data-type="exp"></div>
+                <div class="setup-item"><span>💊 Medical</span><input type="checkbox" data-cat="Medical" data-type="exp"></div>
+                <div class="setup-item"><span>📱 Phone/Internet</span><input type="checkbox" data-cat="Utilities" data-type="exp"></div>
             </div>
-            <button class="btn-track" onclick="showInvWizard()">Next: Investments</button>
-        </div>
-
-        <div class="modal-card" id="wizard-inv-view" style="display:none;">
-            <h3 style="color:var(--m-teal);">Step 2: Investments</h3>
-            <div id="inv-setup-list"></div>
-            <button class="btn-fresh-alt" onclick="addWizardInv()">+ Add Asset</button>
             <button class="btn-track" onclick="finishWizard()">Finish Setup</button>
         </div>
     </div>
 
-    <div class="budget-header" id="main-header">
+    <div class="budget-header">
         <div class="header-main">
-            <span id="header-label">Remaining to Spend</span>
-            <span id="header-val">$0</span>
+            <span>Remaining to Spend</span>
+            <span id="left-val">$0</span>
         </div>
-        <div style="font-size: 10px; opacity: 0.9; margin-top:5px; display:flex; justify-content:space-between;">
-            <span id="header-subtext">Planned Income - Expenses</span>
-            <span id="sync-info">Sync: Never</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <div style="font-size: 11px; opacity: 0.9;" id="sync-info">Sync: Never</div>
+            <div style="display:flex; gap:10px;">
+                <label for="sync-upload" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↑ Sync</label>
+                <div onclick="exportNewFile()" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↓ Save</div>
+            </div>
+            <input type="file" id="sync-upload" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
     </div>
 
-    <div class="tab-bar">
-        <div class="tab active" id="tab-budget" onclick="switchTab('budget')">Budget</div>
-        <div class="tab" id="tab-invest" onclick="switchTab('invest')">Investments</div>
+    <div class="budget-label">Cash Flow</div>
+    <div class="card">
+        <div class="cf-row"><span>Income</span><span id="cf-inc" class="cf-val pos">$0</span></div>
+        <div class="cf-row"><span>Expenses</span><span id="cf-exp" class="cf-val neg">$0</span></div>
+        <div class="cf-row" style="border-bottom:none"><span>Savings</span><span id="cf-sav" class="cf-val">$0</span></div>
     </div>
 
-    <div id="view-budget">
-        <div class="card">
-            <div class="cf-row"><span>Income</span><span id="cf-inc" class="pos">$0</span></div>
-            <div class="cf-row"><span>Expenses</span><span id="cf-exp" class="neg">$0</span></div>
-            <div class="cf-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
+    <div class="budget-label"><span>Income Plan</span> <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal); font-size:12px;">+ Add</button></div>
+    <div class="card"><div id="income-list"></div></div>
+
+    <div class="budget-label"><span>Expense Plan</span> <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal); font-size:12px;">+ Add</button></div>
+    <div class="card"><div id="expense-list"></div></div>
+
+    <div class="card">
+        <b>Track Transaction</b>
+        <input type="text" id="desc" placeholder="Merchant">
+        <select id="cat-select"></select>
+        <div style="display:flex; gap:10px;">
+            <input type="date" id="txn-date" style="flex:1">
+            <input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1">
         </div>
-        <div class="budget-label">Plan <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal); font-size:12px;">+ Custom</button></div>
-        <div class="card"><div id="income-list"></div><div id="expense-list"></div></div>
-        <div class="card">
-            <b>Track Entry</b>
-            <input type="text" id="desc" placeholder="Merchant">
-            <select id="cat-select"></select>
-            <div style="display:flex; gap:10px;"><input type="date" id="txn-date" style="flex:1"><input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1"></div>
-            <button class="btn-track" onclick="addTransaction()">Add Entry</button>
-        </div>
-        <div id="txn-list"></div>
+        <button class="btn-track" onclick="addTransaction()">Add Entry</button>
     </div>
 
-    <div id="view-invest" style="display:none;">
-        <div class="budget-label">Asset Balances</div>
-        <div class="card" id="invest-main-list"></div>
-        <button class="btn-track" onclick="addInvestItem()">+ New Investment</button>
-    </div>
+    <h3 style="margin-left:10px;">Recent Activity</h3>
+    <div id="txn-list"></div>
 
     <script>
-        let txns = JSON.parse(localStorage.getItem('m_txns')) || [];
-        let planInc = JSON.parse(localStorage.getItem('m_p_inc')) || [];
-        let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [];
-        let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
-        let activeTab = 'budget';
+        let txns = JSON.parse(localStorage.getItem('m9_txns')) || [];
+        let planInc = JSON.parse(localStorage.getItem('m9_p_inc')) || [];
+        let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
 
         window.onload = function() {
-            // v14.2 Reload Check
-            if (txns.length === 0 && planInc.length === 0 && assets.length === 0) {
-                document.getElementById('status-msg').innerText = "No data found. Let's start fresh.";
+            if (txns.length === 0 && planInc.length === 0) {
+                document.getElementById('status-msg').innerText = "No data found. Let's set it up.";
                 document.getElementById('continue-btn').style.display = 'none';
             }
             document.getElementById('txn-date').valueAsDate = new Date();
             updateUI();
         };
 
-        function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
-        function showInvWizard() { document.getElementById('wizard-view').style.display = 'none'; document.getElementById('wizard-inv-view').style.display = 'block'; addWizardInv(); }
-        function addWizardInv() {
-            const div = document.createElement('div');
-            div.innerHTML = `<div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" placeholder="Name" style="width:60%"><input type="number" placeholder="$" style="width:40%"></div>`;
-            document.getElementById('inv-setup-list').appendChild(div);
+        function showWizard() {
+            document.getElementById('initial-choice').style.display = 'none';
+            document.getElementById('wizard-view').style.display = 'block';
         }
 
         function finishWizard() {
-            planInc = []; planExp = []; assets = []; txns = [];
-            document.querySelectorAll('#wizard-list input:checked').forEach(c => {
-                const name = c.getAttribute('data-cat');
-                if(c.getAttribute('data-type') === 'inc') planInc.push({name, amt: 0});
+            localStorage.clear();
+            txns = []; planInc = []; planExp = [];
+            document.querySelectorAll('#wizard-list input:checked').forEach(chk => {
+                const name = chk.getAttribute('data-cat');
+                const type = chk.getAttribute('data-type');
+                if (type === 'inc') planInc.push({name, amt: 0});
                 else planExp.push({name, amt: 0});
             });
-            document.querySelectorAll('#inv-setup-list div').forEach(row => {
-                const inp = row.querySelectorAll('input');
-                if(inp[0] && inp[0].value) assets.push({name: inp[0].value, amt: parseFloat(inp[1].value) || 0});
-            });
-            saveAndRefresh(); closeModal();
+            saveAndRefresh();
+            closeModal();
         }
+
+        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
 
         function syncFromFile(event) {
             const file = event.target.files[0];
@@ -161,94 +150,107 @@
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    txns = data.txns || []; planInc = data.planInc || []; planExp = data.planExp || []; assets = data.assets || [];
-                    localStorage.setItem('m_last_sync', data.exportedAt || new Date().toLocaleString());
+                    txns = data.txns || []; planInc = data.planInc || []; planExp = data.planExp || [];
+                    localStorage.setItem('m9_last_sync', data.exportedAt || new Date().toLocaleString());
                     saveAndRefresh(); closeModal();
                 } catch (err) { alert("Invalid File"); }
             };
             reader.readAsText(file);
         }
 
-        function switchTab(t) {
-            activeTab = t;
-            document.getElementById('view-budget').style.display = t === 'budget' ? 'block' : 'none';
-            document.getElementById('view-invest').style.display = t === 'invest' ? 'block' : 'none';
-            document.getElementById('tab-budget').className = 'tab ' + (t === 'budget' ? 'active' : '');
-            document.getElementById('tab-invest').className = 'tab ' + (t === 'invest' ? 'active' : '');
-            updateUI();
+        function exportNewFile() {
+            const bundle = { txns, planInc, planExp, exportedAt: new Date().toLocaleString() };
+            const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "budget_sync.json";
+            link.click();
+        }
+
+        function updatePlanAmt(type, index, val) {
+            const amt = parseFloat(val) || 0;
+            if (type === 'inc') planInc[index].amt = amt;
+            else planExp[index].amt = amt;
+            saveAndRefresh();
+        }
+
+        function addCustom(type) {
+            const name = prompt("Category Name:");
+            if (name) {
+                if (type === 'inc') planInc.push({ name, amt: 0 });
+                else planExp.push({ name, amt: 0 });
+                saveAndRefresh();
+            }
         }
 
         function addTransaction() {
-            const desc = document.getElementById('desc').value, cat = document.getElementById('cat-select').value, date = document.getElementById('txn-date').value;
+            const desc = document.getElementById('desc').value;
+            const cat = document.getElementById('cat-select').value;
+            const date = document.getElementById('txn-date').value;
             let amt = parseFloat(document.getElementById('amt').value);
             if(!desc || isNaN(amt)) return;
             amt = (cat === "Income") ? Math.abs(amt) : -Math.abs(amt);
             txns.unshift({ id: Date.now(), desc, cat, date, amt });
-            document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
+            document.getElementById('desc').value = '';
+            document.getElementById('amt').value = '';
             saveAndRefresh();
         }
 
-        function addInvestItem() { const n = prompt("Investment Name:"); if(n) { assets.push({name: n, amt: 0}); saveAndRefresh(); } }
-        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-        function addCustom(type) { const n = prompt("Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveAndRefresh(); } }
+        function deletePlanItem(type, index) {
+            if(type === 'inc') planInc.splice(index, 1);
+            else planExp.splice(index, 1);
+            saveAndRefresh();
+        }
+
+        function deleteTxn(id) {
+            txns = txns.filter(t => t.id !== id);
+            saveAndRefresh();
+        }
 
         function saveAndRefresh() {
-            localStorage.setItem('m_txns', JSON.stringify(txns));
-            localStorage.setItem('m_p_inc', JSON.stringify(planInc));
-            localStorage.setItem('m_p_exp', JSON.stringify(planExp));
-            localStorage.setItem('m_assets', JSON.stringify(assets));
+            localStorage.setItem('m9_txns', JSON.stringify(txns));
+            localStorage.setItem('m9_p_inc', JSON.stringify(planInc));
+            localStorage.setItem('m9_p_exp', JSON.stringify(planExp));
             updateUI();
         }
 
         function updateUI() {
-            const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), catS = document.getElementById('cat-select');
-            incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; catS.innerHTML = '';
-
-            let actInc = 0, actExp = 0, budIncTotal = 0, totalAssets = 0;
-            txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
+            const incList = document.getElementById('income-list');
+            const expList = document.getElementById('expense-list');
+            const txnList = document.getElementById('txn-list');
+            const catSelect = document.getElementById('cat-select');
+            incList.innerHTML = ''; expList.innerHTML = ''; txnList.innerHTML = ''; catSelect.innerHTML = '';
             
-            assets.forEach((a, i) => {
-                totalAssets += a.amt;
-                invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><div style="display:flex;"><input type="number" class="plan-input" style="width:100px; margin-right:10px;" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><button class="del-btn" onclick="assets.splice(${i},1);saveAndRefresh();">×</button></div></div>`;
-            });
+            let actInc = 0, actExp = 0, budIncTotal = 0;
+            txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
 
             planInc.forEach((p, i) => {
                 budIncTotal += p.amt;
-                const m = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
-                catS.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
-                incL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="pos">$${(p.amt-m).toFixed(0)}</span><button class="del-btn" onclick="planInc.splice(${i},1);saveAndRefresh();">×</button></div>`;
+                const matches = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
+                catSelect.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
+                incList.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="updatePlanAmt('inc', ${i}, this.value)"><span style="text-align:right" class="pos">$${(p.amt - matches).toFixed(0)}</span><button class="del-btn" onclick="deletePlanItem('inc', ${i})">×</button></div>`;
             });
 
             planExp.forEach((p, i) => {
-                const m = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
-                catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="${(p.amt-m)<0?'neg':'pos'}">$${(p.amt-m).toFixed(0)}</span><button class="del-btn" onclick="planExp.splice(${i},1);saveAndRefresh();">×</button></div>`;
+                const matches = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
+                const rem = p.amt - matches;
+                catSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+                expList.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="updatePlanAmt('exp', ${i}, this.value)"><span style="text-align:right" class="${rem < 0 ? 'neg' : 'pos'}">$${rem.toFixed(0)}</span><button class="del-btn" onclick="deletePlanItem('exp', ${i})">×</button></div>`;
             });
 
-            const savings = actInc - actExp;
             document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
             document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
+            const savings = actInc - actExp;
             document.getElementById('cf-sav').innerText = `$${savings.toLocaleString()}`;
-            
-            // HEADER LOGIC (Budget vs Investment)
-            const header = document.getElementById('main-header');
-            if(activeTab === 'budget') {
-                header.style.background = "var(--m-green)";
-                document.getElementById('header-label').innerText = "Remaining to Spend";
-                document.getElementById('header-val').innerText = `$${(budIncTotal - actExp).toLocaleString()}`;
-                document.getElementById('header-subtext').innerText = "Planned Income - Total Expenses";
-            } else {
-                header.style.background = "var(--m-blue)";
-                document.getElementById('header-label').innerText = "Net Worth";
-                document.getElementById('header-val').innerText = `$${(totalAssets + savings).toLocaleString()}`;
-                document.getElementById('header-subtext').innerText = "Total Assets + Current Cash Savings";
-            }
-            document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m_last_sync') || "Never");
+            document.getElementById('cf-sav').className = 'cf-val ' + (savings >= 0 ? 'pos' : 'neg');
+            document.getElementById('left-val').innerText = `$${(budIncTotal - actExp).toLocaleString()}`;
+            document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
 
-            txns.slice(0, 5).forEach(t => {
-                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
-                    <div><b>${t.cat}</b>: ${t.desc}</div>
-                    <div class="${t.amt < 0 ? 'neg' : 'pos'}">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
+            txns.slice(0, 10).forEach(t => {
+                const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                txnList.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:10px;">
+                    <div><b>${t.cat}</b>: ${t.desc}<br><small>${d}</small></div>
+                    <div style="text-align:right" class="${t.amt < 0 ? 'neg' : 'pos'}">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="deleteTxn(${t.id})">×</button></div>
                 </div>`;
             });
         }
