@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v13.5</title>
+    <title>Monarch-Lite v13.6</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -15,12 +15,10 @@
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         
-        /* Screenshot-matched Table Layout */
         .budget-row { display: grid; grid-template-columns: 1fr 70px 70px 25px; gap: 8px; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .budget-label { font-size: 18px; font-weight: bold; margin: 20px 0 8px 0; display: flex; justify-content: space-between; }
         .col-head { font-size: 10px; opacity: 0.5; text-transform: uppercase; text-align: right; font-weight: 800; }
         
-        /* Progress Bar Styles */
         .bar-container { height: 4px; background: #333; border-radius: 2px; margin-top: 6px; width: 100%; overflow: hidden; grid-column: 1 / 4; }
         .bar-progress { height: 100%; background: var(--m-green); transition: width 0.3s; }
         .bar-over { background: var(--m-red); }
@@ -40,7 +38,7 @@
     <div id="startup-modal">
         <div class="modal-card">
             <h2 style="color:var(--m-teal); margin-top:0;">Sync Budget?</h2>
-            <p style="opacity:0.7; font-size:14px; margin-bottom:20px;">Open your <b>budget_working_copy.json</b> to restore your settings.</p>
+            <p style="opacity:0.7; font-size:14px; margin-bottom:20px;">Open your latest <b>JSON</b> file to restore your data.</p>
             <label for="sync-upload" style="background:var(--m-teal); color:var(--m-blue); padding:15px; border-radius:12px; font-weight:bold; cursor:pointer; display:block; margin-bottom:10px;">Yes, Open File</label>
             <div style="background:#333; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer;" onclick="closeModal()">No, Just Start</div>
         </div>
@@ -61,30 +59,18 @@
         </div>
     </div>
 
-    <div class="budget-label">
-        <span>Income</span>
-        <button class="btn-add-small" onclick="promptPlan('inc')">+ ADD</button>
-    </div>
+    <div class="budget-label"><span>Income</span><button class="btn-add-small" onclick="promptPlan('inc')">+ ADD</button></div>
     <div class="card">
         <div class="budget-row" style="border-bottom: 2px solid #333;">
-            <span class="col-head" style="text-align:left">Category</span>
-            <span class="col-head">Budget</span>
-            <span class="col-head">Remaining</span>
-            <span></span>
+            <span class="col-head" style="text-align:left">Category</span><span class="col-head">Budget</span><span class="col-head">Remaining</span><span></span>
         </div>
         <div id="income-list"></div>
     </div>
 
-    <div class="budget-label">
-        <span>Expenses</span>
-        <button class="btn-add-small" onclick="promptPlan('exp')">+ ADD</button>
-    </div>
+    <div class="budget-label"><span>Expenses</span><button class="btn-add-small" onclick="promptPlan('exp')">+ ADD</button></div>
     <div class="card">
         <div class="budget-row" style="border-bottom: 2px solid #333;">
-            <span class="col-head" style="text-align:left">Category</span>
-            <span class="col-head">Budget</span>
-            <span class="col-head">Remaining</span>
-            <span></span>
+            <span class="col-head" style="text-align:left">Category</span><span class="col-head">Budget</span><span class="col-head">Remaining</span><span></span>
         </div>
         <div id="expense-list"></div>
     </div>
@@ -94,6 +80,7 @@
         <input type="text" id="desc" placeholder="Merchant (e.g. Rogers)">
         <select id="cat">
             <option value="💰 Income">💰 Income</option>
+            <option value="🏠 Bills">🏠 Bills</option>
             <option value="🏠 Housing">🏠 Housing</option>
             <option value="🛒 Groceries">🛒 Groceries</option>
             <option value="🍳 Dining">🍳 Dining</option>
@@ -102,7 +89,7 @@
         </select>
         <div style="display:flex; gap:10px;">
             <input type="date" id="txn-date" style="flex:1">
-            <input type="text" inputmode="decimal" id="amt" placeholder="Amount (neg for exp)" style="flex:1">
+            <input type="text" inputmode="decimal" id="amt" placeholder="Amount (10.00)" style="flex:1">
         </div>
         <button class="btn-track" onclick="addTransaction()">Add Entry</button>
     </div>
@@ -134,24 +121,23 @@
                         txns = data.txns; planInc = data.planInc || []; planExp = data.planExp || [];
                         localStorage.setItem('m9_last_sync', data.exportedAt || new Date().toLocaleString());
                     }
-                    saveAndRefresh();
-                    closeModal();
+                    saveAndRefresh(); closeModal();
                 } catch (err) { alert("Invalid File"); }
             };
             reader.readAsText(file);
         }
 
         function exportNewFile() {
-            const bundle = { txns, planInc, planExp, version: "13.5", exportedAt: new Date().toLocaleString() };
+            const bundle = { txns, planInc, planExp, version: "13.6", exportedAt: new Date().toLocaleString() };
             const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = "budget_master.json";
+            link.download = "budget_working_copy.json";
             link.click();
         }
 
         function promptPlan(type) {
-            const name = prompt("Name (e.g. Housing):");
+            const name = prompt("Name (e.g. Bills):");
             const amt = parseFloat(prompt("Budgeted Amount:"));
             if (name && !isNaN(amt)) {
                 if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
@@ -164,8 +150,16 @@
             const desc = document.getElementById('desc').value;
             const cat = document.getElementById('cat').value;
             const date = document.getElementById('txn-date').value;
-            const amt = parseFloat(document.getElementById('amt').value);
+            let amt = parseFloat(document.getElementById('amt').value);
             if(!desc || isNaN(amt)) return;
+            
+            // AUTO-NEGATIVE LOGIC: If not Income, make it negative
+            if (cat !== "💰 Income") {
+                amt = -Math.abs(amt);
+            } else {
+                amt = Math.abs(amt);
+            }
+
             txns.unshift({ id: Date.now(), desc, cat, date, amt });
             document.getElementById('desc').value = '';
             document.getElementById('amt').value = '';
@@ -194,17 +188,15 @@
             
             let totalBudInc = 0, totalBudExp = 0, actualExp = 0;
 
-            // Render Logic for both Sections
             const renderSection = (planArr, targetEl, isExp) => {
                 planArr.forEach(p => {
                     if(isExp) totalBudExp += p.amt; else totalBudInc += p.amt;
                     
-                    // FIXED MATCHING LOGIC: Checks if txn cat or desc contains the plan name
+                    // CATEGORY-BASED MATCHING: Matches plan name to txn category
                     const actual = txns.filter(t => {
                         const amountMatch = isExp ? t.amt < 0 : t.amt > 0;
-                        const labelMatch = t.cat.toLowerCase().includes(p.name.toLowerCase()) || 
-                                           t.desc.toLowerCase().includes(p.name.toLowerCase());
-                        return amountMatch && labelMatch;
+                        const catMatch = t.cat.toLowerCase().includes(p.name.toLowerCase());
+                        return amountMatch && catMatch;
                     }).reduce((sum, t) => sum + Math.abs(t.amt), 0);
 
                     const remaining = p.amt - actual;
@@ -227,18 +219,16 @@
             renderSection(planInc, incList, false);
             renderSection(planExp, expList, true);
 
-            // Global Totals
             txns.forEach(t => { if(t.amt < 0) actualExp += Math.abs(t.amt); });
             document.getElementById('header-remaining').innerText = `$${(totalBudInc - actualExp).toLocaleString()}`;
-            document.getElementById('sync-status').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
+            document.getElementById('sync-status').innerText = "Last Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
 
-            // Transaction List
-            txns.slice(0, 10).forEach(t => {
+            txns.slice(0, 12).forEach(t => {
                 const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
                 txnList.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:12px;">
                     <div><b>${t.cat}</b><br><small>${t.desc} • ${d}</small></div>
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <b style="${t.amt < 0 ? 'color:var(--m-red)' : 'color:var(--m-teal)'}">$${Math.abs(t.amt).toFixed(2)}</b>
+                        <b style="${t.amt < 0 ? 'color:var(--m-red)' : 'color:var(--m-teal)'}">$${Math.abs(t.amt).toLocaleString()}</b>
                         <button class="del-btn" onclick="deleteItem('txn', ${t.id})">×</button>
                     </div>
                 </div>`;
