@@ -210,7 +210,7 @@
         updateUI();
     </script>
 <script>
-    // 1. REPLACE THIS WITH YOUR CLIENT ID
+    // 1. CONFIG (Paste your actual Client ID here)
     const CLIENT_ID = '92806363831-ein0puf9e0fnhsss0m2objg4asa6ht6s.apps.googleusercontent.com';
     const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
@@ -218,52 +218,83 @@
     let tokenClient;
     let gapiInited = false;
     let gisInited = false;
+    
+    // MAKE TXNS GLOBAL so all functions can see it
+    let txns = JSON.parse(localStorage.getItem('m11_txns')) || [];
+    let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
 
-    // Initialize the Google APIs
+    // Initialize Google APIs
     function gapiLoaded() { gapi.load('client', async () => { await gapi.client.init({ discoveryDocs: [DISCOVERY_DOC] }); gapiInited = true; }); }
     function gisLoaded() { tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' }); gisInited = true; }
 
     async function syncWithDrive() {
         tokenClient.callback = async (resp) => {
-            if (resp.error) return;
+            if (resp.error) { console.error(resp); return; }
             document.getElementById('sync-text').innerText = "Syncing...";
 
-            // Find file
-            const list = await gapi.client.drive.files.list({ q: "name = 'budget_data.json' and trashed = false" });
-            let fileId = list.result.files.length > 0 ? list.result.files[0].id : null;
+            try {
+                // Find budget file
+                const list = await gapi.client.drive.files.list({ q: "name = 'budget_data.json' and trashed = false" });
+                let fileId = list.result.files.length > 0 ? list.result.files[0].id : null;
 
-            let localTxns = JSON.parse(localStorage.getItem('m11_txns')) || [];
+                if (fileId) {
+                    // Download & Merge
+                    const res = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
+                    let cloudTxns = res.result || [];
+                    
+                    // Merge logic: Combine and keep unique IDs
+                    const combined = [...txns, ...cloudTxns];
+                    txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
+                }
 
-            if (fileId) {
-                // Download & Merge
-                const res = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
-                let cloudTxns = res.result || [];
+                // Save current state back to Drive
+                const content = JSON.stringify(txns);
+                const metadata = { name: 'budget_data.json', mimeType: 'application/json' };
                 
-                // Merge logic: Combine and remove duplicates by ID
-                const combined = [...localTxns, ...cloudTxns];
-                const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
-                txns = unique;
-            }
+                if (!fileId) {
+                    await gapi.client.drive.files.create({ resource: metadata, media: { mimeType: 'application/json', body: content } });
+                } else {
+                    await gapi.client.drive.files.update({ fileId: fileId, media: { mimeType: 'application/json', body: content } });
+                }
 
-            // Save to Drive
-            const content = JSON.stringify(txns);
-            const metadata = { name: 'budget_data.json', mimeType: 'application/json' };
-            
-            if (!fileId) {
-                // Create new file
-                await gapi.client.drive.files.create({ resource: metadata, media: { mimeType: 'application/json', body: content } });
-            } else {
-                // Update existing
-                await gapi.client.drive.files.update({ fileId: fileId, media: { mimeType: 'application/json', body: content } });
+                localStorage.setItem('m11_txns', JSON.stringify(txns));
+                updateUI();
+                document.getElementById('sync-text').innerText = "Synced ✅";
+            } catch (err) {
+                console.error("Sync Error:", err);
+                document.getElementById('sync-text').innerText = "Sync Failed ❌";
             }
-
-            updateUI();
-            document.getElementById('sync-text').innerText = "Synced ✅";
         };
         tokenClient.requestAccessToken({ prompt: '' });
     }
-</script>
 
+    // Standard App Functions (Simplified for Sync compatibility)
+    function addTransaction() {
+        const desc = document.getElementById('desc').value;
+        const amt = parseFloat(document.getElementById('amt').value);
+        if(!desc || isNaN(amt)) return;
+        
+        txns.unshift({ id: Date.now(), desc, cat: "🛒", date: new Date().toISOString().split('T')[0], amt });
+        localStorage.setItem('m11_txns', JSON.stringify(txns));
+        updateUI();
+    }
+
+    function updateUI() {
+        const list = document.getElementById('txn-list');
+        if (!list) return;
+        list.innerHTML = '';
+        let total = 0;
+        txns.sort((a,b) => new Date(b.date) - new Date(a.date));
+        txns.forEach(t => {
+            total += t.amt;
+            list.innerHTML += `<div class="txn-row"><div><b>${t.desc}</b><br><small>${t.date}</small></div><div>$${Math.abs(t.amt).toFixed(2)}</div></div>`;
+        });
+        document.getElementById('net-val').innerText = `$${total.toLocaleString()}`;
+    }
+
+    // Run UI on load
+    window.onload = updateUI;
+</script>
 <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
 <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>   
 </body>
