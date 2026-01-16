@@ -3,99 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v16.0.0</title>
+    <title>Monarch-Lite v15.1.0 (REVERT)</title>
     <style>
-        :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; --m-gray: #2a2a2a; }
+        :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
-        /* Header & Progress Bar */
-        .budget-header { background: var(--m-green); color: white; padding: 18px; border-radius: 12px; margin-bottom: 15px; }
-        .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.2rem; align-items: center; }
+        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; }
+        .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 400px; text-align: center; }
         
-        /* Collapsible Section Styling */
-        .group-container { background: var(--m-card); border-radius: 16px; margin-bottom: 12px; overflow: hidden; }
-        .group-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; cursor: pointer; border-bottom: 1px solid #333; transition: background 0.2s; }
-        .group-header:active { background: #252525; }
-        .group-title { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 1.1rem; }
-        .group-metrics { display: flex; gap: 20px; font-size: 0.9rem; font-weight: bold; text-align: right; }
-        .metric-label { font-size: 0.7rem; text-transform: uppercase; opacity: 0.6; display: block; margin-bottom: 2px; }
+        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
+        .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         
-        .arrow { transition: transform 0.3s; opacity: 0.5; }
-        .collapsed .arrow { transform: rotate(-90deg); }
-        .group-content { display: block; padding: 5px 15px; }
-        .collapsed .group-content { display: none; }
-
-        /* Row Styling */
-        .budget-row { display: grid; grid-template-columns: 1fr 100px 80px; gap: 10px; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; font-size: 15px; }
-        .budget-row:last-child { border-bottom: none; }
-        .label-cell { display: flex; align-items: center; gap: 10px; }
+        .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
+        .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; }
+        .budget-row { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
+        .budget-label { font-size: 16px; font-weight: bold; margin: 15px 0 8px 0; color: var(--m-teal); display: flex; justify-content: space-between; }
         
-        input, select { width: 100%; padding: 8px; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 6px; font-size: 14px; text-align: right; }
-        .tab-bar { display: flex; gap: 8px; margin-bottom: 15px; }
-        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; color: white; opacity: 0.6; }
-        .tab.active { background: var(--m-teal); color: var(--m-blue); opacity: 1; }
-
-        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; }
-        .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; display: inline-block; width: 48%; box-sizing: border-box; }
+        input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
+        
+        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+        .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: inline-block; width: 48%; box-sizing: border-box; }
+        
         .unsaved-glow { background: var(--m-teal) !important; color: var(--m-blue) !important; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
-        .del-btn { color: var(--m-red); background: none; border: none; cursor: pointer; font-size: 16px; }
+        .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
     </style>
 </head>
 <body>
 
+    <div id="startup-modal" style="display:none;">
+        <div class="modal-card">
+            <h2 style="color:var(--m-teal); margin-top:0;">Welcome Back</h2>
+            <p id="status-msg" style="font-size:14px; opacity:0.8; margin-bottom:25px;">Data Found.</p>
+            <button class="btn-track" onclick="closeModal()">Continue</button>
+        </div>
+    </div>
+
     <div class="budget-header">
-        <div class="header-main">
-            <span>Left to budget</span>
-            <span id="surplus-val">$0</span>
-        </div>
-        <div style="font-size: 10px; margin-top:8px; display:flex; justify-content:space-between; opacity: 0.8;">
-            <span id="save-info">Last Saved: Never</span>
-            <span id="loc-info">Source: Browser</span>
+        <div class="header-main"><span>Surplus</span><span id="header-val">$0</span></div>
+        <div style="font-size: 10px; margin-top:5px; display:flex; justify-content:space-between; opacity: 0.9;">
+            <span id="save-info">Last Saved: Never</span><span id="loc-info">Source: Browser</span>
         </div>
     </div>
 
-    <div class="tab-bar">
-        <button class="tab active" onclick="switchTab('budget')">Budget</button>
-        <button class="tab" onclick="switchTab('invest')">Investments</button>
-    </div>
+    <div class="budget-label">Income <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
+    <div class="card" id="income-list"></div>
 
-    <div class="group-container" id="income-group">
-        <div class="group-header" onclick="toggleGroup('income-group')">
-            <div class="group-title"><span class="arrow">▼</span> Income</div>
-            <div class="group-metrics">
-                <div><span class="metric-label">Budget</span><span id="inc-total-budget">$0</span></div>
-                <div><span class="metric-label">Remaining</span><span id="inc-total-remain" class="pos">$0</span></div>
-            </div>
-        </div>
-        <div class="group-content" id="income-list"></div>
-    </div>
+    <div class="budget-label">Expenses <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
+    <div class="card" id="expense-list"></div>
 
-    <div class="group-container" id="expense-group">
-        <div class="group-header" onclick="toggleGroup('expense-group')">
-            <div class="group-title"><span class="arrow">▼</span> Expenses</div>
-            <div class="group-metrics">
-                <div><span class="metric-label">Budget</span><span id="exp-total-budget">$0</span></div>
-                <div><span class="metric-label">Remaining</span><span id="exp-total-remain">$0</span></div>
-            </div>
-        </div>
-        <div class="group-content" id="expense-list"></div>
-    </div>
-
-    <div class="group-container">
-        <div style="padding: 15px;">
-            <b style="color: var(--m-teal)">Add Transaction</b>
-            <input type="text" id="desc" placeholder="Merchant" style="text-align: left; margin-top: 10px;">
-            <select id="cat-select" style="margin: 10px 0;"></select>
-            <div style="display:flex; gap:10px;">
-                <input type="date" id="txn-date" style="flex:1">
-                <input type="number" id="amt" placeholder="Amount" style="flex:1">
-            </div>
-            <button class="btn-track" onclick="addTransaction()">Track Transaction</button>
-        </div>
+    <div class="card">
+        <b style="color:var(--m-teal)">Add Transaction</b>
+        <input type="text" id="desc" placeholder="Merchant">
+        <select id="cat-select" style="margin: 8px 0;"></select>
+        <div style="display:flex; gap:10px;"><input type="date" id="txn-date" style="flex:1"><input type="number" id="amt" placeholder="Amount" style="flex:1"></div>
+        <button class="btn-track" style="margin-top:10px;" onclick="addTransaction()">Track</button>
     </div>
 
     <div style="display:flex; justify-content: space-between; margin-bottom: 20px;">
@@ -105,24 +71,18 @@
     </div>
 
     <script>
-        // Data structure matching your images
-        let planInc = JSON.parse(localStorage.getItem('m_p_inc')) || [
-            {name: "Paychecks", amt: 6696},
-            {name: "Other Income", amt: 3300},
-            {name: "RogersWE Cash", amt: 107}
-        ];
-        let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [
-            {name: "Mortgage", amt: 3537},
-            {name: "Insurance", amt: 316},
-            {name: "Child Care", amt: 239},
-            {name: "Gas & Electric", amt: 223}
-        ];
         let txns = JSON.parse(localStorage.getItem('m_txns')) || [];
+        let planInc = JSON.parse(localStorage.getItem('m_p_inc')) || [{name: "Paychecks", amt: 6000}];
+        let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [{name: "Mortgage", amt: 3000}];
         let hasUnsavedChanges = false;
 
-        function toggleGroup(id) {
-            document.getElementById(id).classList.toggle('collapsed');
-        }
+        window.onload = function() {
+            if(txns.length > 0 || planInc.length > 1) document.getElementById('startup-modal').style.display = 'flex';
+            document.getElementById('txn-date').valueAsDate = new Date();
+            updateUI();
+        };
+
+        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
 
         function saveInternal() {
             localStorage.setItem('m_txns', JSON.stringify(txns));
@@ -135,56 +95,26 @@
             const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), catS = document.getElementById('cat-select');
             incL.innerHTML = ''; expL.innerHTML = ''; catS.innerHTML = '';
             
-            let totalIncBud = 0, totalIncRem = 0, totalExpBud = 0, totalExpRem = 0;
+            let totalInc = 0, totalExp = 0;
 
-            // Process Income
             planInc.forEach((p, i) => {
-                totalIncBud += p.amt;
+                totalInc += p.amt;
                 const spent = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
-                const remain = p.amt - spent;
-                totalIncRem += remain;
                 catS.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
-                incL.innerHTML += renderRow(p, i, remain, 'inc');
+                incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" onclick="planInc.splice(${i},1);hasUnsavedChanges=true;saveInternal()">×</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value);hasUnsavedChanges=true;saveInternal()"><span class="pos">$${(p.amt - spent).toFixed(0)}</span></div>`;
             });
 
-            // Process Expenses
             planExp.forEach((p, i) => {
-                totalExpBud += p.amt;
+                totalExp += p.amt;
                 const spent = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
-                const remain = p.amt - spent;
-                totalExpRem += remain;
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += renderRow(p, i, remain, 'exp');
+                expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" onclick="planExp.splice(${i},1);hasUnsavedChanges=true;saveInternal()">×</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value);hasUnsavedChanges=true;saveInternal()"><span>$${(p.amt - spent).toFixed(0)}</span></div>`;
             });
 
-            // Summary Header
-            document.getElementById('inc-total-budget').innerText = `$${totalIncBud.toLocaleString()}`;
-            document.getElementById('inc-total-remain').innerText = `$${totalIncRem.toLocaleString()}`;
-            document.getElementById('exp-total-budget').innerText = `$${totalExpBud.toLocaleString()}`;
-            document.getElementById('exp-total-remain').innerText = `$${totalExpRem.toLocaleString()}`;
-            document.getElementById('surplus-val').innerText = `$${(totalIncBud - totalExpBud).toLocaleString()}`;
-            
-            // Glow effect
-            document.getElementById('save-btn').className = hasUnsavedChanges ? 'btn-mgmt unsaved-glow' : 'btn-mgmt';
+            document.getElementById('header-val').innerText = `$${(totalInc - totalExp).toLocaleString()}`;
             document.getElementById('save-info').innerText = "Last Saved: " + (localStorage.getItem('m_last_save_time') || "Never");
-        }
-
-        function renderRow(p, i, remain, type) {
-            const colorClass = remain < 0 ? 'neg' : 'pos';
-            return `
-                <div class="budget-row">
-                    <div class="label-cell"><button class="del-btn" onclick="removeCat('${type}', ${i})">×</button> ${p.name}</div>
-                    <input type="number" value="${p.amt}" onchange="updatePlan('${type}', ${i}, this.value)">
-                    <div class="${colorClass}" style="text-align:right; font-weight:bold;">$${remain.toLocaleString()}</div>
-                </div>
-            `;
-        }
-
-        function updatePlan(type, i, val) {
-            if(type === 'inc') planInc[i].amt = parseFloat(val) || 0;
-            else planExp[i].amt = parseFloat(val) || 0;
-            hasUnsavedChanges = true;
-            saveInternal();
+            document.getElementById('loc-info').innerText = "Source: " + (localStorage.getItem('m_data_loc') || "Browser");
+            document.getElementById('save-btn').className = hasUnsavedChanges ? 'btn-mgmt unsaved-glow' : 'btn-mgmt';
         }
 
         function addTransaction() {
@@ -193,6 +123,7 @@
             const isInc = planInc.some(p => p.name === cat);
             txns.unshift({ id: Date.now(), desc, cat, amt: isInc ? Math.abs(amt) : -Math.abs(amt) });
             hasUnsavedChanges = true;
+            document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
             saveInternal();
         }
 
@@ -203,24 +134,34 @@
             a.href = URL.createObjectURL(blob);
             a.download = `budget_backup.json`;
             a.click();
-            localStorage.setItem('m_last_save_time', new Date().toLocaleTimeString());
+            localStorage.setItem('m_last_save_time', new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
             hasUnsavedChanges = false;
             updateUI();
         }
 
         function syncFromFile(event) {
             const file = event.target.files[0];
+            if(!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
                 const data = JSON.parse(e.target.result);
-                txns = data.txns; planInc = data.planInc; planExp = data.planExp;
+                txns = data.txns || []; planInc = data.planInc || []; planExp = data.planExp || [];
                 localStorage.setItem('m_data_loc', file.name);
+                hasUnsavedChanges = false;
                 saveInternal();
             };
             reader.readAsText(file);
         }
 
-        updateUI();
+        function addCustom(type) {
+            const n = prompt("Category Name:");
+            if(n) {
+                if(type==='inc') planInc.push({name:n, amt:0});
+                else planExp.push({name:n, amt:0});
+                hasUnsavedChanges = true;
+                saveInternal();
+            }
+        }
     </script>
 </body>
 </html>
