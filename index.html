@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v13.3</title>
+    <title>Monarch-Lite v13.4</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
-        /* Modal Overlay */
         #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; text-align: center; }
         .modal-card { background: var(--m-card); padding: 30px; border-radius: 24px; border: 1px solid var(--m-teal); width: 85%; max-width: 400px; }
         
@@ -16,20 +15,21 @@
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         .header-sub { font-size: 11px; opacity: 0.9; margin-top: 4px; }
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
-        .net-worth-h1 { font-size: 2.2rem; margin: 8px 0; font-weight: 700; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        small { font-size: 10px; opacity: 0.6; text-transform: uppercase; font-weight: bold; }
+        
+        /* New Table Style for Income/Expenses */
+        .budget-row { display: grid; grid-template-columns: 1fr 80px 80px 30px; gap: 5px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 13px; }
+        .budget-label { font-size: 18px; font-weight: bold; margin: 15px 0 5px 0; display: flex; justify-content: space-between; align-items: center;}
+        .col-head { font-size: 10px; opacity: 0.6; text-transform: uppercase; text-align: right; }
+        
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
-        .btn-add { background: #333; color: var(--m-teal); border: 1px dashed var(--m-teal); padding: 8px; border-radius: 8px; width: 100%; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .btn-add-small { background: none; color: var(--m-teal); border: 1px solid var(--m-teal); padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; }
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
         .btn-sync-alt { background: var(--m-teal); color: var(--m-blue); padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; }
         .btn-fresh-alt { background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; }
-        .txn-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2a2a2a; }
-        .txn-icon { width: 32px; height: 32px; background: #2a2a2a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 16px; }
-        .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
-        .bar-bg { background: #333; height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0;}
-        .bar-fill { height: 100%; transition: width 0.5s ease; background: var(--m-teal); }
-        .plan-item { font-size: 12px; padding: 4px 0; display: flex; justify-content: space-between; border-bottom: 1px solid #2a2a2a; }
+        .del-btn { color: var(--m-red); background: none; border: none; font-size: 16px; cursor: pointer; text-align: right; }
+        
+        .pos { color: var(--m-green); }
+        .neg { color: var(--m-red); }
     </style>
 </head>
 <body>
@@ -43,13 +43,13 @@
         </div>
     </div>
 
-    <div id="header-container" class="budget-header">
+    <div class="budget-header">
         <div class="header-main">
-            <span>Remaining to Spend</span>
+            <span>Left to budget</span>
             <span id="left-val">$0</span>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-            <div class="header-sub" id="left-desc">Working Copy: Never</div>
+            <div class="header-sub" id="left-desc">Sync: Never</div>
             <div style="display:flex; gap:10px;">
                 <label for="sync-upload" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↑ Sync</label>
                 <div onclick="exportNewFile()" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↓ Save</div>
@@ -58,55 +58,53 @@
         </div>
     </div>
 
+    <div class="budget-label">
+        <span>Income</span>
+        <button class="btn-add-small" onclick="promptPlan('inc')">+ Add</button>
+    </div>
     <div class="card">
-        <small>Current Month Total</small>
-        <div class="net-worth-h1" id="net-val">$0</div>
-        <div style="display:flex; gap:20px;">
-            <div><small>Income</small><div style="color:var(--m-teal); font-weight:bold;" id="act-inc">$0</div></div>
-            <div><small>Expenses</small><div style="color:var(--m-red); font-weight:bold;" id="act-exp">$0</div></div>
+        <div class="budget-row" style="border-bottom: 2px solid #333; padding-bottom: 5px;">
+            <span class="col-head" style="text-align:left">Category</span>
+            <span class="col-head">Budget</span>
+            <span class="col-head">Remaining</span>
+            <span></span>
         </div>
+        <div id="income-list"></div>
     </div>
 
+    <div class="budget-label">
+        <span>Expenses</span>
+        <button class="btn-add-small" onclick="promptPlan('exp')">+ Add</button>
+    </div>
     <div class="card">
-        <div style="display:flex; justify-content:space-between">
-            <b style="color:var(--m-teal)">Monthly Plan</b>
-            <small id="plan-pct">0% Spent</small>
+        <div class="budget-row" style="border-bottom: 2px solid #333; padding-bottom: 5px;">
+            <span class="col-head" style="text-align:left">Category</span>
+            <span class="col-head">Budget</span>
+            <span class="col-head">Remaining</span>
+            <span></span>
         </div>
-        <div class="bar-bg"><div id="budget-bar" class="bar-fill" style="width:0%"></div></div>
-        <div class="grid">
-            <div>
-                <small>Plan Inc: <span id="total-p-inc">$0</span></small>
-                <div id="plan-inc-list" style="margin-bottom:8px;"></div>
-                <button class="btn-add" onclick="promptPlan('inc')">+ Inc</button>
-            </div>
-            <div>
-                <small>Plan Exp: <span id="total-p-exp">$0</span></small>
-                <div id="plan-exp-list" style="margin-bottom:8px;"></div>
-                <button class="btn-add" onclick="promptPlan('exp')">+ Exp</button>
-            </div>
-        </div>
+        <div id="expense-list"></div>
     </div>
 
     <div class="card">
         <b>Track Transaction</b>
         <input type="text" id="desc" placeholder="Merchant">
         <select id="cat">
-            <option value="💰">Income / Paycheck</option>
-            <option value="🏠">Housing & Bills</option>
+            <option value="💰">Income</option>
+            <option value="🏠">Housing</option>
             <option value="🛒">Groceries</option>
-            <option value="🍳">Dining & Food</option>
-            <option value="🏋️">Gym & Snacks</option>
+            <option value="🍳">Dining</option>
+            <option value="🏋️">Gym/Snacks</option>
             <option value="🚗">Transport</option>
-            <option value="💊">Medical</option>
         </select>
-        <div class="grid">
-            <input type="date" id="txn-date">
-            <input type="text" inputmode="decimal" id="amt" placeholder="Amount">
+        <div style="display:flex; gap:10px;">
+            <input type="date" id="txn-date" style="flex:1">
+            <input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1">
         </div>
         <button class="btn-track" onclick="addTransaction()">Add Entry</button>
     </div>
 
-    <h3 style="margin-left:10px;">Transactions</h3>
+    <h3 style="margin-left:10px;">Recent Activity</h3>
     <div id="txn-list"></div>
 
     <script>
@@ -114,27 +112,13 @@
         let planInc = JSON.parse(localStorage.getItem('m9_p_inc')) || [];
         let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
 
-        document.getElementById('txn-date').valueAsDate = new Date();
-
-        // Startup Logic
         window.onload = function() {
             document.getElementById('startup-modal').style.display = 'flex';
+            document.getElementById('txn-date').valueAsDate = new Date();
             updateUI();
         };
 
-        function closeModal() {
-            document.getElementById('startup-modal').style.display = 'none';
-        }
-
-        function exportNewFile() {
-            const bundle = { txns, planInc, planExp, version: "13.3", exportedAt: new Date().toLocaleString() };
-            const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "budget_working_copy.json";
-            link.click();
-            alert("Saved! ✅");
-        }
+        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
 
         function syncFromFile(event) {
             const file = event.target.files[0];
@@ -146,15 +130,31 @@
                     if (data.txns) {
                         txns = data.txns; planInc = data.planInc || []; planExp = data.planExp || [];
                         localStorage.setItem('m9_last_sync', data.exportedAt || new Date().toLocaleString());
-                    } else if (Array.isArray(data)) {
-                        txns = data;
                     }
                     saveAndRefresh();
                     closeModal();
-                    alert("Sync Successful! ✅");
-                } catch (err) { alert("Invalid File ❌"); }
+                } catch (err) { alert("Error loading file"); }
             };
             reader.readAsText(file);
+        }
+
+        function exportNewFile() {
+            const bundle = { txns, planInc, planExp, version: "13.4", exportedAt: new Date().toLocaleString() };
+            const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "budget_working_copy.json";
+            link.click();
+        }
+
+        function promptPlan(type) {
+            const name = prompt("Category Name:");
+            const amt = parseFloat(prompt("Budgeted Amount:"));
+            if (name && !isNaN(amt)) {
+                if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
+                else planExp.push({ id: Date.now(), name, amt });
+                saveAndRefresh();
+            }
         }
 
         function addTransaction() {
@@ -162,27 +162,17 @@
             const cat = document.getElementById('cat').value;
             const date = document.getElementById('txn-date').value;
             const amt = parseFloat(document.getElementById('amt').value);
-            if(!desc || !date || isNaN(amt)) return;
+            if(!desc || isNaN(amt)) return;
             txns.unshift({ id: Date.now(), desc, cat, date, amt });
             document.getElementById('desc').value = '';
             document.getElementById('amt').value = '';
             saveAndRefresh();
         }
 
-        function deleteTxn(id) { txns = txns.filter(t => t.id !== id); saveAndRefresh(); }
-
-        function promptPlan(type) {
-            const name = prompt("Name:");
-            const amt = parseFloat(prompt("Amount:"));
-            if (!name || isNaN(amt)) return;
-            if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
-            else planExp.push({ id: Date.now(), name, amt });
-            saveAndRefresh();
-        }
-
-        function deletePlan(type, id) {
-            if (type === 'inc') planInc = planInc.filter(i => i.id !== id);
-            else planExp = planExp.filter(i => i.id !== id);
+        function deleteItem(type, id) {
+            if(type === 'txn') txns = txns.filter(t => t.id !== id);
+            if(type === 'inc') planInc = planInc.filter(i => i.id !== id);
+            if(type === 'exp') planExp = planExp.filter(e => e.id !== id);
             saveAndRefresh();
         }
 
@@ -194,34 +184,46 @@
         }
 
         function updateUI() {
-            const listEl = document.getElementById('txn-list');
-            document.getElementById('left-desc').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
-            document.getElementById('plan-inc-list').innerHTML = '';
-            document.getElementById('plan-exp-list').innerHTML = '';
-            listEl.innerHTML = '';
+            const incList = document.getElementById('income-list');
+            const expList = document.getElementById('expense-list');
+            const txnList = document.getElementById('txn-list');
             
-            let sPInc = 0, sPExp = 0, aInc = 0, aExp = 0;
-            txns.sort((a, b) => new Date(b.date) - new Date(a.date));
-            txns.forEach(t => {
-                if (t.amt > 0) aInc += t.amt; else aExp += Math.abs(t.amt);
-                const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                listEl.innerHTML += `<div class="card txn-row" style="margin-bottom:8px;"><div class="txn-icon">${t.cat}</div><div style="flex-grow:1"><b>${t.desc}</b><br><small>${d}</small></div><div style="text-align:right; margin-right:10px;">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTxn(${t.id})">×</button></div>`;
+            incList.innerHTML = ''; expList.innerHTML = ''; txnList.innerHTML = '';
+            
+            let totalBudInc = 0, totalBudExp = 0, actualExp = 0;
+
+            // Render Income
+            planInc.forEach(p => {
+                totalBudInc += p.amt;
+                // Simplified matching: checks if any txn description or category matches plan name
+                const actual = txns.filter(t => t.amt > 0 && (t.desc.includes(p.name) || t.cat.includes(p.name)))
+                                   .reduce((sum, t) => sum + t.amt, 0);
+                const remaining = p.amt - actual;
+                incList.innerHTML += `<div class="budget-row"><span>${p.name}</span><span style="text-align:right">$${p.amt}</span><span style="text-align:right" class="pos">$${remaining}</span><button class="del-btn" onclick="deleteItem('inc', ${p.id})">×</button></div>`;
             });
 
-            planInc.forEach(i => { sPInc += i.amt; document.getElementById('plan-inc-list').innerHTML += `<div class="plan-item"><span>${i.name}</span><span>$${i.amt} <span onclick="deletePlan('inc', ${i.id})" style="color:var(--m-red); cursor:pointer;">×</span></span></div>`; });
-            planExp.forEach(i => { sPExp += i.amt; document.getElementById('plan-exp-list').innerHTML += `<div class="plan-item"><span>${i.name}</span><span>$${i.amt} <span onclick="deletePlan('exp', ${i.id})" style="color:var(--m-red); cursor:pointer;">×</span></span></div>`; });
+            // Render Expenses
+            planExp.forEach(p => {
+                totalBudExp += p.amt;
+                const actual = txns.filter(t => t.amt < 0 && (t.desc.includes(p.name) || t.cat.includes(p.name)))
+                                   .reduce((sum, t) => sum + Math.abs(t.amt), 0);
+                const remaining = p.amt - actual;
+                expList.innerHTML += `<div class="budget-row"><span>${p.name}</span><span style="text-align:right">$${p.amt}</span><span style="text-align:right" class="${remaining < 0 ? 'neg' : 'pos'}">$${remaining}</span><button class="del-btn" onclick="deleteItem('exp', ${p.id})">×</button></div>`;
+            });
 
-            const remaining = sPExp - aExp;
-            const pct = sPExp > 0 ? Math.min((aExp / sPExp) * 100, 100) : 0;
+            // Summary math
+            txns.forEach(t => { if(t.amt < 0) actualExp += Math.abs(t.amt); });
+            document.getElementById('left-val').innerText = `$${(totalBudInc - actualExp).toLocaleString()}`;
+            document.getElementById('left-desc').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
 
-            document.getElementById('net-val').innerText = `$${(aInc - aExp).toLocaleString()}`;
-            document.getElementById('act-inc').innerText = `$${aInc.toLocaleString()}`;
-            document.getElementById('act-exp').innerText = `$${aExp.toLocaleString()}`;
-            document.getElementById('left-val').innerText = `$${remaining.toLocaleString()}`;
-            document.getElementById('total-p-inc').innerText = `$${sPInc}`;
-            document.getElementById('total-p-exp').innerText = `$${sPExp}`;
-            document.getElementById('budget-bar').style.width = pct + '%';
-            document.getElementById('plan-pct').innerText = Math.round(pct) + '% Spent';
+            // Transactions
+            txns.slice(0, 10).forEach(t => {
+                const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                txnList.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:10px;">
+                    <div><b>${t.cat} ${t.desc}</b><br><small>${d}</small></div>
+                    <div style="text-align:right">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="deleteItem('txn', ${t.id})">×</button></div>
+                </div>`;
+            });
         }
     </script>
 </body>
