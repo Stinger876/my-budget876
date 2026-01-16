@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.3</title>
+    <title>Monarch-Lite v14.2</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
-        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0; }
+        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0; }
         .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 85%; max-width: 400px; margin: auto; text-align: center; }
         
-        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; transition: background 0.3s; }
+        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
+        
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
+        .cf-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 10px; }
         .cf-val { font-size: 1.2rem; font-weight: bold; }
 
         .budget-row { display: grid; grid-template-columns: 1fr 85px 85px 30px; gap: 5px; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
@@ -25,12 +27,12 @@
         .plan-input { text-align: right; border-color: #444; height: 32px; }
         
         .setup-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333; text-align: left; }
+        .setup-item input[type="checkbox"] { width: 20px; height: 20px; }
+
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
+        .btn-sync-alt { background: var(--m-teal); color: var(--m-blue); padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; text-decoration: none; }
         .btn-fresh-alt { background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 16px; cursor: pointer; text-align: right; }
-        
-        .tab-btn { padding: 10px 20px; background: #2a2a2a; color: white; border: none; border-radius: 8px 8px 0 0; cursor: pointer; margin-right: 5px; opacity: 0.6; }
-        .tab-btn.active { background: var(--m-card); opacity: 1; border: 1px solid #333; border-bottom: none; }
         
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
@@ -40,87 +42,81 @@
 
     <div id="startup-modal">
         <div class="modal-card" id="initial-choice">
-            <h2 style="color:var(--m-teal);">Monarch-Lite</h2>
-            <p id="status-msg">Found existing data.</p>
-            <div id="continue-btn" class="btn-track" onclick="closeModal()">Continue Session</div>
-            <div class="btn-fresh-alt" onclick="showWizard()">Start Fresh Setup</div>
+            <h2 style="margin-top:0; color:var(--m-teal);">Welcome Back</h2>
+            <p id="status-msg" style="font-size:14px; opacity:0.8; margin-bottom:25px;">Budget data found in browser.</p>
+            <div id="continue-btn" class="btn-sync-alt" onclick="closeModal()">Continue with Session</div>
+            <label for="sync-upload" class="btn-fresh-alt" style="background:#444;">Sync from File</label>
+            <div class="btn-fresh-alt" onclick="showWizard()" style="color:var(--m-red); border:1px solid var(--m-red);">Start Fresh Setup</div>
         </div>
 
-        <div class="modal-card" id="wizard-cats" style="display:none;">
-            <h3 style="color:var(--m-teal);">1. Categories</h3>
+        <div class="modal-card" id="wizard-view" style="display:none;">
+            <h3 style="margin-top:0; color:var(--m-teal);">Budget Setup</h3>
+            <p style="font-size:12px; opacity:0.7;">Select common Canadian categories:</p>
+            
             <div id="wizard-list">
                 <div class="setup-item"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
                 <div class="setup-item"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
                 <div class="setup-item"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
                 <div class="setup-item"><span>🚗 Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
-                <div class="setup-item"><span>🍳 Dining</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
-                <div class="setup-item"><span>🏋️ Gym/Snacks</span><input type="checkbox" checked data-cat="Gym & Snacks" data-type="exp"></div>
+                <div class="setup-item"><span>🍳 Dining Out</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
+                <div class="setup-item"><span>🏋️ Gym & Snacks</span><input type="checkbox" checked data-cat="Gym & Snacks" data-type="exp"></div>
+                <div class="setup-item"><span>💊 Medical</span><input type="checkbox" data-cat="Medical" data-type="exp"></div>
+                <div class="setup-item"><span>📱 Phone/Internet</span><input type="checkbox" data-cat="Utilities" data-type="exp"></div>
             </div>
-            <button class="btn-track" onclick="nextStep()">Next: Investments</button>
-        </div>
-
-        <div class="modal-card" id="wizard-inv" style="display:none;">
-            <h3 style="color:var(--m-teal);">2. Investments</h3>
-            <p style="font-size:12px; opacity:0.7;">Add assets like TFSA, RRSP, or Savings.</p>
-            <div id="inv-setup-list"></div>
-            <button class="btn-fresh-alt" onclick="addInvInput()">+ Add Investment</button>
             <button class="btn-track" onclick="finishWizard()">Finish Setup</button>
         </div>
     </div>
 
-    <div class="budget-header" id="main-header" onclick="toggleHeader()">
+    <div class="budget-header">
         <div class="header-main">
-            <span id="header-label">Net Worth</span>
-            <span id="header-val">$0</span>
+            <span>Remaining to Spend</span>
+            <span id="left-val">$0</span>
         </div>
-        <div style="font-size: 10px; opacity: 0.8; margin-top:5px; display:flex; justify-content:space-between;">
-            <span id="header-subtext">Includes Cash + Investments</span>
-            <span id="sync-info">Sync: Never</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <div style="font-size: 11px; opacity: 0.9;" id="sync-info">Sync: Never</div>
+            <div style="display:flex; gap:10px;">
+                <label for="sync-upload" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↑ Sync</label>
+                <div onclick="exportNewFile()" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↓ Save</div>
+            </div>
+            <input type="file" id="sync-upload" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
     </div>
 
-    <div style="display:flex; margin-top:10px;">
-        <button class="tab-btn active" id="tab-b" onclick="switchTab('budget')">Budget</button>
-        <button class="tab-btn" id="tab-i" onclick="switchTab('invest')">Investments</button>
+    <div class="budget-label">Cash Flow</div>
+    <div class="card">
+        <div class="cf-row"><span>Income</span><span id="cf-inc" class="cf-val pos">$0</span></div>
+        <div class="cf-row"><span>Expenses</span><span id="cf-exp" class="cf-val neg">$0</span></div>
+        <div class="cf-row" style="border-bottom:none"><span>Savings</span><span id="cf-sav" class="cf-val">$0</span></div>
     </div>
 
-    <div id="view-budget">
-        <div class="budget-label">Cash Flow</div>
-        <div class="card">
-            <div class="cf-row"><span>Income</span><span id="cf-inc" class="pos">$0</span></div>
-            <div class="cf-row"><span>Expenses</span><span id="cf-exp" class="neg">$0</span></div>
-            <div class="cf-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
+    <div class="budget-label"><span>Income Plan</span> <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal); font-size:12px;">+ Add</button></div>
+    <div class="card"><div id="income-list"></div></div>
+
+    <div class="budget-label"><span>Expense Plan</span> <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal); font-size:12px;">+ Add</button></div>
+    <div class="card"><div id="expense-list"></div></div>
+
+    <div class="card">
+        <b>Track Transaction</b>
+        <input type="text" id="desc" placeholder="Merchant">
+        <select id="cat-select"></select>
+        <div style="display:flex; gap:10px;">
+            <input type="date" id="txn-date" style="flex:1">
+            <input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1">
         </div>
-        <div class="budget-label">Plans <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal);">+ Custom</button></div>
-        <div class="card"><div id="income-list"></div><div id="expense-list"></div></div>
-        
-        <div class="card">
-            <b>Track Transaction</b>
-            <input type="text" id="desc" placeholder="Merchant">
-            <select id="cat-select"></select>
-            <div style="display:flex; gap:10px;"><input type="date" id="txn-date" style="flex:1"><input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1"></div>
-            <button class="btn-track" onclick="addTransaction()">Add Entry</button>
-        </div>
-        <h3>Recent</h3>
-        <div id="txn-list"></div>
+        <button class="btn-track" onclick="addTransaction()">Add Entry</button>
     </div>
 
-    <div id="view-invest" style="display:none;">
-        <div class="budget-label">Asset Management</div>
-        <div class="card" id="inv-list-main"></div>
-        <button class="btn-track" onclick="addCustomInv()">+ Add New Asset</button>
-    </div>
+    <h3 style="margin-left:10px;">Recent Activity</h3>
+    <div id="txn-list"></div>
 
     <script>
-        let txns = JSON.parse(localStorage.getItem('m_txns')) || [];
-        let planInc = JSON.parse(localStorage.getItem('m_p_inc')) || [];
-        let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [];
-        let investments = JSON.parse(localStorage.getItem('m_inv')) || [];
-        let headerState = "nw"; // nw = networth, rem = remaining
+        let txns = JSON.parse(localStorage.getItem('m9_txns')) || [];
+        let planInc = JSON.parse(localStorage.getItem('m9_p_inc')) || [];
+        let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
 
         window.onload = function() {
             if (txns.length === 0 && planInc.length === 0) {
-                document.getElementById('status-msg').innerText = "New User Detected.";
+                document.getElementById('status-msg').innerText = "No data found. Let's set it up.";
                 document.getElementById('continue-btn').style.display = 'none';
             }
             document.getElementById('txn-date').valueAsDate = new Date();
@@ -129,112 +125,132 @@
 
         function showWizard() {
             document.getElementById('initial-choice').style.display = 'none';
-            document.getElementById('wizard-cats').style.display = 'block';
-        }
-
-        function nextStep() {
-            document.getElementById('wizard-cats').style.display = 'none';
-            document.getElementById('wizard-inv').style.display = 'block';
-            if(document.getElementById('inv-setup-list').innerHTML === "") addInvInput();
-        }
-
-        function addInvInput() {
-            const div = document.createElement('div');
-            div.className = 'setup-item';
-            div.innerHTML = `<input type="text" placeholder="Name (e.g. TFSA)" style="width:60%"> <input type="number" placeholder="$ Amount" style="width:35%">`;
-            document.getElementById('inv-setup-list').appendChild(div);
+            document.getElementById('wizard-view').style.display = 'block';
         }
 
         function finishWizard() {
-            planInc = []; planExp = []; investments = []; txns = [];
+            localStorage.clear();
+            txns = []; planInc = []; planExp = [];
             document.querySelectorAll('#wizard-list input:checked').forEach(chk => {
                 const name = chk.getAttribute('data-cat');
-                if (chk.getAttribute('data-type') === 'inc') planInc.push({name, amt: 0});
+                const type = chk.getAttribute('data-type');
+                if (type === 'inc') planInc.push({name, amt: 0});
                 else planExp.push({name, amt: 0});
             });
-            document.querySelectorAll('#inv-setup-list div').forEach(row => {
-                const inputs = row.querySelectorAll('input');
-                if(inputs[0].value) investments.push({name: inputs[0].value, amt: parseFloat(inputs[1].value) || 0});
-            });
-            saveAndRefresh(); closeModal();
+            saveAndRefresh();
+            closeModal();
         }
 
         function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-        function switchTab(t) {
-            document.getElementById('view-budget').style.display = t === 'budget' ? 'block' : 'none';
-            document.getElementById('view-invest').style.display = t === 'invest' ? 'block' : 'none';
-            document.getElementById('tab-b').className = t === 'budget' ? 'tab-btn active' : 'tab-btn';
-            document.getElementById('tab-i').className = t === 'invest' ? 'tab-btn active' : 'tab-btn';
+
+        function syncFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    txns = data.txns || []; planInc = data.planInc || []; planExp = data.planExp || [];
+                    localStorage.setItem('m9_last_sync', data.exportedAt || new Date().toLocaleString());
+                    saveAndRefresh(); closeModal();
+                } catch (err) { alert("Invalid File"); }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportNewFile() {
+            const bundle = { txns, planInc, planExp, exportedAt: new Date().toLocaleString() };
+            const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "budget_sync.json";
+            link.click();
+        }
+
+        function updatePlanAmt(type, index, val) {
+            const amt = parseFloat(val) || 0;
+            if (type === 'inc') planInc[index].amt = amt;
+            else planExp[index].amt = amt;
+            saveAndRefresh();
+        }
+
+        function addCustom(type) {
+            const name = prompt("Category Name:");
+            if (name) {
+                if (type === 'inc') planInc.push({ name, amt: 0 });
+                else planExp.push({ name, amt: 0 });
+                saveAndRefresh();
+            }
         }
 
         function addTransaction() {
-            const desc = document.getElementById('desc').value, cat = document.getElementById('cat-select').value, date = document.getElementById('txn-date').value;
+            const desc = document.getElementById('desc').value;
+            const cat = document.getElementById('cat-select').value;
+            const date = document.getElementById('txn-date').value;
             let amt = parseFloat(document.getElementById('amt').value);
             if(!desc || isNaN(amt)) return;
             amt = (cat === "Income") ? Math.abs(amt) : -Math.abs(amt);
             txns.unshift({ id: Date.now(), desc, cat, date, amt });
+            document.getElementById('desc').value = '';
+            document.getElementById('amt').value = '';
             saveAndRefresh();
-            document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
         }
 
-        function updateInvAmt(index, val) { investments[index].amt = parseFloat(val) || 0; saveAndRefresh(); }
-        function addCustomInv() { const n = prompt("Asset Name:"); if(n) { investments.push({name: n, amt: 0}); saveAndRefresh(); } }
-        function toggleHeader() { headerState = headerState === "nw" ? "rem" : "nw"; updateUI(); }
+        function deletePlanItem(type, index) {
+            if(type === 'inc') planInc.splice(index, 1);
+            else planExp.splice(index, 1);
+            saveAndRefresh();
+        }
+
+        function deleteTxn(id) {
+            txns = txns.filter(t => t.id !== id);
+            saveAndRefresh();
+        }
 
         function saveAndRefresh() {
-            localStorage.setItem('m_txns', JSON.stringify(txns));
-            localStorage.setItem('m_p_inc', JSON.stringify(planInc));
-            localStorage.setItem('m_p_exp', JSON.stringify(planExp));
-            localStorage.setItem('m_inv', JSON.stringify(investments));
+            localStorage.setItem('m9_txns', JSON.stringify(txns));
+            localStorage.setItem('m9_p_inc', JSON.stringify(planInc));
+            localStorage.setItem('m9_p_exp', JSON.stringify(planExp));
             updateUI();
         }
 
         function updateUI() {
-            const incList = document.getElementById('income-list'), expList = document.getElementById('expense-list'), txnList = document.getElementById('txn-list'), invList = document.getElementById('inv-list-main'), catSelect = document.getElementById('cat-select');
-            incList.innerHTML = ''; expList.innerHTML = ''; txnList.innerHTML = ''; invList.innerHTML = ''; catSelect.innerHTML = '';
+            const incList = document.getElementById('income-list');
+            const expList = document.getElementById('expense-list');
+            const txnList = document.getElementById('txn-list');
+            const catSelect = document.getElementById('cat-select');
+            incList.innerHTML = ''; expList.innerHTML = ''; txnList.innerHTML = ''; catSelect.innerHTML = '';
             
-            let actInc = 0, actExp = 0, budIncTotal = 0, totalInv = 0;
+            let actInc = 0, actExp = 0, budIncTotal = 0;
             txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
-            investments.forEach((inv, i) => {
-                totalInv += inv.amt;
-                invList.innerHTML += `<div class="cf-row"><span>${inv.name}</span><input type="number" class="plan-input" style="width:100px" value="${inv.amt}" onchange="updateInvAmt(${i}, this.value)"></div>`;
-            });
 
             planInc.forEach((p, i) => {
-                budIncTotal += p.amt; const m = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
+                budIncTotal += p.amt;
+                const matches = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 catSelect.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
-                incList.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value);saveAndRefresh();"><span class="pos">$${(p.amt - m).toFixed(0)}</span><button class="del-btn" onclick="planInc.splice(${i},1);saveAndRefresh();">×</button></div>`;
+                incList.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="updatePlanAmt('inc', ${i}, this.value)"><span style="text-align:right" class="pos">$${(p.amt - matches).toFixed(0)}</span><button class="del-btn" onclick="deletePlanItem('inc', ${i})">×</button></div>`;
             });
 
             planExp.forEach((p, i) => {
-                const m = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
+                const matches = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
+                const rem = p.amt - matches;
                 catSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expList.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value);saveAndRefresh();"><span class="${(p.amt-m)<0?'neg':'pos'}">$${(p.amt-m).toFixed(0)}</span><button class="del-btn" onclick="planExp.splice(${i},1);saveAndRefresh();">×</button></div>`;
+                expList.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="updatePlanAmt('exp', ${i}, this.value)"><span style="text-align:right" class="${rem < 0 ? 'neg' : 'pos'}">$${rem.toFixed(0)}</span><button class="del-btn" onclick="deletePlanItem('exp', ${i})">×</button></div>`;
             });
 
-            const netSavings = actInc - actExp;
             document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
             document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
-            document.getElementById('cf-sav').innerText = `$${netSavings.toLocaleString()}`;
-            document.getElementById('cf-sav').className = 'cf-val ' + (netSavings >= 0 ? 'pos' : 'neg');
+            const savings = actInc - actExp;
+            document.getElementById('cf-sav').innerText = `$${savings.toLocaleString()}`;
+            document.getElementById('cf-sav').className = 'cf-val ' + (savings >= 0 ? 'pos' : 'neg');
+            document.getElementById('left-val').innerText = `$${(budIncTotal - actExp).toLocaleString()}`;
+            document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
 
-            // Header Math
-            if(headerState === "nw") {
-                document.getElementById('header-label').innerText = "Net Worth";
-                document.getElementById('header-val').innerText = `$${(totalInv + netSavings).toLocaleString()}`;
-                document.getElementById('header-subtext').innerText = "Total Assets + Net Savings";
-                document.getElementById('main-header').style.background = "var(--m-blue)";
-            } else {
-                document.getElementById('header-label').innerText = "Remaining Budget";
-                document.getElementById('header-val').innerText = `$${(budIncTotal - actExp).toLocaleString()}`;
-                document.getElementById('header-subtext').innerText = "Planned Income - Total Expenses";
-                document.getElementById('main-header').style.background = "var(--m-green)";
-            }
-
-            txns.slice(0, 5).forEach(t => {
-                txnList.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; padding:10px;">
-                    <div><b>${t.cat}</b>: ${t.desc}</div>
-                    <div class="${t.amt < 0 ? 'neg' : 'pos'}">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
+            txns.slice(0, 10).forEach(t => {
+                const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                txnList.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:10px;">
+                    <div><b>${t.cat}</b>: ${t.desc}<br><small>${d}</small></div>
+                    <div style="text-align:right" class="${t.amt < 0 ? 'neg' : 'pos'}">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="deleteTxn(${t.id})">×</button></div>
                 </div>`;
             });
         }
