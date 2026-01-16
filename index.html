@@ -147,9 +147,36 @@
                         await gapi.client.drive.files.update({ fileId: fileId, media: { mimeType: 'application/json', body: content } });
                     }
 
-                    saveAndRefresh();
-                    alert("Sync Complete! ✅ Data saved to Google Drive.");
-               } catch (err) {
+                        function saveAndRefresh() {
+        localStorage.setItem('m9_txns', JSON.stringify(txns));
+        localStorage.setItem('m9_p_inc', JSON.stringify(planInc));
+        localStorage.setItem('m9_p_exp', JSON.stringify(planExp));
+        // Save the current time as the last sync time
+        localStorage.setItem('m9_last_sync', new Date().toLocaleString());
+        updateUI();
+    }
+
+    function updateUI() {
+        const txnListEl = document.getElementById('txn-list');
+        const lastSync = localStorage.getItem('m9_last_sync') || "Never";
+        
+        // Update the sub-header text to show the time
+        document.getElementById('left-desc').innerText = "Last Synced: " + lastSync;
+
+        txnListEl.innerHTML = '';
+        let aInc = 0, aExp = 0;
+        
+        txns.forEach(t => {
+            if (t.amt > 0) aInc += t.amt; else aExp += Math.abs(t.amt);
+            const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            txnListEl.innerHTML += `<div class="txn-row"><div class="txn-icon">${t.cat}</div><div style="flex-grow:1"><b>${t.desc}</b><br><small>${d}</small></div><div style="text-align:right">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTxn(${t.id})">×</button></div>`;
+        });
+
+        document.getElementById('net-val').innerText = `$${(aInc - aExp).toLocaleString()}`;
+        document.getElementById('act-inc').innerText = `$${aInc.toLocaleString()}`;
+        document.getElementById('act-exp').innerText = `$${aExp.toLocaleString()}`;
+    }
+
     console.error(err);
     // This will alert the specific error message from Google
     alert("Sync Failed: " + (err.result?.error?.message || "Check for blocked pop-ups"));
