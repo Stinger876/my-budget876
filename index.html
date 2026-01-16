@@ -3,27 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.11</title>
+    <title>Monarch-Lite v14.12</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
-        body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
+        body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 100px; }
         
-        /* Modal & Setup */
         #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0; }
         .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; margin: auto; text-align: center; box-sizing: border-box; }
         
-        /* Header */
         .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; transition: background 0.3s; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         
-        /* Tabs */
         .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
         .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; opacity: 0.6; color: white; border: none; }
         .tab.active { background: var(--m-teal); color: var(--m-blue); opacity: 1; }
 
         .card { background: var(--m-card); padding: 12px 15px; border-radius: 16px; margin-bottom: 15px; }
-        
-        /* v14.11 Right-Justified Action Group */
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; gap: 10px; }
         .item-info { flex: 1; font-size: 14px; font-weight: 500; }
         .item-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
@@ -32,11 +27,10 @@
         .remaining-tag { width: 70px; text-align: right; font-weight: bold; font-size: 13px; }
         
         .budget-label { font-size: 15px; font-weight: bold; margin: 15px 0 8px 5px; display: flex; justify-content: space-between; color: var(--m-teal); }
-        
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
-        .btn-fresh-alt { width: 100%; background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; box-sizing: border-box; }
+        .btn-fresh-alt { width: 100%; background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; box-sizing: border-box; text-align: center; text-decoration: none; border: none; }
         
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
@@ -56,10 +50,16 @@
         <div class="modal-card" id="wizard-view" style="display:none;">
             <h3 style="color:var(--m-teal);">Step 1: Budget Categories</h3>
             <div id="wizard-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left;">
-                <div style="background:#2a2a2a; padding:10px; border-radius:8px; display:flex; justify-content:space-between;"><span>Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
-                <div style="background:#2a2a2a; padding:10px; border-radius:8px; display:flex; justify-content:space-between;"><span>Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
-                <div style="background:#2a2a2a; padding:10px; border-radius:8px; display:flex; justify-content:space-between;"><span>Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
-                <div style="background:#2a2a2a; padding:10px; border-radius:8px; display:flex; justify-content:space-between;"><span>Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
+                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
+                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
+                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
+                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
+                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Dining</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
+                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Gym & Snacks</span><input type="checkbox" checked data-cat="Gym & Snacks" data-type="exp"></div>
+                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Utilities</span><input type="checkbox" checked data-cat="Utilities" data-type="exp"></div>
+                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Entertainment</span><input type="checkbox" checked data-cat="Entertainment" data-type="exp"></div>
+                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Personal Care</span><input type="checkbox" checked data-cat="Personal Care" data-type="exp"></div>
+                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Shopping</span><input type="checkbox" checked data-cat="Shopping" data-type="exp"></div>
             </div>
             <button class="btn-track" onclick="showInvWizard()">Next: Investments</button>
         </div>
@@ -94,13 +94,10 @@
             <div class="item-row"><span>Total Expenses</span><span id="cf-exp" class="neg">$0</span></div>
             <div class="item-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
         </div>
-
         <div class="budget-label">Planned Income <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal); font-weight:bold;">+ Add</button></div>
         <div class="card" id="income-list"></div>
-
         <div class="budget-label">Planned Expenses <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal); font-weight:bold;">+ Add</button></div>
         <div class="card" id="expense-list"></div>
-
         <div class="card">
             <b>New Entry</b>
             <input type="text" id="desc" placeholder="Merchant">
@@ -115,6 +112,12 @@
         <div class="budget-label">Asset Balances</div>
         <div class="card" id="invest-main-list"></div>
         <button class="btn-track" onclick="addInvestItem()">+ New Investment</button>
+    </div>
+
+    <div class="budget-label">Settings & Sync</div>
+    <div class="card">
+        <button class="btn-fresh-alt" onclick="exportToFile()">Download Sync File</button>
+        <button class="btn-fresh-alt" style="color:var(--m-red);" onclick="if(confirm('Delete everything?')) {localStorage.clear(); location.reload();}">Reset All Data</button>
     </div>
 
     <script>
@@ -152,6 +155,32 @@
                 if(inp[0] && inp[0].value) assets.push({name: inp[0].value, amt: parseFloat(inp[1].value) || 0});
             });
             saveAndRefresh(); closeModal();
+        }
+
+        function syncFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    txns = data.txns || []; planInc = data.planInc || []; planExp = data.planExp || []; assets = data.assets || [];
+                    localStorage.setItem('m_last_sync', data.exportedAt || new Date().toLocaleString());
+                    saveAndRefresh(); closeModal();
+                } catch (err) { alert("Invalid File"); }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportToFile() {
+            const data = { txns, planInc, planExp, assets, exportedAt: new Date().toLocaleString() };
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `monarch_sync_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            localStorage.setItem('m_last_sync', data.exportedAt);
+            updateUI();
         }
 
         function switchTab(t) {
@@ -192,13 +221,11 @@
             let actInc = 0, actExp = 0, budIncTotal = 0, totalAssets = 0;
             txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
             
-            // Assets Tab (Clean, No Deletes)
             assets.forEach((a, i) => {
                 totalAssets += a.amt;
                 invL.innerHTML += `<div class="item-row"><span class="item-info">${a.name}</span><div class="item-actions"><input type="number" class="plan-input" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"></div></div>`;
             });
 
-            // Budget Tab (Right-justified grouping)
             planInc.forEach((p, i) => {
                 budIncTotal += p.amt;
                 const m = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
@@ -209,34 +236,4 @@
             planExp.forEach((p, i) => {
                 const m = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="item-row"><span class="item-info">${p.name}</span><div class="item-actions"><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="remaining-tag ${(p.amt-m)<0?'neg':'pos'}">$${(p.amt-m).toFixed(0)}</span></div></div>`;
-            });
-
-            const savings = actInc - actExp;
-            document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
-            document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
-            document.getElementById('cf-sav').innerText = `$${savings.toLocaleString()}`;
-            
-            const header = document.getElementById('main-header');
-            if(activeTab === 'budget') {
-                header.style.background = "var(--m-green)";
-                document.getElementById('header-label').innerText = "Remaining to Spend";
-                document.getElementById('header-val').innerText = `$${(budIncTotal - actExp).toLocaleString()}`;
-                document.getElementById('header-subtext').innerText = "Planned Income - Total Expenses";
-            } else {
-                header.style.background = "var(--m-blue)";
-                document.getElementById('header-label').innerText = "Net Worth";
-                document.getElementById('header-val').innerText = `$${(totalAssets + savings).toLocaleString()}`;
-                document.getElementById('header-subtext').innerText = "Assets + Cash Savings";
-            }
-
-            txns.slice(0, 10).forEach(t => {
-                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
-                    <div style="font-size:14px;"><b>${t.cat}</b>: ${t.desc}</div>
-                    <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div>
-                </div>`;
-            });
-        }
-    </script>
-</body>
-</html>
+                expL.innerHTML += `<div class="item-row"><span class="item-info">${p
