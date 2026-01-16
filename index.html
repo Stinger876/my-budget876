@@ -7,7 +7,7 @@
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
-        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; cursor: pointer; }
+        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         .header-sub { font-size: 11px; opacity: 0.9; margin-top: 4px; }
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
@@ -23,34 +23,40 @@
         .txn-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2a2a2a; }
         .txn-icon { width: 32px; height: 32px; background: #2a2a2a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 16px; }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
-        .flow-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; }
-        .flow-bar-container { flex-grow: 1; margin: 0 15px; background: #333; height: 6px; border-radius: 3px; position: relative; }
-        .flow-bar-fill { height: 100%; background: var(--m-teal); border-radius: 3px; }
     </style>
 </head>
 <body>
 
-<div id="header-container" class="budget-header">
+    <div id="header-container" class="budget-header">
         <div class="header-main">
             <span>Remaining to Spend</span>
             <span id="left-val">$0</span>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-            <div class="header-sub" id="left-desc">Tap "Sync" to load a file</div>
+            <div class="header-sub" id="left-desc">Last Synced: Never</div>
             <div style="display:flex; gap:10px;">
                 <label for="sync-upload" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↑ Sync File</label>
                 <div onclick="exportNewFile()" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↓ Create New</div>
             </div>
             <input type="file" id="sync-upload" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
- </div>
+    </div>
+
+    <div class="card">
+        <small>Current Net Worth</small>
+        <div class="net-worth-h1" id="net-val">$0</div>
+        <div style="display:flex; gap:20px;">
+            <div><small>Actual Inc</small><div style="color:var(--m-teal); font-weight:bold;" id="act-inc">$0</div></div>
+            <div><small>Actual Exp</small><div style="color:var(--m-red); font-weight:bold;" id="act-exp">$0</div></div>
+        </div>
+    </div>
 
     <div class="card">
         <div style="display:flex; justify-content:space-between">
             <b style="color:var(--m-teal)">Monthly Plan</b>
             <small id="plan-pct">0% Spent</small>
         </div>
-        <div class="bar-bg"><div id="budget-bar" class="bar-fill"></div></div>
+        <div class="bar-bg"><div id="budget-bar" class="bar-fill" style="width:0%"></div></div>
         <div class="grid">
             <div>
                 <small>Expected Inc: <span id="total-p-inc">$0</span></small>
@@ -84,25 +90,17 @@
         <button class="btn-track" onclick="addTransaction()">Add Entry</button>
     </div>
 
-    <h3 style="margin-left:10px;">Cash Flow by Category</h3>
-    <div class="card" id="cash-flow-list"></div>
-
     <h3 style="margin-left:10px;">Transactions</h3>
     <div class="card" id="txn-list"></div>
-     <script>
-        // 1. DATA LOADING
+
+    <script>
         let txns = JSON.parse(localStorage.getItem('m9_txns')) || [];
         let planInc = JSON.parse(localStorage.getItem('m9_p_inc')) || [];
         let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
 
         document.getElementById('txn-date').valueAsDate = new Date();
 
-        // 2. FILE SYNC LOGIC
-        // This creates a brand new, properly formatted JSON file from your current data
         function exportNewFile() {
-            if (txns.length === 0) {
-                if (!confirm("Your list is empty. Create an empty backup file anyway?")) return;
-            }
             const dataStr = JSON.stringify(txns, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
@@ -110,73 +108,42 @@
             link.href = url;
             link.download = "budget_backup.json";
             link.click();
-            alert("New file created! Save this to your phone or Drive. You can now use 'Sync File' to update it later.");
+            alert("Backup Created! ✅");
         }
 
-        // This merges an existing file with your current app data
-function syncFromFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            let cloudData = JSON.parse(e.target.result);
-            
-            // 1. Force the data into an array format regardless of how it was saved
-            let incomingTxns = [];
-            if (Array.isArray(cloudData)) {
-                incomingTxns = cloudData;
-            } else if (typeof cloudData === 'object' && cloudData !== null) {
-                // Look for any array inside the object (like 'txns' or 'transactions')
-                incomingTxns = Object.values(cloudData).find(val => Array.isArray(val)) || [];
-            }
-
-            // 2. Filter out any items that don't look like transactions (must have an ID)
-            const validIncoming = incomingTxns.filter(t => t && t.id);
-
-            if (validIncoming.length === 0 && incomingTxns.length > 0) {
-                // If we found a list but it has no IDs, they might be old-style entries
-                incomingTxns.forEach((t, index) => { if (!t.id) t.id = Date.now() + index; });
-            }
-
-            // 3. Merge with current app data
-            const combined = [...txns, ...incomingTxns];
-            
-            // 4. De-duplicate by ID so you don't get double entries
-            txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
-            
-            // 5. Update the UI and Storage
-            localStorage.setItem('m9_last_sync', new Date().toLocaleString());
-            saveAndRefresh();
-            alert("Sync Success! ✅ Processed " + incomingTxns.length + " items.");
-            
-        } catch (err) {
-            console.error("Detailed Sync Error:", err);
-            alert("Sync Failed: Could not read the file. Try creating a 'New Backup' first to see the required format.");
+        function syncFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const cloudData = JSON.parse(e.target.result);
+                    const incoming = Array.isArray(cloudData) ? cloudData : [];
+                    const combined = [...txns, ...incoming];
+                    txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
+                    localStorage.setItem('m9_last_sync', new Date().toLocaleString());
+                    saveAndRefresh();
+                    alert("Sync Success! ✅");
+                } catch (err) {
+                    alert("Invalid File Format ❌");
+                }
+            };
+            reader.readAsText(file);
         }
-    };
-    reader.readAsText(file);
-}
 
-        // 3. APP LOGIC
         function addTransaction() {
             const desc = document.getElementById('desc').value;
             const cat = document.getElementById('cat').value;
             const date = document.getElementById('txn-date').value;
             const amt = parseFloat(document.getElementById('amt').value);
             if(!desc || !date || isNaN(amt)) return;
-
             txns.unshift({ id: Date.now(), desc, cat, date, amt });
             document.getElementById('desc').value = '';
             document.getElementById('amt').value = '';
             saveAndRefresh();
         }
 
-        function deleteTxn(id) {
-            txns = txns.filter(t => t.id !== id);
-            saveAndRefresh();
-        }
+        function deleteTxn(id) { txns = txns.filter(t => t.id !== id); saveAndRefresh(); }
 
         function promptPlan(type) {
             const name = prompt("Enter name:");
@@ -203,14 +170,12 @@ function syncFromFile(event) {
         function updateUI() {
             const txnListEl = document.getElementById('txn-list');
             const lastSync = localStorage.getItem('m9_last_sync') || "Never";
-            
             document.getElementById('left-desc').innerText = "Last Synced: " + lastSync;
             document.getElementById('plan-inc-list').innerHTML = '';
             document.getElementById('plan-exp-list').innerHTML = '';
             txnListEl.innerHTML = '';
             
             let sumPInc = 0, sumPExp = 0, aInc = 0, aExp = 0;
-
             txns.sort((a, b) => new Date(b.date) - new Date(a.date));
             txns.forEach(t => {
                 if (t.amt > 0) aInc += t.amt; else aExp += Math.abs(t.amt);
@@ -218,16 +183,25 @@ function syncFromFile(event) {
                 txnListEl.innerHTML += `<div class="txn-row"><div class="txn-icon">${t.cat}</div><div style="flex-grow:1"><b>${t.desc}</b><br><small>${d}</small></div><div style="text-align:right">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTxn(${t.id})">×</button></div>`;
             });
 
-            planInc.forEach(i => { sumPInc += i.amt; document.getElementById('plan-inc-list').innerHTML += `<div class="plan-item"><span>${i.name}</span> $${i.amt} <button class="del-btn" onclick="deletePlan('inc', ${i.id})">×</button></div>`; });
-            planExp.forEach(i => { sumPExp += i.amt; document.getElementById('plan-exp-list').innerHTML += `<div class="plan-item"><span>${i.name}</span> $${i.amt} <button class="del-btn" onclick="deletePlan('exp', ${i.id})">×</button></div>`; });
+            planInc.forEach(i => { sumPInc += i.amt; document.getElementById('plan-inc-list').innerHTML += `<div>${i.name} $${i.amt} <button class="del-btn" onclick="deletePlan('inc', ${i.id})">×</button></div>`; });
+            planExp.forEach(i => { sumPExp += i.amt; document.getElementById('plan-exp-list').innerHTML += `<div>${i.name} $${i.amt} <button class="del-btn" onclick="deletePlan('exp', ${i.id})">×</button></div>`; });
 
-            document.getElementById('net-val').innerText = `$${(aInc - aExp).toLocaleString()}`;
+            // Calculations
+            const netVal = aInc - aExp;
+            const remaining = sumPExp - aExp;
+            const pct = sumPExp > 0 ? Math.min((aExp / sumPExp) * 100, 100) : 0;
+
+            document.getElementById('net-val').innerText = `$${netVal.toLocaleString()}`;
             document.getElementById('act-inc').innerText = `$${aInc.toLocaleString()}`;
             document.getElementById('act-exp').innerText = `$${aExp.toLocaleString()}`;
-            document.getElementById('left-val').innerText = `$${(sumPExp - aExp).toLocaleString()}`;
+            document.getElementById('left-val').innerText = `$${remaining.toLocaleString()}`;
+            document.getElementById('total-p-inc').innerText = `$${sumPInc}`;
+            document.getElementById('total-p-exp').innerText = `$${sumPExp}`;
+            document.getElementById('budget-bar').style.width = pct + '%';
+            document.getElementById('plan-pct').innerText = Math.round(pct) + '% Spent';
         }
 
         window.onload = updateUI;
-    </script>  
+    </script>
 </body>
 </html>
