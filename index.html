@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v13.6</title>
+    <title>Monarch-Lite v13.7</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -39,7 +39,7 @@
     <div id="startup-modal">
         <div class="modal-card">
             <h2 style="margin-top:0; color:var(--m-teal);">Welcome Back</h2>
-            <p style="font-size:14px; opacity:0.8; margin-bottom:25px;">Open your budget file to continue.</p>
+            <p style="font-size:14px; opacity:0.8; margin-bottom:25px;">Load your file to sync your budget.</p>
             <label for="sync-upload" class="btn-sync-alt">Yes, Open File</label>
             <div class="btn-fresh-alt" onclick="closeModal()">No, Start Fresh</div>
         </div>
@@ -114,6 +114,7 @@
             <option value="🍳">🍳 Dining</option>
             <option value="🏋️">🏋️ Health/Gym</option>
             <option value="🚗">🚗 Transport</option>
+            <option value="💊">💊 Medical</option>
         </select>
         <div style="display:flex; gap:10px;">
             <input type="date" id="txn-date" style="flex:1">
@@ -156,7 +157,7 @@
         }
 
         function exportNewFile() {
-            const bundle = { txns, planInc, planExp, version: "13.6", exportedAt: new Date().toLocaleString() };
+            const bundle = { txns, planInc, planExp, version: "13.7", exportedAt: new Date().toLocaleString() };
             const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -165,7 +166,7 @@
         }
 
         function promptPlan(type) {
-            const name = prompt("Enter Category Name (e.g. Housing or 🏠):");
+            const name = prompt("Enter Category Name (MUST include the emoji, e.g. 🏠 Housing):");
             const amt = parseFloat(prompt("Budgeted Amount:"));
             if (name && !isNaN(amt)) {
                 if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
@@ -181,12 +182,11 @@
             let amt = parseFloat(document.getElementById('amt').value);
             if(!desc || isNaN(amt)) return;
             
-            // AUTOMATIC SIGN LOGIC: 
-            // If it's not the Income emoji, make the number negative automatically
-            if (cat !== "💰") {
-                amt = -Math.abs(amt);
-            } else {
+            // STRICT SIGN LOGIC: Everything non-income is negative
+            if (cat === "💰") {
                 amt = Math.abs(amt);
+            } else {
+                amt = -Math.abs(amt);
             }
 
             txns.unshift({ id: Date.now(), desc, cat, date, amt });
@@ -219,19 +219,19 @@
 
             txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
 
-            // Render Budget Rows with SMART MATCHING
+            // Render Budget Rows with STRICT EMOJI MATCHING
             planInc.forEach(p => {
                 budInc += p.amt;
-                // Matches if txn category OR description contains the plan name/emoji
-                const matches = txns.filter(t => t.amt > 0 && (t.desc.includes(p.name) || t.cat.includes(p.name) || p.name.includes(t.cat)))
+                // Match based on if the transaction emoji (t.cat) exists within the plan name string
+                const matches = txns.filter(t => t.amt > 0 && p.name.includes(t.cat))
                                    .reduce((s, t) => s + t.amt, 0);
                 incList.innerHTML += `<div class="budget-row"><span>${p.name}</span><span style="text-align:right">$${p.amt}</span><span style="text-align:right" class="pos">$${p.amt - matches}</span><button class="del-btn" onclick="deleteItem('inc', ${p.id})">×</button></div>`;
             });
 
             planExp.forEach(p => {
                 budExp += p.amt;
-                // Matches if txn category OR description contains the plan name/emoji
-                const matches = txns.filter(t => t.amt < 0 && (t.desc.includes(p.name) || t.cat.includes(p.name) || p.name.includes(t.cat)))
+                // Match based on if the transaction emoji (t.cat) exists within the plan name string
+                const matches = txns.filter(t => t.amt < 0 && p.name.includes(t.cat))
                                    .reduce((s, t) => s + Math.abs(t.amt), 0);
                 const rem = p.amt - matches;
                 expList.innerHTML += `<div class="budget-row"><span>${p.name}</span><span style="text-align:right">$${p.amt}</span><span style="text-align:right" class="${rem < 0 ? 'neg' : 'pos'}">$${rem}</span><button class="del-btn" onclick="deleteItem('exp', ${p.id})">×</button></div>`;
@@ -244,16 +244,16 @@
             document.getElementById('cf-sav').innerText = `$${savings.toLocaleString()}`;
             document.getElementById('cf-sav').className = 'cf-val ' + (savings >= 0 ? 'pos' : 'neg');
 
-            // Header math: Total Budgeted Income minus Total Actual Expenses
+            // Header math
             document.getElementById('left-val').innerText = `$${(budInc - actExp).toLocaleString()}`;
             document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
 
             // Transactions list
-            txns.slice(0, 10).forEach(t => {
+            txns.slice(0, 8).forEach(t => {
                 const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
                 txnList.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:10px;">
                     <div><b>${t.cat} ${t.desc}</b><br><small>${d}</small></div>
-                    <div style="text-align:right">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="deleteItem('txn', ${t.id})">×</button></div>
+                    <div style="text-align:right" class="${t.amt < 0 ? 'neg' : 'pos'}">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="deleteItem('txn', ${t.id})">×</button></div>
                 </div>`;
             });
         }
