@@ -31,16 +31,19 @@
 <body>
 
 <div id="header-container" class="budget-header">
-    <div class="header-main">
-        <span>Remaining to Spend</span>
-        <span id="left-val">$0</span>
-    </div>
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div class="header-sub" id="left-desc">Tap "Sync File" to load backup</div>
-        <label for="sync-upload" style="background:rgba(255,255,255,0.2); padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">Sync File</label>
-        <input type="file" id="sync-upload" accept=".json" style="display:none" onchange="syncFromFile(event)">
-    </div>
-</div>
+        <div class="header-main">
+            <span>Remaining to Spend</span>
+            <span id="left-val">$0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <div class="header-sub" id="left-desc">Tap "Sync" to load a file</div>
+            <div style="display:flex; gap:10px;">
+                <label for="sync-upload" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↑ Sync File</label>
+                <div onclick="exportNewFile()" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↓ Create New</div>
+            </div>
+            <input type="file" id="sync-upload" accept=".json" style="display:none" onchange="syncFromFile(event)">
+        </div>
+ </div>
 
     <div class="card">
         <div style="display:flex; justify-content:space-between">
@@ -86,47 +89,55 @@
 
     <h3 style="margin-left:10px;">Transactions</h3>
     <div class="card" id="txn-list"></div>
-       <script>
-        // 1. CONFIG & GLOBALS
-        const CLIENT_ID = '92806363831-ein0puf9e0fnhsss0m2objg4asa6ht6s.apps.googleusercontent.com';
-        const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-
-        let tokenClient, gapiInited = false, gisInited = false;
-        
+     <script>
+        // 1. DATA LOADING
         let txns = JSON.parse(localStorage.getItem('m9_txns')) || [];
         let planInc = JSON.parse(localStorage.getItem('m9_p_inc')) || [];
         let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
 
         document.getElementById('txn-date').valueAsDate = new Date();
 
-        // 2. GOOGLE DRIVE SYNC LOGIC
-        function gapiLoaded() { gapi.load('client', async () => { await gapi.client.init({ discoveryDocs: [DISCOVERY_DOC] }); gapiInited = true; }); }
-        function gisLoaded() { tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' }); gisInited = true; }
-
-        function syncFromFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const cloudData = JSON.parse(e.target.result);
-            
-            // Merge logic (The same logic used in the Monarch Gist)
-            const combined = [...txns, ...cloudData];
-            // Remove duplicates by ID
-            txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
-            
-            localStorage.setItem('m9_last_sync', new Date().toLocaleString());
-            saveAndRefresh();
-            alert("Sync Complete! ✅ Data merged from file.");
-        } catch (err) {
-            alert("Sync Failed: Invalid budget file ❌");
+        // 2. FILE SYNC LOGIC
+        // This creates a brand new, properly formatted JSON file from your current data
+        function exportNewFile() {
+            if (txns.length === 0) {
+                if (!confirm("Your list is empty. Create an empty backup file anyway?")) return;
+            }
+            const dataStr = JSON.stringify(txns, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "budget_backup.json";
+            link.click();
+            alert("New file created! Save this to your phone or Drive. You can now use 'Sync File' to update it later.");
         }
-    };
-    reader.readAsText(file);
-}
+
+        // This merges an existing file with your current app data
+        function syncFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const cloudData = JSON.parse(e.target.result);
+                    if (!Array.isArray(cloudData)) throw new Error("Not a valid list");
+
+                    const combined = [...txns, ...cloudData];
+                    // Remove duplicates by ID
+                    txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
+                    
+                    localStorage.setItem('m9_last_sync', new Date().toLocaleString());
+                    saveAndRefresh();
+                    alert("Sync Complete! ✅ Data merged successfully.");
+                } catch (err) {
+                    alert("Sync Failed: The file format is invalid. Use 'Create New' to start a fresh one.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
         // 3. APP LOGIC
         function addTransaction() {
             const desc = document.getElementById('desc').value;
@@ -170,13 +181,12 @@
 
         function updateUI() {
             const txnListEl = document.getElementById('txn-list');
-            const flowListEl = document.getElementById('cash-flow-list');
             const lastSync = localStorage.getItem('m9_last_sync') || "Never";
             
             document.getElementById('left-desc').innerText = "Last Synced: " + lastSync;
             document.getElementById('plan-inc-list').innerHTML = '';
             document.getElementById('plan-exp-list').innerHTML = '';
-            txnListEl.innerHTML = ''; flowListEl.innerHTML = '';
+            txnListEl.innerHTML = '';
             
             let sumPInc = 0, sumPExp = 0, aInc = 0, aExp = 0;
 
@@ -197,9 +207,6 @@
         }
 
         window.onload = updateUI;
-        document.getElementById('header-container').onclick = syncWithDrive;
-    </script>
-    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>   
+    </script>  
 </body>
 </html>
