@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.1</title>
+    <title>Monarch-Lite v14.2</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
-        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0; }
-        .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 85%; max-width: 400px; margin: auto; }
+        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0; }
+        .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 85%; max-width: 400px; margin: auto; text-align: center; }
         
         .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
@@ -26,12 +26,12 @@
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .plan-input { text-align: right; border-color: #444; height: 32px; }
         
-        .setup-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333; }
+        .setup-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333; text-align: left; }
         .setup-item input[type="checkbox"] { width: 20px; height: 20px; }
 
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
         .btn-sync-alt { background: var(--m-teal); color: var(--m-blue); padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; text-decoration: none; }
-        .btn-fresh-alt { background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; }
+        .btn-fresh-alt { background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 16px; cursor: pointer; text-align: right; }
         
         .pos { color: var(--m-green); }
@@ -42,29 +42,28 @@
 
     <div id="startup-modal">
         <div class="modal-card" id="initial-choice">
-            <h2 style="margin-top:0; color:var(--m-teal);">Monarch-Lite</h2>
-            <p style="font-size:14px; opacity:0.8; margin-bottom:25px;">How would you like to start?</p>
-            <label for="sync-upload" class="btn-sync-alt">Open Saved Budget</label>
-            <div class="btn-fresh-alt" onclick="showWizard()">Start Fresh Setup</div>
+            <h2 style="margin-top:0; color:var(--m-teal);">Welcome Back</h2>
+            <p id="status-msg" style="font-size:14px; opacity:0.8; margin-bottom:25px;">Budget data found in browser.</p>
+            <div id="continue-btn" class="btn-sync-alt" onclick="closeModal()">Continue with Session</div>
+            <label for="sync-upload" class="btn-fresh-alt" style="background:#444;">Sync from File</label>
+            <div class="btn-fresh-alt" onclick="showWizard()" style="color:var(--m-red); border:1px solid var(--m-red);">Start Fresh Setup</div>
         </div>
 
         <div class="modal-card" id="wizard-view" style="display:none;">
             <h3 style="margin-top:0; color:var(--m-teal);">Budget Setup</h3>
-            <p style="font-size:12px; opacity:0.7;">Select categories to include:</p>
+            <p style="font-size:12px; opacity:0.7;">Select common Canadian categories:</p>
             
             <div id="wizard-list">
                 <div class="setup-item"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
-                <div class="setup-item"><span>🏠 Housing (Rent/Mortgage)</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
+                <div class="setup-item"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
                 <div class="setup-item"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
-                <div class="setup-item"><span>🚗 Auto (Gas/Insurance)</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
+                <div class="setup-item"><span>🚗 Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
                 <div class="setup-item"><span>🍳 Dining Out</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
                 <div class="setup-item"><span>🏋️ Gym & Snacks</span><input type="checkbox" checked data-cat="Gym & Snacks" data-type="exp"></div>
-                <div class="setup-item"><span>💊 Medical/Health</span><input type="checkbox" data-cat="Medical" data-type="exp"></div>
-                <div class="setup-item"><span>📱 Phone & Internet</span><input type="checkbox" data-cat="Utilities" data-type="exp"></div>
-                <div class="setup-item"><span>🎞️ Entertainment</span><input type="checkbox" data-cat="Entertainment" data-type="exp"></div>
+                <div class="setup-item"><span>💊 Medical</span><input type="checkbox" data-cat="Medical" data-type="exp"></div>
+                <div class="setup-item"><span>📱 Phone/Internet</span><input type="checkbox" data-cat="Utilities" data-type="exp"></div>
             </div>
-
-            <button class="btn-track" onclick="finishWizard()" style="margin-top:20px;">Create My Budget</button>
+            <button class="btn-track" onclick="finishWizard()">Finish Setup</button>
         </div>
     </div>
 
@@ -85,30 +84,15 @@
 
     <div class="budget-label">Cash Flow</div>
     <div class="card">
-        <div class="cf-row">
-            <span><span class="cf-dot" style="background:var(--m-green)"></span>Income</span>
-            <span id="cf-inc" class="cf-val pos">$0</span>
-        </div>
-        <div class="cf-row">
-            <span><span class="cf-dot" style="background:var(--m-red)"></span>Expenses</span>
-            <span id="cf-exp" class="cf-val neg">$0</span>
-        </div>
-        <div class="cf-row" style="border-bottom:none">
-            <span><span class="cf-dot" style="background:#fff"></span>Savings</span>
-            <span id="cf-sav" class="cf-val">$0</span>
-        </div>
+        <div class="cf-row"><span>Income</span><span id="cf-inc" class="cf-val pos">$0</span></div>
+        <div class="cf-row"><span>Expenses</span><span id="cf-exp" class="cf-val neg">$0</span></div>
+        <div class="cf-row" style="border-bottom:none"><span>Savings</span><span id="cf-sav" class="cf-val">$0</span></div>
     </div>
 
-    <div class="budget-label">
-        <span>Income Plan</span>
-        <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal); font-size:12px; font-weight:bold;">+ Add Custom</button>
-    </div>
+    <div class="budget-label"><span>Income Plan</span> <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal); font-size:12px;">+ Add</button></div>
     <div class="card"><div id="income-list"></div></div>
 
-    <div class="budget-label">
-        <span>Expense Plan</span>
-        <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal); font-size:12px; font-weight:bold;">+ Add Custom</button>
-    </div>
+    <div class="budget-label"><span>Expense Plan</span> <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal); font-size:12px;">+ Add</button></div>
     <div class="card"><div id="expense-list"></div></div>
 
     <div class="card">
@@ -132,11 +116,11 @@
 
         window.onload = function() {
             if (txns.length === 0 && planInc.length === 0) {
-                document.getElementById('startup-modal').style.display = 'flex';
-            } else {
-                updateUI();
+                document.getElementById('status-msg').innerText = "No data found. Let's set it up.";
+                document.getElementById('continue-btn').style.display = 'none';
             }
             document.getElementById('txn-date').valueAsDate = new Date();
+            updateUI();
         };
 
         function showWizard() {
@@ -147,16 +131,17 @@
         function finishWizard() {
             localStorage.clear();
             txns = []; planInc = []; planExp = [];
-            const checks = document.querySelectorAll('#wizard-list input:checked');
-            checks.forEach(chk => {
+            document.querySelectorAll('#wizard-list input:checked').forEach(chk => {
                 const name = chk.getAttribute('data-cat');
                 const type = chk.getAttribute('data-type');
                 if (type === 'inc') planInc.push({name, amt: 0});
                 else planExp.push({name, amt: 0});
             });
             saveAndRefresh();
-            document.getElementById('startup-modal').style.display = 'none';
+            closeModal();
         }
+
+        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
 
         function syncFromFile(event) {
             const file = event.target.files[0];
@@ -167,8 +152,7 @@
                     const data = JSON.parse(e.target.result);
                     txns = data.txns || []; planInc = data.planInc || []; planExp = data.planExp || [];
                     localStorage.setItem('m9_last_sync', data.exportedAt || new Date().toLocaleString());
-                    saveAndRefresh();
-                    document.getElementById('startup-modal').style.display = 'none';
+                    saveAndRefresh(); closeModal();
                 } catch (err) { alert("Invalid File"); }
             };
             reader.readAsText(file);
@@ -235,36 +219,23 @@
             const expList = document.getElementById('expense-list');
             const txnList = document.getElementById('txn-list');
             const catSelect = document.getElementById('cat-select');
-            
             incList.innerHTML = ''; expList.innerHTML = ''; txnList.innerHTML = ''; catSelect.innerHTML = '';
             
             let actInc = 0, actExp = 0, budIncTotal = 0;
-
             txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
 
-            // Populate Dropdown and Plan
             planInc.forEach((p, i) => {
                 budIncTotal += p.amt;
                 const matches = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 catSelect.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
-                incList.innerHTML += `<div class="budget-row">
-                    <span>${p.name}</span>
-                    <input type="number" class="plan-input" value="${p.amt}" onchange="updatePlanAmt('inc', ${i}, this.value)">
-                    <span style="text-align:right" class="pos">$${p.amt - matches}</span>
-                    <button class="del-btn" onclick="deletePlanItem('inc', ${i})">×</button>
-                </div>`;
+                incList.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="updatePlanAmt('inc', ${i}, this.value)"><span style="text-align:right" class="pos">$${(p.amt - matches).toFixed(0)}</span><button class="del-btn" onclick="deletePlanItem('inc', ${i})">×</button></div>`;
             });
 
             planExp.forEach((p, i) => {
                 const matches = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
                 const rem = p.amt - matches;
                 catSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expList.innerHTML += `<div class="budget-row">
-                    <span>${p.name}</span>
-                    <input type="number" class="plan-input" value="${p.amt}" onchange="updatePlanAmt('exp', ${i}, this.value)">
-                    <span style="text-align:right" class="${rem < 0 ? 'neg' : 'pos'}">$${rem}</span>
-                    <button class="del-btn" onclick="deletePlanItem('exp', ${i})">×</button>
-                </div>`;
+                expList.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="updatePlanAmt('exp', ${i}, this.value)"><span style="text-align:right" class="${rem < 0 ? 'neg' : 'pos'}">$${rem.toFixed(0)}</span><button class="del-btn" onclick="deletePlanItem('exp', ${i})">×</button></div>`;
             });
 
             document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
@@ -272,7 +243,6 @@
             const savings = actInc - actExp;
             document.getElementById('cf-sav').innerText = `$${savings.toLocaleString()}`;
             document.getElementById('cf-sav').className = 'cf-val ' + (savings >= 0 ? 'pos' : 'neg');
-
             document.getElementById('left-val').innerText = `$${(budIncTotal - actExp).toLocaleString()}`;
             document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
 
