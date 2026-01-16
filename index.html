@@ -3,56 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v13.4</title>
+    <title>Monarch-Lite v13.5</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
-        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; text-align: center; }
-        .modal-card { background: var(--m-card); padding: 30px; border-radius: 24px; border: 1px solid var(--m-teal); width: 85%; max-width: 400px; }
+        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; }
+        .modal-card { background: var(--m-card); padding: 30px; border-radius: 24px; border: 1px solid var(--m-teal); width: 85%; max-width: 400px; text-align: center; }
         
         .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
-        .header-sub { font-size: 11px; opacity: 0.9; margin-top: 4px; }
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         
-        /* New Table Style for Income/Expenses */
-        .budget-row { display: grid; grid-template-columns: 1fr 80px 80px 30px; gap: 5px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 13px; }
-        .budget-label { font-size: 18px; font-weight: bold; margin: 15px 0 5px 0; display: flex; justify-content: space-between; align-items: center;}
-        .col-head { font-size: 10px; opacity: 0.6; text-transform: uppercase; text-align: right; }
+        /* Screenshot-matched Table Layout */
+        .budget-row { display: grid; grid-template-columns: 1fr 70px 70px 25px; gap: 8px; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
+        .budget-label { font-size: 18px; font-weight: bold; margin: 20px 0 8px 0; display: flex; justify-content: space-between; }
+        .col-head { font-size: 10px; opacity: 0.5; text-transform: uppercase; text-align: right; font-weight: 800; }
         
+        /* Progress Bar Styles */
+        .bar-container { height: 4px; background: #333; border-radius: 2px; margin-top: 6px; width: 100%; overflow: hidden; grid-column: 1 / 4; }
+        .bar-progress { height: 100%; background: var(--m-green); transition: width 0.3s; }
+        .bar-over { background: var(--m-red); }
+
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
-        .btn-add-small { background: none; color: var(--m-teal); border: 1px solid var(--m-teal); padding: 4px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; }
-        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
-        .btn-sync-alt { background: var(--m-teal); color: var(--m-blue); padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; }
-        .btn-fresh-alt { background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; }
-        .del-btn { color: var(--m-red); background: none; border: none; font-size: 16px; cursor: pointer; text-align: right; }
+        .btn-add-small { background: #2a2a2a; color: var(--m-teal); border: 1px solid var(--m-teal); padding: 4px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; }
+        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; }
+        .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; text-align: right; padding: 0;}
         
-        .pos { color: var(--m-green); }
-        .neg { color: var(--m-red); }
+        .val-pos { color: var(--m-green); font-weight: 600; text-align: right; }
+        .val-neg { color: var(--m-red); font-weight: 600; text-align: right; }
+        .val-neutral { color: white; text-align: right; }
     </style>
 </head>
 <body>
 
     <div id="startup-modal">
         <div class="modal-card">
-            <h2 style="margin-top:0; color:var(--m-teal);">Welcome Back</h2>
-            <p style="font-size:14px; opacity:0.8; margin-bottom:25px;">Would you like to open a saved budget file?</p>
-            <label for="sync-upload" class="btn-sync-alt">Yes, Open File</label>
-            <div class="btn-fresh-alt" onclick="closeModal()">No, Start Fresh</div>
+            <h2 style="color:var(--m-teal); margin-top:0;">Sync Budget?</h2>
+            <p style="opacity:0.7; font-size:14px; margin-bottom:20px;">Open your <b>budget_working_copy.json</b> to restore your settings.</p>
+            <label for="sync-upload" style="background:var(--m-teal); color:var(--m-blue); padding:15px; border-radius:12px; font-weight:bold; cursor:pointer; display:block; margin-bottom:10px;">Yes, Open File</label>
+            <div style="background:#333; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer;" onclick="closeModal()">No, Just Start</div>
         </div>
     </div>
 
     <div class="budget-header">
         <div class="header-main">
             <span>Left to budget</span>
-            <span id="left-val">$0</span>
+            <span id="header-remaining">$0</span>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-            <div class="header-sub" id="left-desc">Sync: Never</div>
-            <div style="display:flex; gap:10px;">
-                <label for="sync-upload" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↑ Sync</label>
-                <div onclick="exportNewFile()" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↓ Save</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:11px;">
+            <div id="sync-status">Last Sync: Never</div>
+            <div style="display:flex; gap:12px;">
+                <label for="sync-upload" style="cursor:pointer; font-weight:bold;">↑ SYNC</label>
+                <div onclick="exportNewFile()" style="cursor:pointer; font-weight:bold;">↓ SAVE</div>
             </div>
             <input type="file" id="sync-upload" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
@@ -60,10 +63,10 @@
 
     <div class="budget-label">
         <span>Income</span>
-        <button class="btn-add-small" onclick="promptPlan('inc')">+ Add</button>
+        <button class="btn-add-small" onclick="promptPlan('inc')">+ ADD</button>
     </div>
     <div class="card">
-        <div class="budget-row" style="border-bottom: 2px solid #333; padding-bottom: 5px;">
+        <div class="budget-row" style="border-bottom: 2px solid #333;">
             <span class="col-head" style="text-align:left">Category</span>
             <span class="col-head">Budget</span>
             <span class="col-head">Remaining</span>
@@ -74,10 +77,10 @@
 
     <div class="budget-label">
         <span>Expenses</span>
-        <button class="btn-add-small" onclick="promptPlan('exp')">+ Add</button>
+        <button class="btn-add-small" onclick="promptPlan('exp')">+ ADD</button>
     </div>
     <div class="card">
-        <div class="budget-row" style="border-bottom: 2px solid #333; padding-bottom: 5px;">
+        <div class="budget-row" style="border-bottom: 2px solid #333;">
             <span class="col-head" style="text-align:left">Category</span>
             <span class="col-head">Budget</span>
             <span class="col-head">Remaining</span>
@@ -88,18 +91,18 @@
 
     <div class="card">
         <b>Track Transaction</b>
-        <input type="text" id="desc" placeholder="Merchant">
+        <input type="text" id="desc" placeholder="Merchant (e.g. Rogers)">
         <select id="cat">
-            <option value="💰">Income</option>
-            <option value="🏠">Housing</option>
-            <option value="🛒">Groceries</option>
-            <option value="🍳">Dining</option>
-            <option value="🏋️">Gym/Snacks</option>
-            <option value="🚗">Transport</option>
+            <option value="💰 Income">💰 Income</option>
+            <option value="🏠 Housing">🏠 Housing</option>
+            <option value="🛒 Groceries">🛒 Groceries</option>
+            <option value="🍳 Dining">🍳 Dining</option>
+            <option value="🏋️ Health">🏋️ Health</option>
+            <option value="🚗 Transport">🚗 Transport</option>
         </select>
         <div style="display:flex; gap:10px;">
             <input type="date" id="txn-date" style="flex:1">
-            <input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1">
+            <input type="text" inputmode="decimal" id="amt" placeholder="Amount (neg for exp)" style="flex:1">
         </div>
         <button class="btn-track" onclick="addTransaction()">Add Entry</button>
     </div>
@@ -133,22 +136,22 @@
                     }
                     saveAndRefresh();
                     closeModal();
-                } catch (err) { alert("Error loading file"); }
+                } catch (err) { alert("Invalid File"); }
             };
             reader.readAsText(file);
         }
 
         function exportNewFile() {
-            const bundle = { txns, planInc, planExp, version: "13.4", exportedAt: new Date().toLocaleString() };
+            const bundle = { txns, planInc, planExp, version: "13.5", exportedAt: new Date().toLocaleString() };
             const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = "budget_working_copy.json";
+            link.download = "budget_master.json";
             link.click();
         }
 
         function promptPlan(type) {
-            const name = prompt("Category Name:");
+            const name = prompt("Name (e.g. Housing):");
             const amt = parseFloat(prompt("Budgeted Amount:"));
             if (name && !isNaN(amt)) {
                 if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
@@ -187,41 +190,57 @@
             const incList = document.getElementById('income-list');
             const expList = document.getElementById('expense-list');
             const txnList = document.getElementById('txn-list');
-            
             incList.innerHTML = ''; expList.innerHTML = ''; txnList.innerHTML = '';
             
             let totalBudInc = 0, totalBudExp = 0, actualExp = 0;
 
-            // Render Income
-            planInc.forEach(p => {
-                totalBudInc += p.amt;
-                // Simplified matching: checks if any txn description or category matches plan name
-                const actual = txns.filter(t => t.amt > 0 && (t.desc.includes(p.name) || t.cat.includes(p.name)))
-                                   .reduce((sum, t) => sum + t.amt, 0);
-                const remaining = p.amt - actual;
-                incList.innerHTML += `<div class="budget-row"><span>${p.name}</span><span style="text-align:right">$${p.amt}</span><span style="text-align:right" class="pos">$${remaining}</span><button class="del-btn" onclick="deleteItem('inc', ${p.id})">×</button></div>`;
-            });
+            // Render Logic for both Sections
+            const renderSection = (planArr, targetEl, isExp) => {
+                planArr.forEach(p => {
+                    if(isExp) totalBudExp += p.amt; else totalBudInc += p.amt;
+                    
+                    // FIXED MATCHING LOGIC: Checks if txn cat or desc contains the plan name
+                    const actual = txns.filter(t => {
+                        const amountMatch = isExp ? t.amt < 0 : t.amt > 0;
+                        const labelMatch = t.cat.toLowerCase().includes(p.name.toLowerCase()) || 
+                                           t.desc.toLowerCase().includes(p.name.toLowerCase());
+                        return amountMatch && labelMatch;
+                    }).reduce((sum, t) => sum + Math.abs(t.amt), 0);
 
-            // Render Expenses
-            planExp.forEach(p => {
-                totalBudExp += p.amt;
-                const actual = txns.filter(t => t.amt < 0 && (t.desc.includes(p.name) || t.cat.includes(p.name)))
-                                   .reduce((sum, t) => sum + Math.abs(t.amt), 0);
-                const remaining = p.amt - actual;
-                expList.innerHTML += `<div class="budget-row"><span>${p.name}</span><span style="text-align:right">$${p.amt}</span><span style="text-align:right" class="${remaining < 0 ? 'neg' : 'pos'}">$${remaining}</span><button class="del-btn" onclick="deleteItem('exp', ${p.id})">×</button></div>`;
-            });
+                    const remaining = p.amt - actual;
+                    const pct = Math.min((actual / p.amt) * 100, 100) || 0;
+                    const colorClass = isExp ? (remaining < 0 ? 'val-neg' : 'val-pos') : 'val-pos';
 
-            // Summary math
+                    targetEl.innerHTML += `
+                        <div class="budget-row">
+                            <span style="font-weight:600">${p.name}</span>
+                            <span class="val-neutral">$${p.amt.toLocaleString()}</span>
+                            <span class="${colorClass}">$${remaining.toLocaleString()}</span>
+                            <button class="del-btn" onclick="deleteItem('${isExp?'exp':'inc'}', ${p.id})">×</button>
+                            <div class="bar-container">
+                                <div class="bar-progress ${isExp && remaining < 0 ? 'bar-over' : ''}" style="width:${pct}%"></div>
+                            </div>
+                        </div>`;
+                });
+            };
+
+            renderSection(planInc, incList, false);
+            renderSection(planExp, expList, true);
+
+            // Global Totals
             txns.forEach(t => { if(t.amt < 0) actualExp += Math.abs(t.amt); });
-            document.getElementById('left-val').innerText = `$${(totalBudInc - actualExp).toLocaleString()}`;
-            document.getElementById('left-desc').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
+            document.getElementById('header-remaining').innerText = `$${(totalBudInc - actualExp).toLocaleString()}`;
+            document.getElementById('sync-status').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
 
-            // Transactions
+            // Transaction List
             txns.slice(0, 10).forEach(t => {
                 const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                txnList.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:10px;">
-                    <div><b>${t.cat} ${t.desc}</b><br><small>${d}</small></div>
-                    <div style="text-align:right">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="deleteItem('txn', ${t.id})">×</button></div>
+                txnList.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:12px;">
+                    <div><b>${t.cat}</b><br><small>${t.desc} • ${d}</small></div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <b style="${t.amt < 0 ? 'color:var(--m-red)' : 'color:var(--m-teal)'}">$${Math.abs(t.amt).toFixed(2)}</b>
+                        <button class="del-btn" onclick="deleteItem('txn', ${t.id})">×</button>
+                    </div>
                 </div>`;
             });
         }
