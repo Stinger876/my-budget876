@@ -3,42 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.7</title>
+    <title>Monarch-Lite v14.8</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
-        /* Modal and Wizard Styling */
+        /* Modal & Wizard */
         #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0; }
         .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; margin: auto; text-align: center; box-sizing: border-box; }
-        
-        /* Fixed Grid for PC, List for Mobile */
         .wizard-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; text-align: left; }
         @media (min-width: 600px) { .wizard-grid { grid-template-columns: 1fr 1fr; } }
-
         .setup-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #2a2a2a; border-radius: 12px; border: 1px solid #333; }
-        .setup-row input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; margin: 0; }
+        .setup-row input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; }
 
-        /* Header Styling */
+        /* Header */
         .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; transition: background 0.3s; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         
-        .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
-        .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
-        
+        /* Tabs */
         .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
         .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; opacity: 0.6; color: white; border: none; }
         .tab.active { background: var(--m-teal); color: var(--m-blue); opacity: 1; }
 
-        .budget-row { display: grid; grid-template-columns: 1fr 85px 85px 30px; gap: 5px; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
-        .budget-label { font-size: 18px; font-weight: bold; margin: 20px 0 10px 0; display: flex; justify-content: space-between; align-items: center;}
+        /* Budget Tables - Fixed Alignment */
+        .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
+        .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
+        .budget-row { display: grid; grid-template-columns: 1fr 80px 70px 30px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
+        .budget-label { font-size: 16px; font-weight: bold; margin: 15px 0 8px 0; display: flex; justify-content: space-between; align-items: center; color: var(--m-teal); }
         
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
-        .plan-input { text-align: right; border-color: #444; height: 32px; }
+        .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
         
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; box-sizing: border-box; }
-        .btn-fresh-alt { width: 100%; background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; text-decoration: none; box-sizing: border-box; border: 1px solid transparent; }
-        .del-btn { color: var(--m-red); background: none; border: none; font-size: 16px; cursor: pointer; text-align: right; }
+        .btn-fresh-alt { width: 100%; background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; box-sizing: border-box; border: 1px solid transparent; }
+        .del-btn { color: var(--m-red); background: none; border: none; font-size: 20px; cursor: pointer; display: flex; justify-content: flex-end; align-items: center; }
         
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
@@ -58,7 +56,6 @@
 
         <div class="modal-card" id="wizard-view" style="display:none;">
             <h3 style="color:var(--m-teal);">Step 1: Budget</h3>
-            <p style="font-size:12px; opacity:0.7; margin-bottom: 15px;">Monthly Categories:</p>
             <div id="wizard-list" class="wizard-grid">
                 <div class="setup-row"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
                 <div class="setup-row"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
@@ -66,8 +63,6 @@
                 <div class="setup-row"><span>🚗 Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
                 <div class="setup-row"><span>🍳 Dining</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
                 <div class="setup-row"><span>🏋️ Gym & Snacks</span><input type="checkbox" checked data-cat="Gym & Snacks" data-type="exp"></div>
-                <div class="setup-row"><span>📱 Utilities</span><input type="checkbox" data-cat="Utilities" data-type="exp"></div>
-                <div class="setup-row"><span>🎞️ Entertainment</span><input type="checkbox" data-cat="Entertainment" data-type="exp"></div>
             </div>
             <button class="btn-track" onclick="showInvWizard()">Next: Investments</button>
         </div>
@@ -98,12 +93,17 @@
 
     <div id="view-budget">
         <div class="card">
-            <div class="cf-row"><span>Income</span><span id="cf-inc" class="pos">$0</span></div>
-            <div class="cf-row"><span>Expenses</span><span id="cf-exp" class="neg">$0</span></div>
+            <div class="cf-row"><span>Total Income</span><span id="cf-inc" class="pos">$0</span></div>
+            <div class="cf-row"><span>Total Expenses</span><span id="cf-exp" class="neg">$0</span></div>
             <div class="cf-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
         </div>
-        <div class="budget-label">Plan <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal); font-weight:bold;">+ Custom</button></div>
-        <div class="card"><div id="income-list"></div><div id="expense-list"></div></div>
+
+        <div class="budget-label">Budget Income <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal); font-weight:bold;">+ Add</button></div>
+        <div class="card" id="income-list"></div>
+
+        <div class="budget-label">Budget Expenses <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal); font-weight:bold;">+ Add</button></div>
+        <div class="card" id="expense-list"></div>
+
         <div class="card">
             <b>Track Entry</b>
             <input type="text" id="desc" placeholder="Merchant">
@@ -130,7 +130,6 @@
         window.onload = function() {
             if (txns.length === 0 && planInc.length === 0 && assets.length === 0) {
                 document.getElementById('continue-btn').style.display = 'none';
-                document.getElementById('status-msg').innerText = "Start fresh to create your budget.";
             }
             document.getElementById('txn-date').valueAsDate = new Date();
             updateUI();
@@ -183,18 +182,18 @@
         }
 
         function addTransaction() {
-            const desc = document.getElementById('desc').value, cat = document.getElementById('cat-select').value, date = document.getElementById('txn-date').value;
+            const desc = document.getElementById('desc').value, cat = document.getElementById('cat-select').value;
             let amt = parseFloat(document.getElementById('amt').value);
             if(!desc || isNaN(amt)) return;
-            amt = (cat === "Income") ? Math.abs(amt) : -Math.abs(amt);
-            txns.unshift({ id: Date.now(), desc, cat, date, amt });
+            amt = (planInc.some(p => p.name === cat)) ? Math.abs(amt) : -Math.abs(amt);
+            txns.unshift({ id: Date.now(), desc, cat, date: document.getElementById('txn-date').value, amt });
             document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
             saveAndRefresh();
         }
 
-        function addInvestItem() { const n = prompt("Investment Name:"); if(n) { assets.push({name: n, amt: 0}); saveAndRefresh(); } }
+        function addInvestItem() { const n = prompt("Name:"); if(n) { assets.push({name: n, amt: 0}); saveAndRefresh(); } }
         function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-        function addCustom(type) { const n = prompt("Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveAndRefresh(); } }
+        function addCustom(type) { const n = prompt("Category Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveAndRefresh(); } }
 
         function saveAndRefresh() {
             localStorage.setItem('m_txns', JSON.stringify(txns));
@@ -248,7 +247,7 @@
             }
             document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m_last_sync') || "Never");
 
-            txns.slice(0, 10).forEach(t => {
+            txns.slice(0, 5).forEach(t => {
                 txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
                     <div><b>${t.cat}</b>: ${t.desc}</div>
                     <div class="${t.amt < 0 ? 'neg' : 'pos'}">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
