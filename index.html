@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v13.5</title>
+    <title>Monarch-Lite v13.6</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -16,12 +16,10 @@
         
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         
-        /* Cash Flow Styles */
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .cf-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 10px; }
         .cf-val { font-size: 1.2rem; font-weight: bold; }
 
-        /* Budget Styles */
         .budget-row { display: grid; grid-template-columns: 1fr 80px 80px 30px; gap: 5px; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         .budget-label { font-size: 18px; font-weight: bold; margin: 20px 0 10px 0; display: flex; justify-content: space-between; align-items: center;}
         .col-head { font-size: 10px; opacity: 0.6; text-transform: uppercase; text-align: right; }
@@ -41,7 +39,7 @@
     <div id="startup-modal">
         <div class="modal-card">
             <h2 style="margin-top:0; color:var(--m-teal);">Welcome Back</h2>
-            <p style="font-size:14px; opacity:0.8; margin-bottom:25px;">Would you like to open a saved budget file?</p>
+            <p style="font-size:14px; opacity:0.8; margin-bottom:25px;">Open your budget file to continue.</p>
             <label for="sync-upload" class="btn-sync-alt">Yes, Open File</label>
             <div class="btn-fresh-alt" onclick="closeModal()">No, Start Fresh</div>
         </div>
@@ -49,7 +47,7 @@
 
     <div class="budget-header">
         <div class="header-main">
-            <span>Left to budget</span>
+            <span>Remaining to Spend</span>
             <span id="left-val">$0</span>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
@@ -110,12 +108,12 @@
         <b>Track Transaction</b>
         <input type="text" id="desc" placeholder="Merchant">
         <select id="cat-select">
-            <option value="💰">Income</option>
-            <option value="🏠">Housing</option>
-            <option value="🛒">Groceries</option>
-            <option value="🍳">Dining</option>
-            <option value="🏋️">Health/Gym</option>
-            <option value="🚗">Transport</option>
+            <option value="💰">💰 Income</option>
+            <option value="🏠">🏠 Housing</option>
+            <option value="🛒">🛒 Groceries</option>
+            <option value="🍳">🍳 Dining</option>
+            <option value="🏋️">🏋️ Health/Gym</option>
+            <option value="🚗">🚗 Transport</option>
         </select>
         <div style="display:flex; gap:10px;">
             <input type="date" id="txn-date" style="flex:1">
@@ -158,7 +156,7 @@
         }
 
         function exportNewFile() {
-            const bundle = { txns, planInc, planExp, version: "13.5", exportedAt: new Date().toLocaleString() };
+            const bundle = { txns, planInc, planExp, version: "13.6", exportedAt: new Date().toLocaleString() };
             const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -167,7 +165,7 @@
         }
 
         function promptPlan(type) {
-            const name = prompt("Name:");
+            const name = prompt("Enter Category Name (e.g. Housing or 🏠):");
             const amt = parseFloat(prompt("Budgeted Amount:"));
             if (name && !isNaN(amt)) {
                 if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
@@ -180,8 +178,17 @@
             const desc = document.getElementById('desc').value;
             const cat = document.getElementById('cat-select').value;
             const date = document.getElementById('txn-date').value;
-            const amt = parseFloat(document.getElementById('amt').value);
+            let amt = parseFloat(document.getElementById('amt').value);
             if(!desc || isNaN(amt)) return;
+            
+            // AUTOMATIC SIGN LOGIC: 
+            // If it's not the Income emoji, make the number negative automatically
+            if (cat !== "💰") {
+                amt = -Math.abs(amt);
+            } else {
+                amt = Math.abs(amt);
+            }
+
             txns.unshift({ id: Date.now(), desc, cat, date, amt });
             document.getElementById('desc').value = '';
             document.getElementById('amt').value = '';
@@ -212,16 +219,20 @@
 
             txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
 
-            // Render Budget Rows
+            // Render Budget Rows with SMART MATCHING
             planInc.forEach(p => {
                 budInc += p.amt;
-                const matches = txns.filter(t => t.amt > 0 && (t.desc.includes(p.name) || t.cat.includes(p.name))).reduce((s, t) => s + t.amt, 0);
+                // Matches if txn category OR description contains the plan name/emoji
+                const matches = txns.filter(t => t.amt > 0 && (t.desc.includes(p.name) || t.cat.includes(p.name) || p.name.includes(t.cat)))
+                                   .reduce((s, t) => s + t.amt, 0);
                 incList.innerHTML += `<div class="budget-row"><span>${p.name}</span><span style="text-align:right">$${p.amt}</span><span style="text-align:right" class="pos">$${p.amt - matches}</span><button class="del-btn" onclick="deleteItem('inc', ${p.id})">×</button></div>`;
             });
 
             planExp.forEach(p => {
                 budExp += p.amt;
-                const matches = txns.filter(t => t.amt < 0 && (t.desc.includes(p.name) || t.cat.includes(p.name))).reduce((s, t) => s + Math.abs(t.amt), 0);
+                // Matches if txn category OR description contains the plan name/emoji
+                const matches = txns.filter(t => t.amt < 0 && (t.desc.includes(p.name) || t.cat.includes(p.name) || p.name.includes(t.cat)))
+                                   .reduce((s, t) => s + Math.abs(t.amt), 0);
                 const rem = p.amt - matches;
                 expList.innerHTML += `<div class="budget-row"><span>${p.name}</span><span style="text-align:right">$${p.amt}</span><span style="text-align:right" class="${rem < 0 ? 'neg' : 'pos'}">$${rem}</span><button class="del-btn" onclick="deleteItem('exp', ${p.id})">×</button></div>`;
             });
@@ -233,12 +244,12 @@
             document.getElementById('cf-sav').innerText = `$${savings.toLocaleString()}`;
             document.getElementById('cf-sav').className = 'cf-val ' + (savings >= 0 ? 'pos' : 'neg');
 
-            // Header math
+            // Header math: Total Budgeted Income minus Total Actual Expenses
             document.getElementById('left-val').innerText = `$${(budInc - actExp).toLocaleString()}`;
             document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
 
-            // Transactions
-            txns.slice(0, 5).forEach(t => {
+            // Transactions list
+            txns.slice(0, 10).forEach(t => {
                 const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
                 txnList.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:10px;">
                     <div><b>${t.cat} ${t.desc}</b><br><small>${d}</small></div>
