@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.9.4</title>
+    <title>Monarch-Lite v14.9.5</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -23,8 +23,9 @@
 
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
-        .budget-row { display: grid; grid-template-columns: 1fr 80px 70px 30px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
+        .budget-row { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         .budget-label { font-size: 16px; font-weight: bold; margin: 15px 0 8px 0; display: flex; justify-content: space-between; align-items: center; color: var(--m-teal); }
+        .budget-col-headers { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; font-size: 10px; text-transform: uppercase; opacity: 0.6; margin-bottom: 5px; padding: 0 5px; }
         
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
@@ -36,7 +37,8 @@
         
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
-        .del-btn { color: var(--m-red); background: none; border: none; font-size: 20px; cursor: pointer; }
+        .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; opacity: 0.5; }
+        .del-btn:hover { opacity: 1; }
     </style>
 </head>
 <body>
@@ -58,7 +60,6 @@
                 <div class="setup-row"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
                 <div class="setup-row"><span>🚗 Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
                 <div class="setup-row"><span>🍳 Dining</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
-                <div class="setup-row"><span>🏋️ Gym & Snacks</span><input type="checkbox" checked data-cat="Gym & Snacks" data-type="exp"></div>
             </div>
             <button class="btn-track" onclick="showInvWizard()">Next</button>
         </div>
@@ -83,15 +84,21 @@
     </div>
 
     <div id="view-budget">
+        <div class="budget-label">Cash Flow</div>
         <div class="card">
             <div class="cf-row"><span>Actual Income</span><span id="cf-inc" class="pos">$0</span></div>
             <div class="cf-row"><span>Actual Expenses</span><span id="cf-exp" class="neg">$0</span></div>
             <div class="cf-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
         </div>
+
         <div class="budget-label">Income <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
+        <div class="budget-col-headers"><span>Category</span><span style="text-align:right">Plan</span><span style="text-align:right">Remain</span></div>
         <div class="card" id="income-list"></div>
+
         <div class="budget-label">Expenses <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
+        <div class="budget-col-headers"><span>Category</span><span style="text-align:right">Plan</span><span style="text-align:right">Remain</span></div>
         <div class="card" id="expense-list"></div>
+
         <div class="card">
             <b>Transactions</b>
             <input type="text" id="desc" placeholder="Merchant">
@@ -125,17 +132,13 @@
         let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
         let activeTab = 'budget';
 
-        // ROGERS CATEGORY MAPPING LOGIC
         const rogersMap = {
             "Quick Payment Service-Fast Food Restaurants": "Dining",
             "Eating Places and Restaurants": "Dining",
             "Grocery Stores and Supermarkets": "Groceries",
             "Automotive Service Shops (Non-Dealer)": "Auto",
             "Automated Fuel Dispensers": "Auto",
-            "Service Stations": "Auto",
-            "Drug Stores and Pharmacies": "Gym & Snacks", // Likely recovery snacks location
-            "Health and Beauty Spas": "Gym & Snacks",
-            "Cosmetic Stores": "Gym & Snacks"
+            "Service Stations": "Auto"
         };
 
         function syncFromFile(event) {
@@ -148,33 +151,22 @@
                     const rows = content.split('\n').filter(r => r.trim() !== "");
                     const newEntries = [];
                     for(let i = 1; i < rows.length; i++) {
-                        // Complex regex for CSV parsing with quotes
                         const cols = rows[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
                         if (!cols || cols.length < 13) continue;
-
                         const date = cols[0].trim();
                         const rogersCat = cols[6].replace(/"/g, '').trim();
                         const rawDesc = cols[7].replace(/"/g, '').trim();
                         const rawAmt = cols[12].replace(/[$,"]/g, '').trim();
                         const amt = parseFloat(rawAmt);
-
                         if(!isNaN(amt)) {
-                            // Map to your budget category or keep the original description
                             const mappedCat = rogersMap[rogersCat] || "Imported";
-                            
-                            newEntries.push({
-                                id: Date.now() + Math.random(),
-                                date: date,
-                                desc: rawDesc,
-                                cat: mappedCat,
-                                amt: -Math.abs(amt)
-                            });
+                            newEntries.push({ id: Date.now() + Math.random(), date, desc: rawDesc, cat: mappedCat, amt: -Math.abs(amt) });
                         }
                     }
                     txns = [...newEntries, ...txns];
                     localStorage.setItem('m_last_sync', "Rogers Import: " + new Date().toLocaleString());
                     saveAndRefresh();
-                    alert(`Imported ${newEntries.length} transactions. Categories mapped using Rogers descriptions.`);
+                    alert(`Imported ${newEntries.length} transactions.`);
                 } else {
                     try {
                         const data = JSON.parse(content);
@@ -188,7 +180,6 @@
             reader.readAsText(file);
         }
 
-        // --- Core Logic ---
         window.onload = function() {
             if (txns.length > 0 || planInc.length > 0 || assets.length > 0) {
                 document.getElementById('status-msg').innerText = "Session Active.";
@@ -217,6 +208,15 @@
             });
             saveAndRefresh(); closeModal();
         }
+
+        function removeCat(type, index) {
+            if(confirm("Remove this category? Transactions will remain but category mapping will break.")) {
+                if(type === 'inc') planInc.splice(index, 1);
+                else planExp.splice(index, 1);
+                saveAndRefresh();
+            }
+        }
+
         function exportToFile() {
             const data = { txns, planInc, planExp, assets, exportedAt: new Date().toLocaleString() };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -246,6 +246,7 @@
         }
         function addInvestItem() { const n = prompt("Name:"); if(n) { assets.push({name: n, amt: 0}); saveAndRefresh(); } }
         function addCustom(type) { const n = prompt("Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveAndRefresh(); } }
+        
         function saveAndRefresh() {
             localStorage.setItem('m_txns', JSON.stringify(txns));
             localStorage.setItem('m_p_inc', JSON.stringify(planInc));
@@ -253,31 +254,38 @@
             localStorage.setItem('m_assets', JSON.stringify(assets));
             updateUI();
         }
+
         function updateUI() {
             const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), catS = document.getElementById('cat-select');
             incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; catS.innerHTML = '';
             let actInc = 0, actExp = 0, budIncT = 0, budExpT = 0, totalAssets = 0;
+            
             txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
+            
             assets.forEach((a, i) => {
                 totalAssets += a.amt;
                 invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" class="plan-input" style="width:100px;" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"></div>`;
             });
+
             planInc.forEach((p, i) => {
                 budIncT += p.amt;
                 const m = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 catS.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
-                incL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="pos">$${(p.amt-m).toFixed(0)}</span></div>`;
+                incL.innerHTML += `<div class="budget-row"><span style="display:flex; align-items:center;"><button class="del-btn" onclick="removeCat('inc', ${i})">🗑️</button>&nbsp;${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="pos" style="text-align:right">$${(p.amt-m).toFixed(0)}</span></div>`;
             });
+
             planExp.forEach((p, i) => {
                 budExpT += p.amt;
                 const m = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="${(p.amt-m)<0?'neg':'pos'}">$${(p.amt-m).toFixed(0)}</span></div>`;
+                expL.innerHTML += `<div class="budget-row"><span style="display:flex; align-items:center;"><button class="del-btn" onclick="removeCat('exp', ${i})">🗑️</button>&nbsp;${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="${(p.amt-m)<0?'neg':'pos'}" style="text-align:right">$${(p.amt-m).toFixed(0)}</span></div>`;
             });
+
             const actSavings = actInc - actExp;
             document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
             document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
             document.getElementById('cf-sav').innerText = `$${actSavings.toLocaleString()}`;
+            
             const header = document.getElementById('main-header');
             if(activeTab === 'budget') {
                 header.style.background = "var(--m-green)";
@@ -285,17 +293,4 @@
                 document.getElementById('header-val').innerText = `$${(budIncT - budExpT).toLocaleString()}`;
             } else {
                 header.style.background = "var(--m-blue)";
-                document.getElementById('header-label').innerText = "Net Worth";
-                document.getElementById('header-val').innerText = `$${(totalAssets + actSavings).toLocaleString()}`;
-            }
-            document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m_last_sync') || "Never");
-            txns.slice(0, 15).forEach(t => {
-                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
-                    <div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div>
-                    <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
-                </div>`;
-            });
-        }
-    </script>
-</body>
-</html>
+                document.getElementById('header-label').
