@@ -3,56 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.9.7</title>
+    <title>Monarch-Lite v14.9.8</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
-        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; }
+        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0; }
         .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; margin: auto; text-align: center; box-sizing: border-box; }
         .wizard-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; text-align: left; }
         @media (min-width: 600px) { .wizard-grid { grid-template-columns: 1fr 1fr; } }
         .setup-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #2a2a2a; border-radius: 12px; border: 1px solid #333; }
         
-        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
+        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; transition: background 0.3s; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         
         .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; border: none; }
-        .tab.active { background: var(--m-teal); color: var(--m-blue); }
+        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; opacity: 0.6; color: white; border: none; }
+        .tab.active { background: var(--m-teal); color: var(--m-blue); opacity: 1; }
 
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         .budget-label { font-size: 16px; font-weight: bold; margin: 15px 0 8px 0; display: flex; justify-content: space-between; align-items: center; color: var(--m-teal); }
-        .budget-col-headers { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; font-size: 10px; text-transform: uppercase; opacity: 0.6; padding: 0 5px; }
+        .budget-col-headers { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; font-size: 10px; text-transform: uppercase; opacity: 0.6; margin-bottom: 5px; padding: 0 5px; }
         
-        input, select { width: 100%; padding: 10px; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; border: 1px solid #333; }
-        .plan-input { text-align: right; height: 32px; padding: 4px; }
+        input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
         
-        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; }
-        .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; display: block; margin-top: 10px; }
-        .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); padding: 12px; border-radius: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; }
+        .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; height: 45px; box-sizing: border-box; }
+        .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; }
         
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
-        .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
+        .del-btn { color: var(--m-red); background: none; border: none; font-size: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="startup-modal">
         <div class="modal-card" id="initial-choice">
-            <h2 style="color:var(--m-teal);">Monarch-Lite</h2>
-            <p id="status-msg" style="font-size:14px; opacity:0.8;"></p>
-            <button id="continue-btn" class="btn-track" style="display:none;" onclick="closeModal()">Continue Session</button>
-            <button class="btn-mgmt" onclick="showWizard()">Start Fresh Setup</button>
-            <label for="sync-upload-modal" class="btn-mgmt">Import JSON/Rogers CSV</label>
+            <h2 style="color:var(--m-teal); margin-top:0;">Welcome Back</h2>
+            <p id="status-msg" style="font-size:14px; opacity:0.8; margin-bottom:25px;">Data found.</p>
+            <button id="continue-btn" class="btn-track" onclick="closeModal()">Continue Session</button>
+            <label for="sync-upload-modal" class="btn-mgmt" style="width:100%; margin-top:10px;">Sync from File (JSON/CSV)</label>
+            <button class="btn-mgmt" onclick="showWizard()" style="width:100%; color:var(--m-red); margin-top:10px;">Start Fresh Setup</button>
             <input type="file" id="sync-upload-modal" accept=".json,.csv" style="display:none" onchange="syncFromFile(event)">
         </div>
 
         <div class="modal-card" id="wizard-view" style="display:none;">
-            <h3>Select Categories</h3>
+            <h3>Categories</h3>
             <div id="wizard-list" class="wizard-grid">
                 <div class="setup-row"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
                 <div class="setup-row"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
@@ -64,17 +64,17 @@
         </div>
 
         <div class="modal-card" id="wizard-inv-view" style="display:none;">
-            <h3>Assets</h3>
+            <h3>Investments</h3>
             <div id="inv-setup-list"></div>
-            <button class="btn-mgmt" onclick="addWizardInv()">+ Add Asset</button>
-            <button class="btn-track" style="margin-top:15px" onclick="finishWizard()">Finish</button>
+            <button class="btn-mgmt" style="width:100%" onclick="addWizardInv()">+ Add Asset</button>
+            <button class="btn-track" onclick="finishWizard()">Finish</button>
         </div>
     </div>
 
     <div class="budget-header" id="main-header">
         <div class="header-main"><span id="header-label">Budget Surplus</span><span id="header-val">$0</span></div>
         <div style="font-size: 10px; margin-top:5px; display:flex; justify-content:space-between;">
-            <span>Planning</span><span id="sync-info">Sync: Never</span>
+            <span id="header-subtext">Planning</span><span id="sync-info">Sync: Never</span>
         </div>
     </div>
 
@@ -100,11 +100,11 @@
         <div class="card" id="expense-list"></div>
 
         <div class="card">
-            <b>Add Transaction</b>
-            <input type="text" id="desc" placeholder="Merchant" style="margin-top:10px">
-            <select id="cat-select" style="margin: 5px 0;"></select>
+            <b>Transactions</b>
+            <input type="text" id="desc" placeholder="Merchant">
+            <select id="cat-select"></select>
             <div style="display:flex; gap:10px;"><input type="date" id="txn-date" style="flex:1"><input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1"></div>
-            <button class="btn-track" style="margin-top:10px" onclick="addTransaction()">Add</button>
+            <button class="btn-track" onclick="addTransaction()">Add Transaction</button>
         </div>
         <div id="txn-list"></div>
     </div>
@@ -117,8 +117,12 @@
 
     <div class="card">
         <b>Settings</b>
-        <button class="btn-mgmt" onclick="exportToFile()">💾 Download Data Backup</button>
-        <button class="btn-danger" onclick="clearAllData()">🗑️ Reset Everything</button>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+            <button class="btn-mgmt" onclick="exportToFile()">💾 Save</button>
+            <label for="sync-upload-main" class="btn-mgmt">🔄 Import</label>
+            <input type="file" id="sync-upload-main" accept=".json,.csv" style="display:none" onchange="syncFromFile(event)">
+        </div>
+        <button class="btn-danger" onclick="clearAllData()">🗑️ Reset</button>
     </div>
 
     <script>
@@ -137,53 +141,6 @@
             "Service Stations": "Auto"
         };
 
-        window.onload = function() {
-            const hasData = (txns.length > 0 || planInc.length > 0 || assets.length > 0);
-            if (hasData) {
-                document.getElementById('status-msg').innerText = "Session data found.";
-                document.getElementById('continue-btn').style.display = 'block';
-            } else {
-                document.getElementById('status-msg').innerText = "No data found. Start fresh or import.";
-            }
-            document.getElementById('txn-date').valueAsDate = new Date();
-            updateUI();
-        };
-
-        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-
-        function showWizard() {
-            document.getElementById('initial-choice').style.display = 'none';
-            document.getElementById('wizard-view').style.display = 'block';
-        }
-
-        function showInvWizard() {
-            document.getElementById('wizard-view').style.display = 'none';
-            document.getElementById('wizard-inv-view').style.display = 'block';
-            if(assets.length === 0) addWizardInv();
-        }
-
-        function addWizardInv() {
-            const div = document.createElement('div');
-            div.className = "setup-row";
-            div.style.marginBottom = "5px";
-            div.innerHTML = `<input type="text" placeholder="Name" style="width:60%"><input type="number" placeholder="$" style="width:35%">`;
-            document.getElementById('inv-setup-list').appendChild(div);
-        }
-
-        function finishWizard() {
-            planInc = []; planExp = []; assets = []; txns = [];
-            document.querySelectorAll('#wizard-list input:checked').forEach(c => {
-                const name = c.getAttribute('data-cat');
-                if(c.getAttribute('data-type') === 'inc') planInc.push({name, amt: 0});
-                else planExp.push({name, amt: 0});
-            });
-            document.querySelectorAll('#inv-setup-list .setup-row').forEach(row => {
-                const inputs = row.querySelectorAll('input');
-                if(inputs[0].value) assets.push({name: inputs[0].value, amt: parseFloat(inputs[1].value) || 0});
-            });
-            saveAndRefresh(); closeModal();
-        }
-
         function syncFromFile(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -199,7 +156,8 @@
                         const date = cols[0].trim();
                         const rogersCat = cols[6].replace(/"/g, '').trim();
                         const rawDesc = cols[7].replace(/"/g, '').trim();
-                        const amt = parseFloat(cols[12].replace(/[$,"]/g, '').trim());
+                        const rawAmt = cols[12].replace(/[$,"]/g, '').trim();
+                        const amt = parseFloat(rawAmt);
                         if(!isNaN(amt)) {
                             newEntries.push({ id: Date.now() + Math.random(), date, desc: rawDesc, cat: rogersMap[rogersCat] || "Imported", amt: -Math.abs(amt) });
                         }
@@ -207,12 +165,50 @@
                     txns = [...newEntries, ...txns];
                     localStorage.setItem('m_last_sync', "Rogers: " + new Date().toLocaleString());
                 } else {
-                    const data = JSON.parse(content);
-                    txns = data.txns || []; planInc = data.planInc || []; planExp = data.planExp || []; assets = data.assets || [];
+                    try {
+                        const data = JSON.parse(content);
+                        txns = data.txns || []; planInc = data.planInc || []; 
+                        planExp = data.planExp || []; assets = data.assets || [];
+                    } catch (err) { alert("Format Error."); }
                 }
                 saveAndRefresh(); closeModal();
             };
             reader.readAsText(file);
+        }
+
+        window.onload = function() {
+            if (txns.length > 0 || planInc.length > 0 || assets.length > 0) {
+                document.getElementById('status-msg').innerText = "Session Active.";
+                document.getElementById('continue-btn').style.display = 'block';
+            } else { 
+                document.getElementById('status-msg').innerText = "No data found.";
+                document.getElementById('continue-btn').style.display = 'none'; 
+            }
+            document.getElementById('txn-date').valueAsDate = new Date();
+            updateUI();
+        };
+
+        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
+        function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
+        function showInvWizard() { document.getElementById('wizard-view').style.display = 'none'; document.getElementById('wizard-inv-view').style.display = 'block'; if(assets.length === 0) addWizardInv(); }
+        
+        function addWizardInv() {
+            const div = document.createElement('div');
+            div.innerHTML = `<div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" placeholder="Name" style="width:60%"><input type="number" placeholder="$" style="width:40%"></div>`;
+            document.getElementById('inv-setup-list').appendChild(div);
+        }
+
+        function finishWizard() {
+            planInc = []; planExp = []; assets = []; txns = [];
+            document.querySelectorAll('#wizard-list input:checked').forEach(c => {
+                const name = c.getAttribute('data-cat');
+                if(c.getAttribute('data-type') === 'inc') planInc.push({name, amt: 0});
+                else planExp.push({name, amt: 0});
+            });
+            document.querySelectorAll('#inv-setup-list div input').forEach((inp, idx, arr) => {
+                if(idx % 2 === 0 && inp.value) assets.push({name: inp.value, amt: parseFloat(arr[idx+1].value) || 0});
+            });
+            saveAndRefresh(); closeModal();
         }
 
         function saveAndRefresh() {
@@ -238,19 +234,20 @@
                 budIncT += p.amt;
                 const m = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 catS.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
-                incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" onclick="removeCat('inc', ${i})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="pos" style="text-align:right">$${(p.amt-m).toFixed(0)}</span></div>`;
+                incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="removeCat('inc', ${i})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="pos" style="text-align:right">$${(p.amt-m).toFixed(0)}</span></div>`;
             });
 
             planExp.forEach((p, i) => {
                 budExpT += p.amt;
                 const m = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" onclick="removeCat('exp', ${i})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="${(p.amt-m)<0?'neg':'pos'}" style="text-align:right">$${(p.amt-m).toFixed(0)}</span></div>`;
+                expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="removeCat('exp', ${i})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="${(p.amt-m)<0?'neg':'pos'}" style="text-align:right">$${(p.amt-m).toFixed(0)}</span></div>`;
             });
 
+            const actSavings = actInc - actExp;
             document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
             document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
-            document.getElementById('cf-sav').innerText = `$${(actInc - actExp).toLocaleString()}`;
+            document.getElementById('cf-sav').innerText = `$${actSavings.toLocaleString()}`;
             
             const header = document.getElementById('main-header');
             if(activeTab === 'budget') {
@@ -260,20 +257,20 @@
             } else {
                 header.style.background = "var(--m-blue)";
                 document.getElementById('header-label').innerText = "Net Worth";
-                document.getElementById('header-val').innerText = `$${(totalAssets + (actInc - actExp)).toLocaleString()}`;
+                document.getElementById('header-val').innerText = `$${(totalAssets + actSavings).toLocaleString()}`;
             }
             document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m_last_sync') || "Never");
             
             txns.slice(0, 15).forEach(t => {
                 txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
                     <div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div>
-                    <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
+                    <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" style="font-size:14px" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
                 </div>`;
             });
         }
 
         function removeCat(type, index) {
-            if(confirm("Delete category?")) {
+            if(confirm("Remove this category?")) {
                 if(type === 'inc') planInc.splice(index, 1);
                 else planExp.splice(index, 1);
                 saveAndRefresh();
@@ -299,15 +296,15 @@
             updateUI();
         }
 
-        function addInvestItem() { const n = prompt("Asset Name:"); if(n) { assets.push({name: n, amt: 0}); saveAndRefresh(); } }
-        function addCustom(type) { const n = prompt("Category Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveAndRefresh(); } }
-        function clearAllData() { if(confirm("Clear ALL data permanently?")) { localStorage.clear(); location.reload(); } }
+        function addInvestItem() { const n = prompt("Name:"); if(n) { assets.push({name: n, amt: 0}); saveAndRefresh(); } }
+        function addCustom(type) { const n = prompt("Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveAndRefresh(); } }
+        function clearAllData() { if(confirm("Clear everything?")) { localStorage.clear(); location.reload(); } }
         function exportToFile() {
             const data = { txns, planInc, planExp, assets };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `budget_backup.json`;
+            a.download = `budget_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
         }
     </script>
