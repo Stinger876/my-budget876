@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v13.7</title>
+    <title>Monarch-Lite v13.9</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -25,7 +25,7 @@
 
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .btn-add-small { background: #2a2a2a; color: var(--m-teal); border: 1px solid var(--m-teal); padding: 4px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: bold; }
-        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; }
+        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer;}
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; text-align: right; padding: 0;}
         
         .val-pos { color: var(--m-green); font-weight: 600; text-align: right; }
@@ -37,8 +37,8 @@
 
     <div id="startup-modal">
         <div class="modal-card">
-            <h2 style="color:var(--m-teal); margin-top:0;">Sync Budget?</h2>
-            <p style="opacity:0.7; font-size:14px; margin-bottom:20px;">Open your <b>JSON</b> to restore settings.</p>
+            <h2 style="color:var(--m-teal); margin-top:0;">Restore Data?</h2>
+            <p style="opacity:0.7; font-size:14px; margin-bottom:20px;">Open your <b>budget_working_copy.json</b> to load your current plan.</p>
             <label for="sync-upload" style="background:var(--m-teal); color:var(--m-blue); padding:15px; border-radius:12px; font-weight:bold; cursor:pointer; display:block; margin-bottom:10px;">Yes, Open File</label>
             <div style="background:#333; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer;" onclick="closeModal()">No, Start Fresh</div>
         </div>
@@ -50,7 +50,7 @@
             <span id="header-remaining">$0</span>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:11px;">
-            <div id="sync-status">Last Sync: Never</div>
+            <div id="sync-status">Sync: Never</div>
             <div style="display:flex; gap:12px;">
                 <label for="sync-upload" style="cursor:pointer; font-weight:bold;">↑ SYNC</label>
                 <div onclick="exportNewFile()" style="cursor:pointer; font-weight:bold;">↓ SAVE</div>
@@ -77,21 +77,19 @@
 
     <div class="card">
         <b>Track Transaction</b>
-        <input type="text" id="desc" placeholder="Merchant (e.g. GC, Hydro)">
+        <input type="text" id="desc" placeholder="Merchant (e.g. Starbucks)">
         <select id="cat">
-            <optgroup label="Budget Items" id="opt-budget"></optgroup>
-            <optgroup label="General">
-                <option value="💰 Income">💰 Income</option>
-                <option value="🏠 Bills">🏠 Bills</option>
-                <option value="🏠 Housing">🏠 Housing</option>
-                <option value="🛒 Groceries">🛒 Groceries</option>
-                <option value="🍳 Dining">🍳 Dining</option>
-                <option value="🚗 Transport">🚗 Transport</option>
+            <option value="" disabled selected>Select Category</option>
+            <optgroup label="Planned Income" id="opt-inc"></optgroup>
+            <optgroup label="Planned Expenses" id="opt-exp"></optgroup>
+            <optgroup label="Other">
+                <option value="General Income">💰 General Income</option>
+                <option value="General Expense">💳 General Expense</option>
             </optgroup>
         </select>
         <div style="display:flex; gap:10px;">
             <input type="date" id="txn-date" style="flex:1">
-            <input type="text" inputmode="decimal" id="amt" placeholder="Amount (e.g. 94)" style="flex:1">
+            <input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1">
         </div>
         <button class="btn-track" onclick="addTransaction()">Add Entry</button>
     </div>
@@ -130,17 +128,17 @@
         }
 
         function exportNewFile() {
-            const bundle = { txns, planInc, planExp, version: "13.7", exportedAt: new Date().toLocaleString() };
+            const bundle = { txns, planInc, planExp, version: "13.9", exportedAt: new Date().toLocaleString() };
             const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = "budget_master.json";
+            link.download = "budget_working_copy.json";
             link.click();
         }
 
         function promptPlan(type) {
-            const name = prompt("Budget Name (e.g. Hydro or GoC):");
-            const amt = parseFloat(prompt("Monthly Budget $:"));
+            const name = prompt("Name (e.g. Hydro):");
+            const amt = parseFloat(prompt("Budget Amount:"));
             if (name && !isNaN(amt)) {
                 if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
                 else planExp.push({ id: Date.now(), name, amt });
@@ -153,15 +151,16 @@
             const cat = document.getElementById('cat').value;
             const date = document.getElementById('txn-date').value;
             let amt = parseFloat(document.getElementById('amt').value);
-            if(!desc || isNaN(amt)) return;
             
-            // Logic: Is it Income? 
-            // Check if selected category is from Income Plan or general "Income"
-            const isIncomeCat = planInc.some(p => p.name === cat) || cat.includes("Income");
-            amt = isIncomeCat ? Math.abs(amt) : -Math.abs(amt);
+            if(!desc || !cat || isNaN(amt)) return;
+            
+            // Income logic: Checks if cat is a planned income or "General Income"
+            const isInc = planInc.some(p => p.name === cat) || cat === "General Income";
+            amt = isInc ? Math.abs(amt) : -Math.abs(amt);
 
             txns.unshift({ id: Date.now(), desc, cat, date, amt });
-            document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
+            document.getElementById('desc').value = ''; 
+            document.getElementById('amt').value = '';
             saveAndRefresh();
         }
 
@@ -183,28 +182,25 @@
             const incList = document.getElementById('income-list');
             const expList = document.getElementById('expense-list');
             const txnList = document.getElementById('txn-list');
-            const optBudget = document.getElementById('opt-budget');
+            const optInc = document.getElementById('opt-inc');
+            const optExp = document.getElementById('opt-exp');
             
-            incList.innerHTML = ''; expList.innerHTML = ''; txnList.innerHTML = ''; optBudget.innerHTML = '';
+            incList.innerHTML = ''; expList.innerHTML = ''; txnList.innerHTML = ''; 
+            optInc.innerHTML = ''; optExp.innerHTML = '';
             
-            // Update Dropdown Categories
-            [...planInc, ...planExp].forEach(p => {
-                optBudget.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-            });
+            planInc.forEach(p => optInc.innerHTML += `<option value="${p.name}">📈 ${p.name}</option>`);
+            planExp.forEach(p => optExp.innerHTML += `<option value="${p.name}">💸 ${p.name}</option>`);
 
-            let totalBudInc = 0, totalBudExp = 0, actualExpTotal = 0;
+            let totalPlannedInc = 0;
+            let actualSpendingTotal = 0;
+            let actualIncomeTotal = 0;
 
             const renderSection = (planArr, targetEl, isExp) => {
                 planArr.forEach(p => {
-                    if(isExp) totalBudExp += p.amt; else totalBudInc += p.amt;
+                    if(!isExp) totalPlannedInc += p.amt;
                     
-                    // SMART MATCHING: Matches exact category OR if the merchant name contains the budget name
-                    const actual = txns.filter(t => {
-                        const amountMatch = isExp ? t.amt < 0 : t.amt > 0;
-                        const exactMatch = t.cat === p.name;
-                        const nameMatch = t.desc.toLowerCase().includes(p.name.toLowerCase());
-                        return amountMatch && (exactMatch || nameMatch);
-                    }).reduce((sum, t) => sum + Math.abs(t.amt), 0);
+                    const actual = txns.filter(t => t.cat === p.name)
+                                       .reduce((sum, t) => sum + Math.abs(t.amt), 0);
 
                     const remaining = p.amt - actual;
                     const pct = Math.min((actual / p.amt) * 100, 100) || 0;
@@ -226,11 +222,18 @@
             renderSection(planInc, incList, false);
             renderSection(planExp, expList, true);
 
-            txns.forEach(t => { if(t.amt < 0) actualExpTotal += Math.abs(t.amt); });
-            document.getElementById('header-remaining').innerText = `$${(totalBudInc - actualExpTotal).toLocaleString()}`;
-            document.getElementById('sync-status').innerText = "Last Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
+            // Calculate overall header totals
+            txns.forEach(t => {
+                if(t.amt < 0) actualSpendingTotal += Math.abs(t.amt);
+                else actualIncomeTotal += t.amt;
+            });
 
-            txns.slice(0, 12).forEach(t => {
+            // "Left to budget" = Planned Income - Actual Spending
+            const leftToBudget = totalPlannedInc - actualSpendingTotal;
+            document.getElementById('header-remaining').innerText = `$${leftToBudget.toLocaleString()}`;
+            document.getElementById('sync-status').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
+
+            txns.slice(0, 20).forEach(t => {
                 const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
                 txnList.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:12px;">
                     <div><b>${t.cat}</b><br><small>${t.desc} • ${d}</small></div>
