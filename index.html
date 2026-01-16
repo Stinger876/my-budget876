@@ -3,177 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.13</title>
+    <title>Monarch-Lite v14.4</title>
     <style>
-        :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
+        :root { --m-blue: #0a192f; --m-teal: #17e1e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 100px; }
         
-        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0; }
-        .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; margin: auto; text-align: center; box-sizing: border-box; }
+        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; text-align: center; }
+        .modal-card { background: var(--m-card); padding: 30px; border-radius: 24px; border: 1px solid var(--m-teal); width: 85%; max-width: 400px; }
         
         .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         
-        .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; opacity: 0.6; color: white; border: none; }
-        .tab.active { background: var(--m-teal); color: var(--m-blue); opacity: 1; }
+        .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
+        
+        .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
+        .cf-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 10px; }
+        .cf-val { font-size: 1.2rem; font-weight: bold; }
 
-        .card { background: var(--m-card); padding: 12px 15px; border-radius: 16px; margin-bottom: 15px; }
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; gap: 10px; }
-        .item-info { flex: 1; font-size: 14px; font-weight: 500; }
-        .item-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+        .budget-row { display: grid; grid-template-columns: 1fr 80px 80px 30px; gap: 5px; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
+        .budget-label { font-size: 18px; font-weight: bold; margin: 20px 0 10px 0; display: flex; justify-content: space-between; align-items: center;}
+        .col-head { font-size: 10px; opacity: 0.6; text-transform: uppercase; text-align: right; }
         
-        .plan-input { width: 90px; text-align: right; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 6px; padding: 5px; font-size: 14px; }
-        .remaining-tag { width: 70px; text-align: right; font-weight: bold; font-size: 13px; }
-        
-        .budget-label { font-size: 15px; font-weight: bold; margin: 15px 0 8px 5px; display: flex; justify-content: space-between; color: var(--m-teal); }
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
-        
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
-        .btn-fresh-alt { width: 100%; background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; box-sizing: border-box; text-align: center; border: none; }
+        .del-btn { color: var(--m-red); background: none; border: none; font-size: 16px; cursor: pointer; text-align: right; padding: 5px; }
+        .edit-btn { color: var(--m-teal); background: none; border: none; font-size: 12px; cursor: pointer; margin-right: 10px; }
         
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
+        .cat-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
     </style>
 </head>
 <body>
 
     <div id="startup-modal">
-        <div class="modal-card" id="initial-choice">
-            <h2 style="color:var(--m-teal); margin-top:0;">Welcome Back</h2>
-            <button id="continue-btn" class="btn-track" style="margin-bottom:12px" onclick="closeModal()">Continue Session</button>
-            
-            <label for="sync-upload" class="btn-fresh-alt" style="cursor:pointer;">Sync from File</label>
-            <input type="file" id="sync-upload" accept=".json" style="display:none" onchange="syncFromFile(event)">
-            
-            <button class="btn-fresh-alt" onclick="showWizard()" style="color:var(--m-red); border:1px solid var(--m-red);">Start Fresh Setup</button>
-        </div>
-
-        <div class="modal-card" id="wizard-view" style="display:none;">
-            <h3 style="color:var(--m-teal);">Step 1: Budget Categories</h3>
-            <div id="wizard-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left;">
-                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
-                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
-                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
-                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
-                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Dining</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
-                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Gym & Snacks</span><input type="checkbox" checked data-cat="Gym & Snacks" data-type="exp"></div>
-                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Utilities</span><input type="checkbox" checked data-cat="Utilities" data-type="exp"></div>
-                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Entertainment</span><input type="checkbox" checked data-cat="Entertainment" data-type="exp"></div>
-                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Personal Care</span><input type="checkbox" checked data-cat="Personal Care" data-type="exp"></div>
-                <div style="background:#2a2a2a; padding:8px; border-radius:8px; display:flex; justify-content:space-between; font-size:12px;"><span>Shopping</span><input type="checkbox" checked data-cat="Shopping" data-type="exp"></div>
-            </div>
-            <button class="btn-track" onclick="showInvWizard()">Next: Investments</button>
-        </div>
-
-        <div class="modal-card" id="wizard-inv-view" style="display:none;">
-            <h3 style="color:var(--m-teal);">Step 2: Initial Assets</h3>
-            <div id="inv-setup-list" style="margin-bottom:15px;"></div>
-            <button class="btn-fresh-alt" onclick="addWizardInv()">+ Add Asset</button>
-            <button class="btn-track" onclick="finishWizard()">Complete Setup</button>
+        <div class="modal-card">
+            <h2 style="margin-top:0; color:var(--m-teal);">Welcome Back</h2>
+            <p style="font-size:14px; opacity:0.8; margin-bottom:25px;">Open your latest budget file?</p>
+            <label for="sync-upload" style="background:var(--m-teal); color:var(--m-blue); padding:15px; border-radius:12px; font-weight:bold; cursor:pointer; display:block; margin-bottom:10px;">Yes, Open File</label>
+            <div style="background:#333; color:white; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer; display:block;" onclick="closeModal()">No, Use Local</div>
         </div>
     </div>
 
-    <div class="budget-header" id="main-header">
+    <div class="budget-header">
         <div class="header-main">
-            <span id="header-label">Remaining to Spend</span>
-            <span id="header-val">$0</span>
+            <span>Left to budget</span>
+            <span id="left-val">$0</span>
         </div>
-        <div style="font-size: 10px; opacity: 0.9; margin-top:5px; display:flex; justify-content:space-between;">
-            <span id="header-subtext">Planned Income - Total Expenses</span>
-            <span id="sync-info">Sync: Never</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+            <div style="font-size: 11px; opacity: 0.9;" id="sync-info">Sync: Never</div>
+            <div style="display:flex; gap:10px;">
+                <label for="sync-upload" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↑ Sync</label>
+                <div onclick="exportNewFile()" style="background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold;">↓ Save</div>
+            </div>
+            <input type="file" id="sync-upload" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
     </div>
 
-    <div class="tab-bar">
-        <button class="tab active" id="tab-budget" onclick="switchTab('budget')">Budget</button>
-        <button class="tab" id="tab-invest" onclick="switchTab('invest')">Investments</button>
-    </div>
-
-    <div id="view-budget">
-        <div class="card">
-            <div class="item-row"><span>Total Income</span><span id="cf-inc" class="pos">$0</span></div>
-            <div class="item-row"><span>Total Expenses</span><span id="cf-exp" class="neg">$0</span></div>
-            <div class="item-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
-        </div>
-        
-        <div class="budget-label">Planned Income <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal); font-weight:bold;">+ Add</button></div>
-        <div class="card" id="income-list"></div>
-        
-        <div class="budget-label">Planned Expenses <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal); font-weight:bold;">+ Add</button></div>
-        <div class="card" id="expense-list"></div>
-        
-        <div class="card">
-            <b>New Entry</b>
-            <input type="text" id="desc" placeholder="Merchant">
-            <select id="cat-select"></select>
-            <div style="display:flex; gap:10px;"><input type="date" id="txn-date" style="flex:1"><input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1"></div>
-            <button class="btn-track" onclick="addTransaction()">Add Transaction</button>
-        </div>
-        <div id="txn-list"></div>
-    </div>
-
-    <div id="view-invest" style="display:none;">
-        <div class="budget-label">Asset Balances</div>
-        <div class="card" id="invest-main-list"></div>
-        <button class="btn-track" onclick="addInvestItem()">+ New Investment</button>
-    </div>
-
-    <div class="budget-label">Settings & Sync</div>
+    <div class="budget-label">Cash Flow</div>
     <div class="card">
-        <button class="btn-fresh-alt" onclick="exportToFile()">Download Sync File</button>
-        <button class="btn-fresh-alt" style="color:var(--m-red);" onclick="if(confirm('Delete all local data?')) {localStorage.clear(); location.reload();}">Reset All Data</button>
+        <div class="cf-row"><span><span class="cf-dot" style="background:var(--m-green)"></span>Income</span><span id="cf-inc" class="cf-val pos">$0</span></div>
+        <div class="cf-row"><span><span class="cf-dot" style="background:var(--m-red)"></span>Expenses</span><span id="cf-exp" class="cf-val neg">$0</span></div>
+        <div class="cf-row" style="border-bottom:none"><span><span class="cf-dot" style="background:#fff"></span>Savings</span><span id="cf-sav" class="cf-val">$0</span></div>
     </div>
+
+    <div class="budget-label"><span>Income Categories</span><button onclick="promptPlan('inc')" style="background:none; border:none; color:var(--m-teal); font-size:12px; font-weight:bold;">+ Add</button></div>
+    <div class="card"><div id="income-list"></div></div>
+
+    <div class="budget-label"><span>Expense Categories</span><button onclick="promptPlan('exp')" style="background:none; border:none; color:var(--m-teal); font-size:12px; font-weight:bold;">+ Add</button></div>
+    <div class="card"><div id="expense-list"></div></div>
+
+    <div class="card">
+        <b>Track Transaction</b>
+        <input type="text" id="desc" placeholder="Merchant">
+        <select id="cat-select"></select>
+        <div style="display:flex; gap:10px;"><input type="date" id="txn-date" style="flex:1"><input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1"></div>
+        <button class="btn-track" onclick="addTransaction()">Add Entry</button>
+    </div>
+
+    <div class="budget-label">Category Controls</div>
+    <div class="card">
+        <div id="settings-cat-list"></div>
+        <button onclick="addGlobalCategory()" style="width:100%; background:#2a2a2a; color:var(--m-teal); border:1px dashed var(--m-teal); padding:10px; border-radius:8px; margin-top:10px; font-weight:bold;">+ Create New Category</button>
+    </div>
+
+    <h3 style="margin-left:10px;">Recent Activity</h3>
+    <div id="txn-list"></div>
 
     <script>
-        let txns = JSON.parse(localStorage.getItem('m_txns')) || [];
-        let planInc = JSON.parse(localStorage.getItem('m_p_inc')) || [];
-        let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [];
-        let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
-        let activeTab = 'budget';
+        let txns = JSON.parse(localStorage.getItem('m9_txns')) || [];
+        let planInc = JSON.parse(localStorage.getItem('m9_p_inc')) || [];
+        let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
+        let categories = JSON.parse(localStorage.getItem('m9_cats')) || [
+            {id: 1, emoji: "💰", name: "Income"}, {id: 2, emoji: "🏠", name: "Housing"}, 
+            {id: 3, emoji: "🛒", name: "Groceries"}, {id: 4, emoji: "🍳", name: "Dining"}, 
+            {id: 5, emoji: "🚗", name: "Transport"}
+        ];
 
         window.onload = function() {
-            // Only hide Continue if no data exists at all
-            if (txns.length === 0 && planInc.length === 0 && assets.length === 0) {
-                document.getElementById('continue-btn').style.display = 'none';
-            }
+            document.getElementById('startup-modal').style.display = 'flex';
             document.getElementById('txn-date').valueAsDate = new Date();
             updateUI();
         };
 
         function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-        
-        function showWizard() { 
-            document.getElementById('initial-choice').style.display = 'none'; 
-            document.getElementById('wizard-view').style.display = 'block'; 
-        }
-
-        function showInvWizard() { 
-            document.getElementById('wizard-view').style.display = 'none'; 
-            document.getElementById('wizard-inv-view').style.display = 'block'; 
-            if(document.getElementById('inv-setup-list').children.length === 0) addWizardInv(); 
-        }
-
-        function addWizardInv() {
-            const div = document.createElement('div');
-            div.innerHTML = `<div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" placeholder="Name" style="width:60%"><input type="number" placeholder="$" style="width:40%"></div>`;
-            document.getElementById('inv-setup-list').appendChild(div);
-        }
-
-        function finishWizard() {
-            planInc = []; planExp = []; assets = []; txns = [];
-            document.querySelectorAll('#wizard-list input:checked').forEach(c => {
-                const name = c.getAttribute('data-cat');
-                if(c.getAttribute('data-type') === 'inc') planInc.push({name, amt: 0});
-                else planExp.push({name, amt: 0});
-            });
-            document.querySelectorAll('#inv-setup-list div').forEach(row => {
-                const inp = row.querySelectorAll('input');
-                if(inp[0] && inp[0].value) assets.push({name: inp[0].value, amt: parseFloat(inp[1].value) || 0});
-            });
-            saveAndRefresh(); 
-            closeModal();
-        }
 
         function syncFromFile(event) {
             const file = event.target.files[0];
@@ -182,104 +115,126 @@
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    txns = data.txns || []; planInc = data.planInc || []; planExp = data.planExp || []; assets = data.assets || [];
-                    localStorage.setItem('m_last_sync', data.exportedAt || new Date().toLocaleString());
-                    saveAndRefresh(); closeModal();
-                } catch (err) { alert("Invalid File"); }
+                    if (data.txns) {
+                        txns = data.txns; planInc = data.planInc || []; planExp = data.planExp || [];
+                        categories = data.categories || categories;
+                        localStorage.setItem('m9_last_sync', data.exportedAt || new Date().toLocaleString());
+                        saveAndRefresh(); closeModal();
+                    }
+                } catch (err) { alert("File Error"); }
             };
             reader.readAsText(file);
         }
 
-        function exportToFile() {
-            const data = { txns, planInc, planExp, assets, exportedAt: new Date().toLocaleString() };
-            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = `monarch_sync_${new Date().toISOString().slice(0,10)}.json`;
-            a.click();
-            localStorage.setItem('m_last_sync', data.exportedAt);
-            updateUI();
+        function exportNewFile() {
+            const bundle = { txns, planInc, planExp, categories, version: "14.4", exportedAt: new Date().toLocaleString() };
+            const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "budget_v14_4.json";
+            link.click();
         }
 
-        function switchTab(t) {
-            activeTab = t;
-            document.getElementById('view-budget').style.display = t === 'budget' ? 'block' : 'none';
-            document.getElementById('view-invest').style.display = t === 'invest' ? 'block' : 'none';
-            document.getElementById('tab-budget').className = 'tab ' + (t === 'budget' ? 'active' : '');
-            document.getElementById('tab-invest').className = 'tab ' + (t === 'invest' ? 'active' : '');
-            updateUI();
+        function addGlobalCategory() {
+            const name = prompt("Category Name:");
+            const emoji = prompt("Emoji:", "📦");
+            if(name && emoji) {
+                categories.push({ id: Date.now(), emoji, name });
+                saveAndRefresh();
+            }
+        }
+
+        function editCategory(id) {
+            const cat = categories.find(c => c.id === id);
+            const newName = prompt("Edit Name:", cat.name);
+            const newEmoji = prompt("Edit Emoji:", cat.emoji);
+            if(newName) cat.name = newName;
+            if(newEmoji) cat.emoji = newEmoji;
+            saveAndRefresh();
+        }
+
+        function deleteCategory(id) {
+            if(confirm("Delete category?")) {
+                categories = categories.filter(c => c.id !== id);
+                saveAndRefresh();
+            }
+        }
+
+        function promptPlan(type) {
+            const name = prompt("Type category name exactly (e.g., Housing):");
+            const amt = parseFloat(prompt("Budget Amount:"));
+            if (name && !isNaN(amt)) {
+                if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
+                else planExp.push({ id: Date.now(), name, amt });
+                saveAndRefresh();
+            }
         }
 
         function addTransaction() {
-            const desc = document.getElementById('desc').value, cat = document.getElementById('cat-select').value;
-            let amt = parseFloat(document.getElementById('amt').value);
+            const desc = document.getElementById('desc').value;
+            const cat = document.getElementById('cat-select').value;
+            const date = document.getElementById('txn-date').value;
+            const amt = parseFloat(document.getElementById('amt').value);
             if(!desc || isNaN(amt)) return;
-            amt = (planInc.some(p => p.name === cat)) ? Math.abs(amt) : -Math.abs(amt);
-            txns.unshift({ id: Date.now(), desc, cat, date: document.getElementById('txn-date').value, amt });
+            txns.unshift({ id: Date.now(), desc, cat, date, amt });
             document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
             saveAndRefresh();
         }
 
+        function deleteItem(type, id) {
+            if(type === 'txn') txns = txns.filter(t => t.id !== id);
+            if(type === 'inc') planInc = planInc.filter(i => i.id !== id);
+            if(type === 'exp') planExp = planExp.filter(e => e.id !== id);
+            saveAndRefresh();
+        }
+
         function saveAndRefresh() {
-            localStorage.setItem('m_txns', JSON.stringify(txns));
-            localStorage.setItem('m_p_inc', JSON.stringify(planInc));
-            localStorage.setItem('m_p_exp', JSON.stringify(planExp));
-            localStorage.setItem('m_assets', JSON.stringify(assets));
+            localStorage.setItem('m9_txns', JSON.stringify(txns));
+            localStorage.setItem('m9_p_inc', JSON.stringify(planInc));
+            localStorage.setItem('m9_p_exp', JSON.stringify(planExp));
+            localStorage.setItem('m9_cats', JSON.stringify(categories));
             updateUI();
         }
 
-        function addCustom(type) { const n = prompt("Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveAndRefresh(); } }
-        function addInvestItem() { const n = prompt("Asset Name:"); if(n) { assets.push({name: n, amt: 0}); saveAndRefresh(); } }
-
         function updateUI() {
-            const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), catS = document.getElementById('cat-select');
-            incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; catS.innerHTML = '';
-
-            let actInc = 0, actExp = 0, budIncTotal = 0, totalAssets = 0;
-            txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
+            const incList = document.getElementById('income-list');
+            const expList = document.getElementById('expense-list');
+            const setList = document.getElementById('settings-cat-list');
+            const catSelect = document.getElementById('cat-select');
             
-            assets.forEach((a, i) => {
-                totalAssets += a.amt;
-                invL.innerHTML += `<div class="item-row"><span class="item-info">${a.name}</span><div class="item-actions"><input type="number" class="plan-input" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"></div></div>`;
+            incList.innerHTML = ''; expList.innerHTML = ''; setList.innerHTML = ''; catSelect.innerHTML = '';
+            
+            categories.forEach(c => {
+                catSelect.innerHTML += `<option value="${c.emoji}">${c.emoji} ${c.name}</option>`;
+                setList.innerHTML += `<div class="cat-item"><span>${c.emoji} ${c.name}</span><div><button class="edit-btn" onclick="editCategory(${c.id})">Edit</button><button class="del-btn" onclick="deleteCategory(${c.id})">×</button></div></div>`;
             });
 
-            planInc.forEach((p, i) => {
-                budIncTotal += p.amt;
-                const m = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
-                catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                incL.innerHTML += `<div class="item-row"><span class="item-info">${p.name}</span><div class="item-actions"><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="remaining-tag pos">$${(p.amt-m).toFixed(0)}</span></div></div>`;
+            let actInc = 0, actExp = 0, budInc = 0;
+            txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
+
+            planInc.forEach(p => {
+                budInc += p.amt;
+                const matches = txns.filter(t => t.amt > 0 && (t.desc.includes(p.name) || t.cat.includes(p.name))).reduce((s, t) => s + t.amt, 0);
+                incList.innerHTML += `<div class="budget-row"><span>${p.name}</span><span style="text-align:right">$${p.amt}</span><span style="text-align:right" class="pos">$${p.amt - matches}</span><button class="del-btn" onclick="deleteItem('inc', ${p.id})">×</button></div>`;
             });
 
-            planExp.forEach((p, i) => {
-                const m = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
-                catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="item-row"><span class="item-info">${p.name}</span><div class="item-actions"><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="remaining-tag ${(p.amt-m)<0?'neg':'pos'}">$${(p.amt-m).toFixed(0)}</span></div></div>`;
+            planExp.forEach(p => {
+                const matches = txns.filter(t => t.amt < 0 && (t.desc.includes(p.name) || t.cat.includes(p.name))).reduce((s, t) => s + Math.abs(t.amt), 0);
+                const rem = p.amt - matches;
+                expList.innerHTML += `<div class="budget-row"><span>${p.name}</span><span style="text-align:right">$${p.amt}</span><span style="text-align:right" class="${rem < 0 ? 'neg' : 'pos'}">$${rem}</span><button class="del-btn" onclick="deleteItem('exp', ${p.id})">×</button></div>`;
             });
 
-            const savings = actInc - actExp;
             document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
             document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
-            document.getElementById('cf-sav').innerText = `$${savings.toLocaleString()}`;
-            
-            const header = document.getElementById('main-header');
-            if(activeTab === 'budget') {
-                header.style.background = "var(--m-green)";
-                document.getElementById('header-label').innerText = "Remaining to Spend";
-                document.getElementById('header-val').innerText = `$${(budIncTotal - actExp).toLocaleString()}`;
-                document.getElementById('header-subtext').innerText = "Planned Income - Total Expenses";
-            } else {
-                header.style.background = "var(--m-blue)";
-                document.getElementById('header-label').innerText = "Net Worth";
-                document.getElementById('header-val').innerText = `$${(totalAssets + savings).toLocaleString()}`;
-                document.getElementById('header-subtext').innerText = "Assets + Cash Savings";
-            }
-            document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m_last_sync') || "Never");
+            document.getElementById('cf-sav').innerText = `$${(actInc - actExp).toLocaleString()}`;
+            document.getElementById('left-val').innerText = `$${(budInc - actExp).toLocaleString()}`;
+            document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
 
-            txns.slice(0, 10).forEach(t => {
-                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
-                    <div style="font-size:14px;"><b>${t.cat}</b>: ${t.desc}</div>
-                    <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div>
-                </div>`;
+            const txnList = document.getElementById('txn-list');
+            txnList.innerHTML = '';
+            txns.slice(0, 5).forEach(t => {
+                const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                txnList.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:8px;"><div><b>${t.cat} ${t.desc}</b><br><small>${d}</small></div><div>$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="deleteItem('txn', ${t.id})">×</button></div></div>`;
             });
         }
     </script>
