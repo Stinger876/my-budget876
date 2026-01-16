@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.8</title>
+    <title>Monarch-Lite v14.9</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -14,8 +14,7 @@
         .wizard-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; text-align: left; }
         @media (min-width: 600px) { .wizard-grid { grid-template-columns: 1fr 1fr; } }
         .setup-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #2a2a2a; border-radius: 12px; border: 1px solid #333; }
-        .setup-row input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; }
-
+        
         /* Header */
         .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; transition: background 0.3s; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
@@ -25,7 +24,7 @@
         .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; opacity: 0.6; color: white; border: none; }
         .tab.active { background: var(--m-teal); color: var(--m-blue); opacity: 1; }
 
-        /* Budget Tables */
+        /* Tables & Cards */
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px 30px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
@@ -34,15 +33,13 @@
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
         
-        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; box-sizing: border-box; }
-        .btn-fresh-alt { width: 100%; background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; box-sizing: border-box; border: 1px solid transparent; text-align: center; text-decoration: none; }
-        .btn-outline { background: transparent; border: 1px solid var(--m-teal); color: var(--m-teal); }
-        .del-btn { color: var(--m-red); background: none; border: none; font-size: 20px; cursor: pointer; display: flex; justify-content: flex-end; align-items: center; }
+        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; }
+        .btn-fresh-alt { width: 100%; background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; border: 1px solid transparent; text-align: center; text-decoration: none; }
+        .btn-danger { background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; }
         
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
-
-        .sync-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .del-btn { color: var(--m-red); background: none; border: none; font-size: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -80,11 +77,11 @@
 
     <div class="budget-header" id="main-header">
         <div class="header-main">
-            <span id="header-label">Remaining to Spend</span>
+            <span id="header-label">Budget Surplus</span>
             <span id="header-val">$0</span>
         </div>
         <div style="font-size: 10px; opacity: 0.9; margin-top:5px; display:flex; justify-content:space-between;">
-            <span id="header-subtext">Planned Income - Expenses</span>
+            <span id="header-subtext">Budgeted Income - Budgeted Expenses</span>
             <span id="sync-info">Sync: Never</span>
         </div>
     </div>
@@ -96,9 +93,9 @@
 
     <div id="view-budget">
         <div class="card">
-            <div class="cf-row"><span>Total Income</span><span id="cf-inc" class="pos">$0</span></div>
-            <div class="cf-row"><span>Total Expenses</span><span id="cf-exp" class="neg">$0</span></div>
-            <div class="cf-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
+            <div class="cf-row"><span>Actual Income</span><span id="cf-inc" class="pos">$0</span></div>
+            <div class="cf-row"><span>Actual Expenses</span><span id="cf-exp" class="neg">$0</span></div>
+            <div class="cf-row" style="border-bottom:none"><span>Net Actual Savings</span><span id="cf-sav">$0</span></div>
         </div>
 
         <div class="budget-label">Budget Income <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal); font-weight:bold;">+ Add</button></div>
@@ -125,11 +122,12 @@
 
     <div class="card">
         <b>Data Management</b>
-        <div class="sync-controls">
-            <button class="btn-fresh-alt btn-outline" onclick="exportToFile()" style="margin:0; padding:10px;">💾 Save to File</button>
-            <label for="sync-upload-main" class="btn-fresh-alt btn-outline" style="margin:0; padding:10px; font-size:14px; display:flex; align-items:center; justify-content:center;">🔄 Sync from File</label>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+            <button class="btn-fresh-alt" style="margin:0; font-size:14px; border:1px solid #555" onclick="exportToFile()">💾 Save to File</button>
+            <label for="sync-upload-main" class="btn-fresh-alt" style="margin:0; font-size:14px; border:1px solid #555; display:flex; align-items:center; justify-content:center;">🔄 Sync File</label>
             <input type="file" id="sync-upload-main" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
+        <button class="btn-fresh-alt btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
     </div>
 
     <script>
@@ -144,20 +142,21 @@
                 document.getElementById('status-msg').innerText = "Budget data found in browser.";
             } else {
                 document.getElementById('continue-btn').style.display = 'none';
-                document.getElementById('status-msg').innerText = "No data found. Start fresh or sync a file.";
             }
             document.getElementById('txn-date').valueAsDate = new Date();
             updateUI();
         };
 
-        // --- Wizard Logic ---
+        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
         function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
         function showInvWizard() { document.getElementById('wizard-view').style.display = 'none'; document.getElementById('wizard-inv-view').style.display = 'block'; if(assets.length === 0) addWizardInv(); }
+        
         function addWizardInv() {
             const div = document.createElement('div');
             div.innerHTML = `<div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" placeholder="e.g. TFSA" style="width:60%"><input type="number" placeholder="$" style="width:40%"></div>`;
             document.getElementById('inv-setup-list').appendChild(div);
         }
+
         function finishWizard() {
             planInc = []; planExp = []; assets = []; txns = [];
             document.querySelectorAll('#wizard-list input:checked').forEach(c => {
@@ -172,19 +171,14 @@
             saveAndRefresh(); closeModal();
         }
 
-        // --- File I/O ---
         function exportToFile() {
-            const data = {
-                txns, planInc, planExp, assets,
-                exportedAt: new Date().toLocaleString()
-            };
+            const data = { txns, planInc, planExp, assets, exportedAt: new Date().toLocaleString() };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = `monarch_budget_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
-            URL.revokeObjectURL(url);
         }
 
         function syncFromFile(event) {
@@ -194,19 +188,21 @@
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    txns = data.txns || []; 
-                    planInc = data.planInc || []; 
-                    planExp = data.planExp || []; 
-                    assets = data.assets || [];
+                    txns = data.txns || []; planInc = data.planInc || []; planExp = data.planExp || []; assets = data.assets || [];
                     localStorage.setItem('m_last_sync', data.exportedAt || new Date().toLocaleString());
-                    saveAndRefresh(); 
-                    closeModal();
-                } catch (err) { alert("Invalid File Format"); }
+                    saveAndRefresh(); closeModal();
+                } catch (err) { alert("Invalid File"); }
             };
             reader.readAsText(file);
         }
 
-        // --- App Logic ---
+        function clearAllData() {
+            if(confirm("Are you sure? This will delete all transactions, budget plans, and assets permanently.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
         function switchTab(t) {
             activeTab = t;
             document.getElementById('view-budget').style.display = t === 'budget' ? 'block' : 'none';
@@ -227,7 +223,6 @@
         }
 
         function addInvestItem() { const n = prompt("Name:"); if(n) { assets.push({name: n, amt: 0}); saveAndRefresh(); } }
-        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
         function addCustom(type) { const n = prompt("Category Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveAndRefresh(); } }
 
         function saveAndRefresh() {
@@ -242,7 +237,7 @@
             const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), catS = document.getElementById('cat-select');
             incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; catS.innerHTML = '';
 
-            let actInc = 0, actExp = 0, budIncTotal = 0, totalAssets = 0;
+            let actInc = 0, actExp = 0, budIncT = 0, budExpT = 0, totalAssets = 0;
             txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
             
             assets.forEach((a, i) => {
@@ -251,41 +246,42 @@
             });
 
             planInc.forEach((p, i) => {
-                budIncTotal += p.amt;
+                budIncT += p.amt;
                 const m = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 catS.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
                 incL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="pos">$${(p.amt-m).toFixed(0)}</span><button class="del-btn" onclick="planInc.splice(${i},1);saveAndRefresh();">×</button></div>`;
             });
 
             planExp.forEach((p, i) => {
+                budExpT += p.amt;
                 const m = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
                 expL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="${(p.amt-m)<0?'neg':'pos'}">$${(p.amt-m).toFixed(0)}</span><button class="del-btn" onclick="planExp.splice(${i},1);saveAndRefresh();">×</button></div>`;
             });
 
-            const savings = actInc - actExp;
+            const actSavings = actInc - actExp;
             document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
             document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
-            document.getElementById('cf-sav').innerText = `$${savings.toLocaleString()}`;
+            document.getElementById('cf-sav').innerText = `$${actSavings.toLocaleString()}`;
             
             const header = document.getElementById('main-header');
             if(activeTab === 'budget') {
                 header.style.background = "var(--m-green)";
-                document.getElementById('header-label').innerText = "Remaining to Spend";
-                document.getElementById('header-val').innerText = `$${(budIncTotal - actExp).toLocaleString()}`;
-                document.getElementById('header-subtext').innerText = "Planned Income - Actual Expenses";
+                document.getElementById('header-label').innerText = "Budget Surplus";
+                document.getElementById('header-val').innerText = `$${(budIncT - budExpT).toLocaleString()}`;
+                document.getElementById('header-subtext').innerText = "Budgeted Income - Budgeted Expenses";
             } else {
                 header.style.background = "var(--m-blue)";
                 document.getElementById('header-label').innerText = "Net Worth";
-                document.getElementById('header-val').innerText = `$${(totalAssets + savings).toLocaleString()}`;
+                document.getElementById('header-val').innerText = `$${(totalAssets + actSavings).toLocaleString()}`;
                 document.getElementById('header-subtext').innerText = "Assets + Total Net Savings";
             }
             document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m_last_sync') || "Never");
 
             txns.slice(0, 5).forEach(t => {
                 txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
-                    <div><b>${t.cat}</b>: ${t.desc}</div>
-                    <div class="${t.amt < 0 ? 'neg' : 'pos'}">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
+                    <div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div>
+                    <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
                 </div>`;
             });
         }
