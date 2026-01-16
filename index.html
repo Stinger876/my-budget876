@@ -114,29 +114,38 @@
         }
 
         // This merges an existing file with your current app data
-        function syncFromFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+    function syncFromFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const cloudData = JSON.parse(e.target.result);
-                    if (!Array.isArray(cloudData)) throw new Error("Not a valid list");
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            let cloudData = JSON.parse(e.target.result);
+            
+            // Safety check: If the file is wrapped in an object, grab the list
+            if (!Array.isArray(cloudData) && typeof cloudData === 'object') {
+                cloudData = cloudData.txns || Object.values(cloudData).find(val => Array.isArray(val)) || [];
+            }
 
-                    const combined = [...txns, ...cloudData];
-                    // Remove duplicates by ID
-                    txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
-                    
-                    localStorage.setItem('m9_last_sync', new Date().toLocaleString());
-                    saveAndRefresh();
-                    alert("Sync Complete! ✅ Data merged successfully.");
-                } catch (err) {
-                    alert("Sync Failed: The file format is invalid. Use 'Create New' to start a fresh one.");
-                }
-            };
-            reader.readAsText(file);
+            if (!Array.isArray(cloudData)) throw new Error("Not a valid list");
+
+            // Merge logic
+            const combined = [...txns, ...cloudData];
+            
+            // Remove duplicates and save
+            txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
+            
+            localStorage.setItem('m9_last_sync', new Date().toLocaleString());
+            saveAndRefresh();
+            alert("Sync Complete! ✅ " + cloudData.length + " items processed.");
+        } catch (err) {
+            console.error("Sync Error:", err);
+            alert("Sync Failed: The file format is invalid. Ensure you are selecting the 'budget_backup.json' file.");
         }
+    };
+    reader.readAsText(file);
+}
 
         // 3. APP LOGIC
         function addTransaction() {
