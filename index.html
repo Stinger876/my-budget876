@@ -91,119 +91,146 @@
 
     <h3 style="margin-left:10px;">Transactions</h3>
     <div class="card" id="txn-list"></div>
-<script>
-    // 1. CONFIG
-    const CLIENT_ID = '92806363831-ein0puf9e0fnhsss0m2objg4asa6ht6s.apps.googleusercontent.com';
-    const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+    <script>
+        // 1. CONFIG
+        const CLIENT_ID = '92806363831-ein0puf9e0fnhsss0m2objg4asa6ht6s.apps.googleusercontent.com';
+        const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
-    let tokenClient;
-    let gapiInited = false;
-    let gisInited = false;
-
-    // Use m9 keys consistently for your data
-    let txns = JSON.parse(localStorage.getItem('m9_txns')) || [];
-    let planInc = JSON.parse(localStorage.getItem('m9_p_inc')) || [];
-    let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
-
-    // Initialize Google APIs
-    function gapiLoaded() { gapi.load('client', async () => { await gapi.client.init({ discoveryDocs: [DISCOVERY_DOC] }); gapiInited = true; }); }
-    function gisLoaded() { tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' }); gisInited = true; }
-
-    async function syncWithDrive() {
-        if (!gisInited) return alert("Google API not ready. Wait 3 seconds and try again.");
+        let tokenClient, gapiInited = false, gisInited = false;
         
-        tokenClient.callback = async (resp) => {
-            if (resp.error) return;
-            // Visual feedback that sync started
-            const headerVal = document.getElementById('left-val');
-            const originalText = headerVal.innerText;
-            headerVal.innerText = "Syncing...";
+        // Unified data loading (using m9 keys consistently)
+        let txns = JSON.parse(localStorage.getItem('m9_txns')) || [];
+        let planInc = JSON.parse(localStorage.getItem('m9_p_inc')) || [];
+        let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
 
-            try {
-                // Find file in Google Drive
-                const list = await gapi.client.drive.files.list({ q: "name = 'budget_data.json' and trashed = false" });
-                let fileId = list.result.files.length > 0 ? list.result.files[0].id : null;
+        document.getElementById('txn-date').valueAsDate = new Date();
 
-                if (fileId) {
-                    // Download and Merge cloud data with local data
-                    const res = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
-                    let cloudTxns = res.result || [];
-                    const combined = [...txns, ...cloudTxns];
-                    txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
+        // 2. GOOGLE DRIVE SYNC LOGIC
+        function gapiLoaded() { gapi.load('client', async () => { await gapi.client.init({ discoveryDocs: [DISCOVERY_DOC] }); gapiInited = true; }); }
+        function gisLoaded() { tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' }); gisInited = true; }
+
+        async function syncWithDrive() {
+            if (!gisInited || !gapiInited) return alert("Google Services loading... try again in 3 seconds.");
+
+            tokenClient.callback = async (resp) => {
+                if (resp.error) return;
+                const accessToken = resp.access_token;
+                alert("Syncing started...");
+
+                try {
+                    // Search for existing file
+                    const list = await gapi.client.drive.files.list({ q: "name = 'budget_data.json' and trashed = false" });
+                    let fileId = list.result.files.length > 0 ? list.result.files[0].id : null;
+
+                    if (fileId) {
+                        // Download existing cloud data
+                        const downloadRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+                            headers: { 'Authorization': `Bearer ${accessToken}` }
+                        });
+                        
+                        if (downloadRes.ok) {
+                            const cloudTxns = await downloadRes.json();
+                            const combined = [...txns, ...cloudTxns];
+                            // Remove duplicates by ID
+                            txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
+                        }
+                    }
+
+                    // Upload combined data back to Drive
+                    const content = JSON.stringify(txns);
+                    const metadata = { name: 'budget_data.json', mimeType: 'application/json' };
+                    
+                    if (!fileId) {
+                        await gapi.client.drive.files.create({ resource: metadata, media: { mimeType: 'application/json', body: content } });
+                    } else {
+                        await gapi.client.drive.files.update({ fileId: fileId, media: { mimeType: 'application/json', body: content } });
+                    }
+
+                    saveAndRefresh();
+                    alert("Sync Complete! ✅ Check your Google Drive for 'budget_data.json'");
+                } catch (err) {
+                    console.error(err);
+                    alert("Sync Failed ❌. Please ensure you are not in Incognito mode.");
                 }
+            };
+            tokenClient.requestAccessToken({ prompt: '' });
+        }
 
-                // Save combined data back to Drive
-                const content = JSON.stringify(txns);
-                const metadata = { name: 'budget_data.json', mimeType: 'application/json' };
-                
-                if (!fileId) {
-                    await gapi.client.drive.files.create({ resource: metadata, media: { mimeType: 'application/json', body: content } });
-                } else {
-                    await gapi.client.drive.files.update({ fileId: fileId, media: { mimeType: 'application/json', body: content } });
-                }
+        // 3. APP LOGIC
+        function promptPlan(type) {
+            const name = prompt("Enter name:");
+            const amt = parseFloat(prompt("Enter amount:"));
+            if (!name || isNaN(amt)) return;
+            if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
+            else planExp.push({ id: Date.now(), name, amt });
+            saveAndRefresh();
+        }
 
-                saveAndRefresh();
-                alert("Sync Complete! ✅");
-            } catch (err) { 
-                console.error(err); 
-                alert("Sync Failed ❌. Check if you added your email as a Test User."); 
-                headerVal.innerText = originalText;
-            }
-        };
-        tokenClient.requestAccessToken({ prompt: '' });
-    }
+        function deletePlan(type, id) {
+            if (type === 'inc') planInc = planInc.filter(i => i.id !== id);
+            else planExp = planExp.filter(i => i.id !== id);
+            saveAndRefresh();
+        }
 
-    // App Logic Functions
-    function promptPlan(type) {
-        const name = prompt("Enter name:");
-        const amt = parseFloat(prompt("Enter amount:"));
-        if (!name || isNaN(amt)) return;
-        if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
-        else planExp.push({ id: Date.now(), name, amt });
-        saveAndRefresh();
-    }
+        function addTransaction() {
+            const desc = document.getElementById('desc').value;
+            const cat = document.getElementById('cat').value;
+            const date = document.getElementById('txn-date').value;
+            const amt = parseFloat(document.getElementById('amt').value);
+            if(!desc || !date || isNaN(amt)) return;
 
-    function addTransaction() {
-        const desc = document.getElementById('desc').value;
-        const cat = document.getElementById('cat').value;
-        const date = document.getElementById('txn-date').value;
-        const amt = parseFloat(document.getElementById('amt').value);
-        if(!desc || !date || isNaN(amt)) return;
-        txns.unshift({ id: Date.now(), desc, cat, date, amt });
-        document.getElementById('desc').value = '';
-        document.getElementById('amt').value = '';
-        saveAndRefresh();
-    }
+            txns.unshift({ id: Date.now(), desc, cat, date, amt });
+            document.getElementById('desc').value = '';
+            document.getElementById('amt').value = '';
+            saveAndRefresh();
+        }
 
-    function saveAndRefresh() {
-        localStorage.setItem('m9_txns', JSON.stringify(txns));
-        localStorage.setItem('m9_p_inc', JSON.stringify(planInc));
-        localStorage.setItem('m9_p_exp', JSON.stringify(planExp));
-        updateUI();
-    }
+        function deleteTxn(id) {
+            txns = txns.filter(t => t.id !== id);
+            saveAndRefresh();
+        }
 
-    function updateUI() {
-        const txnListEl = document.getElementById('txn-list');
-        const flowListEl = document.getElementById('cash-flow-list');
-        txnListEl.innerHTML = ''; flowListEl.innerHTML = '';
-        
-        let aInc = 0, aExp = 0;
-        txns.forEach(t => {
-            if (t.amt > 0) aInc += t.amt; else aExp += Math.abs(t.amt);
-            const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-            txnListEl.innerHTML += `<div class="txn-row"><div class="txn-icon">${t.cat}</div><div style="flex-grow:1"><b>${t.desc}</b><br><small>${d}</small></div><div style="text-align:right">$${Math.abs(t.amt).toFixed(2)}</div></div>`;
-        });
+        function saveAndRefresh() {
+            localStorage.setItem('m9_txns', JSON.stringify(txns));
+            localStorage.setItem('m9_p_inc', JSON.stringify(planInc));
+            localStorage.setItem('m9_p_exp', JSON.stringify(planExp));
+            updateUI();
+        }
 
-        document.getElementById('net-val').innerText = `$${(aInc - aExp).toLocaleString()}`;
-        document.getElementById('act-inc').innerText = `$${aInc.toLocaleString()}`;
-        document.getElementById('act-exp').innerText = `$${aExp.toLocaleString()}`;
-    }
+        function updateUI() {
+            const txnListEl = document.getElementById('txn-list');
+            const flowListEl = document.getElementById('cash-flow-list');
+            document.getElementById('plan-inc-list').innerHTML = '';
+            document.getElementById('plan-exp-list').innerHTML = '';
+            txnListEl.innerHTML = ''; flowListEl.innerHTML = '';
+            
+            let sumPInc = 0, sumPExp = 0, aInc = 0, aExp = 0, catTotals = {};
 
-    window.onload = updateUI;
-    document.getElementById('header-container').onclick = syncWithDrive;
-</script>
+            txns.sort((a, b) => new Date(b.date) - new Date(a.date));
+            txns.forEach(t => {
+                if (t.amt > 0) aInc += t.amt; else aExp += Math.abs(t.amt);
+                catTotals[t.cat] = (catTotals[t.cat] || 0) + Math.abs(t.amt);
+                const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                txnListEl.innerHTML += `<div class="txn-row"><div class="txn-icon">${t.cat}</div><div style="flex-grow:1"><b>${t.desc}</b><br><small>${d}</small></div><div style="text-align:right">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTxn(${t.id})">×</button></div>`;
+            });
+
+            planInc.forEach(i => { sumPInc += i.amt; document.getElementById('plan-inc-list').innerHTML += `<div class="plan-item"><span>${i.name}</span> $${i.amt} <button class="del-btn" onclick="deletePlan('inc', ${i.id})">×</button></div>`; });
+            planExp.forEach(i => { sumPExp += i.amt; document.getElementById('plan-exp-list').innerHTML += `<div class="plan-item"><span>${i.name}</span> $${i.amt} <button class="del-btn" onclick="deletePlan('exp', ${i.id})">×</button></div>`; });
+
+            document.getElementById('net-val').innerText = `$${(aInc - aExp).toLocaleString()}`;
+            document.getElementById('act-inc').innerText = `$${aInc.toLocaleString()}`;
+            document.getElementById('act-exp').innerText = `$${aExp.toLocaleString()}`;
+            document.getElementById('left-val').innerText = `$${(sumPExp - aExp).toLocaleString()}`;
+        }
+
+        window.onload = updateUI;
+        document.getElementById('header-container').onclick = syncWithDrive;
+    </script>
     <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
     <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>   
+</body>
+</html>
+
 </body>
 </html>
