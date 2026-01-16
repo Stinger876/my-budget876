@@ -3,17 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.5</title>
+    <title>Monarch-Lite v14.6</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
+        /* Modal and Wizard Styling */
         #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0; }
         .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 85%; max-width: 400px; margin: auto; text-align: center; }
         
-        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
+        .setup-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; text-align: left; }
+        .setup-row input[type="checkbox"] { width: 22px; height: 22px; margin: 0; cursor: pointer; }
+
+        /* Header Styling */
+        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; transition: background 0.3s; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         
+        /* Layout Components */
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         
@@ -28,7 +34,7 @@
         .plan-input { text-align: right; border-color: #444; height: 32px; }
         
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
-        .btn-fresh-alt { background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; }
+        .btn-fresh-alt { background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; text-decoration: none; }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 16px; cursor: pointer; text-align: right; }
         
         .pos { color: var(--m-green); }
@@ -39,21 +45,24 @@
 
     <div id="startup-modal">
         <div class="modal-card" id="initial-choice">
-            <h2 style="color:var(--m-teal);">Welcome Back</h2>
-            <p id="status-msg">Existing budget data found.</p>
-            <div id="continue-btn" class="btn-track" style="margin-bottom:10px" onclick="closeModal()">Continue with Session</div>
-            <div class="btn-fresh-alt" onclick="showWizard()" style="color:var(--m-red);">Start Fresh Setup</div>
+            <h2 style="color:var(--m-teal); margin-top:0;">Welcome Back</h2>
+            <p id="status-msg" style="font-size:14px; opacity:0.8; margin-bottom:25px;">Budget data found in browser.</p>
+            <div id="continue-btn" class="btn-track" style="margin-bottom:10px" onclick="closeModal()">Continue Session</div>
+            <label for="sync-upload" class="btn-fresh-alt">Sync from File</label>
+            <div class="btn-fresh-alt" onclick="showWizard()" style="color:var(--m-red); border:1px solid var(--m-red);">Start Fresh Setup</div>
+            <input type="file" id="sync-upload" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
 
         <div class="modal-card" id="wizard-view" style="display:none;">
             <h3 style="color:var(--m-teal);">Step 1: Budget</h3>
-            <div id="wizard-list" style="text-align:left; margin-bottom:15px;">
-                <div class="cf-row"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
-                <div class="cf-row"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
-                <div class="cf-row"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
-                <div class="cf-row"><span>🚗 Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
-                <div class="cf-row"><span>🍳 Dining</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
-                <div class="cf-row"><span>🏋️ Gym & Snacks</span><input type="checkbox" checked data-cat="Gym & Snacks" data-type="exp"></div>
+            <p style="font-size:12px; opacity:0.7;">Monthly Categories:</p>
+            <div id="wizard-list" style="margin-bottom:15px;">
+                <div class="setup-row"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
+                <div class="setup-row"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
+                <div class="setup-row"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
+                <div class="setup-row"><span>🚗 Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
+                <div class="setup-row"><span>🍳 Dining</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
+                <div class="setup-row"><span>🏋️ Gym & Snacks</span><input type="checkbox" checked data-cat="Gym & Snacks" data-type="exp"></div>
             </div>
             <button class="btn-track" onclick="showInvWizard()">Next: Investments</button>
         </div>
@@ -61,7 +70,7 @@
         <div class="modal-card" id="wizard-inv-view" style="display:none;">
             <h3 style="color:var(--m-teal);">Step 2: Investments</h3>
             <div id="inv-setup-list"></div>
-            <button class="btn-fresh-alt" onclick="addWizardInv()">+ Add Investment</button>
+            <button class="btn-fresh-alt" onclick="addWizardInv()">+ Add Asset</button>
             <button class="btn-track" onclick="finishWizard()">Finish Setup</button>
         </div>
     </div>
@@ -88,7 +97,7 @@
             <div class="cf-row"><span>Expenses</span><span id="cf-exp" class="neg">$0</span></div>
             <div class="cf-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
         </div>
-        <div class="budget-label">Plan <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal);">+ Custom</button></div>
+        <div class="budget-label">Plan <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal); font-size:12px;">+ Custom</button></div>
         <div class="card"><div id="income-list"></div><div id="expense-list"></div></div>
         <div class="card">
             <b>Track Entry</b>
@@ -114,8 +123,9 @@
         let activeTab = 'budget';
 
         window.onload = function() {
+            // v14.2 Reload Check
             if (txns.length === 0 && planInc.length === 0 && assets.length === 0) {
-                document.getElementById('status-msg').innerText = "No data found.";
+                document.getElementById('status-msg').innerText = "No data found. Let's start fresh.";
                 document.getElementById('continue-btn').style.display = 'none';
             }
             document.getElementById('txn-date').valueAsDate = new Date();
@@ -142,6 +152,21 @@
                 if(inp[0] && inp[0].value) assets.push({name: inp[0].value, amt: parseFloat(inp[1].value) || 0});
             });
             saveAndRefresh(); closeModal();
+        }
+
+        function syncFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    txns = data.txns || []; planInc = data.planInc || []; planExp = data.planExp || []; assets = data.assets || [];
+                    localStorage.setItem('m_last_sync', data.exportedAt || new Date().toLocaleString());
+                    saveAndRefresh(); closeModal();
+                } catch (err) { alert("Invalid File"); }
+            };
+            reader.readAsText(file);
         }
 
         function switchTab(t) {
@@ -205,7 +230,7 @@
             document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
             document.getElementById('cf-sav').innerText = `$${savings.toLocaleString()}`;
             
-            // HEADER LOGIC
+            // HEADER LOGIC (Budget vs Investment)
             const header = document.getElementById('main-header');
             if(activeTab === 'budget') {
                 header.style.background = "var(--m-green)";
@@ -218,9 +243,10 @@
                 document.getElementById('header-val').innerText = `$${(totalAssets + savings).toLocaleString()}`;
                 document.getElementById('header-subtext').innerText = "Total Assets + Current Cash Savings";
             }
+            document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m_last_sync') || "Never");
 
             txns.slice(0, 5).forEach(t => {
-                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; padding:10px; margin-bottom:5px;">
+                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
                     <div><b>${t.cat}</b>: ${t.desc}</div>
                     <div class="${t.amt < 0 ? 'neg' : 'pos'}">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
                 </div>`;
