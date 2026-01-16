@@ -3,48 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.9.6</title>
+    <title>Monarch-Lite v14.9.4</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
-        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; text-align: center; }
+        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 20px 0; }
+        .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; margin: auto; text-align: center; box-sizing: border-box; }
+        .wizard-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; text-align: left; }
+        @media (min-width: 600px) { .wizard-grid { grid-template-columns: 1fr 1fr; } }
+        .setup-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #2a2a2a; border-radius: 12px; border: 1px solid #333; }
         
         .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; transition: background 0.3s; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         
         .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; opacity: 0.6; color: white; border: none; font-size: 12px; }
+        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; opacity: 0.6; color: white; border: none; }
         .tab.active { background: var(--m-teal); color: var(--m-blue); opacity: 1; }
 
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
-        .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; }
+        .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px 30px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         .budget-label { font-size: 16px; font-weight: bold; margin: 15px 0 8px 0; display: flex; justify-content: space-between; align-items: center; color: var(--m-teal); }
         
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
         
-        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
+        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; }
+        .sync-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; height: 45px; box-sizing: border-box; }
+        .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; }
         
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
-        .del-btn { color: var(--m-red); background: none; border: none; font-size: 20px; cursor: pointer; padding: 0 5px; }
-
-        /* Dashboard Bars */
-        .bar-container { background: #333; height: 8px; border-radius: 4px; margin-top: 5px; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--m-teal); transition: width 0.5s; }
-        .analysis-row { margin-bottom: 15px; }
+        .del-btn { color: var(--m-red); background: none; border: none; font-size: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="startup-modal">
-        <div class="modal-card">
-            <h2 style="color:var(--m-teal);">Dashboard Loaded</h2>
-            <button class="btn-track" onclick="closeModal()">Enter App</button>
+        <div class="modal-card" id="initial-choice">
+            <h2 style="color:var(--m-teal); margin-top:0;">Welcome Back</h2>
+            <p id="status-msg" style="font-size:14px; opacity:0.8; margin-bottom:25px;">Data found.</p>
+            <button id="continue-btn" class="btn-track" onclick="closeModal()">Continue Session</button>
+            <label for="sync-upload-modal" class="btn-mgmt" style="width:100%; margin-top:10px;">Sync from File</label>
+            <button class="btn-mgmt" onclick="showWizard()" style="width:100%; color:var(--m-red); margin-top:10px;">Start Fresh Setup</button>
+            <input type="file" id="sync-upload-modal" accept=".json,.csv" style="display:none" onchange="syncFromFile(event)">
+        </div>
+        <div class="modal-card" id="wizard-view" style="display:none;">
+            <h3>Categories</h3>
+            <div id="wizard-list" class="wizard-grid">
+                <div class="setup-row"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
+                <div class="setup-row"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
+                <div class="setup-row"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
+                <div class="setup-row"><span>🚗 Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
+                <div class="setup-row"><span>🍳 Dining</span><input type="checkbox" checked data-cat="Dining" data-type="exp"></div>
+                <div class="setup-row"><span>🏋️ Gym & Snacks</span><input type="checkbox" checked data-cat="Gym & Snacks" data-type="exp"></div>
+            </div>
+            <button class="btn-track" onclick="showInvWizard()">Next</button>
+        </div>
+        <div class="modal-card" id="wizard-inv-view" style="display:none;">
+            <h3>Investments</h3>
+            <div id="inv-setup-list"></div>
+            <button class="btn-mgmt" style="width:100%" onclick="addWizardInv()">+ Add Asset</button>
+            <button class="btn-track" onclick="finishWizard()">Finish</button>
         </div>
     </div>
 
@@ -56,9 +78,8 @@
     </div>
 
     <div class="tab-bar">
-        <button class="tab active" onclick="switchTab('budget')" id="tab-budget">Budget</button>
-        <button class="tab" onclick="switchTab('analysis')" id="tab-analysis">Analysis</button>
-        <button class="tab" onclick="switchTab('invest')" id="tab-invest">Invest</button>
+        <button class="tab active" id="tab-budget" onclick="switchTab('budget')">Budget</button>
+        <button class="tab" id="tab-invest" onclick="switchTab('invest')">Investments</button>
     </div>
 
     <div id="view-budget">
@@ -67,46 +88,34 @@
             <div class="cf-row"><span>Actual Expenses</span><span id="cf-exp" class="neg">$0</span></div>
             <div class="cf-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
         </div>
-        
         <div class="budget-label">Income <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
         <div class="card" id="income-list"></div>
-        
         <div class="budget-label">Expenses <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
         <div class="card" id="expense-list"></div>
-        
         <div class="card">
-            <b>Manual Entry</b>
+            <b>Transactions</b>
             <input type="text" id="desc" placeholder="Merchant">
             <select id="cat-select"></select>
             <div style="display:flex; gap:10px;"><input type="date" id="txn-date" style="flex:1"><input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1"></div>
             <button class="btn-track" onclick="addTransaction()">Add Transaction</button>
         </div>
-
-        <div class="budget-label">Recent History</div>
         <div id="txn-list"></div>
     </div>
 
-    <div id="view-analysis" style="display:none;">
-        <div class="budget-label">Spending by Category</div>
-        <div class="card" id="analysis-list">
-            </div>
-        
-        <div class="budget-label">Top Merchants</div>
-        <div class="card" id="merchant-list"></div>
-    </div>
-
     <div id="view-invest" style="display:none;">
-        <div class="budget-label">Asset Tracking</div>
-        <div id="invest-main-list" class="card"></div>
+        <div class="budget-label">Assets</div>
+        <div class="card" id="invest-main-list"></div>
+        <button class="btn-track" onclick="addInvestItem()">+ New Investment</button>
     </div>
 
-    <div class="card" style="margin-top:20px;">
-        <label for="sync-upload-main" class="btn-mgmt">🔄 Import Rogers CSV</label>
-        <input type="file" id="sync-upload-main" accept=".json,.csv" style="display:none" onchange="syncFromFile(event)">
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button class="btn-mgmt" style="flex:1" onclick="exportToFile()">💾 Backup</button>
-            <button class="btn-mgmt" style="flex:1; color:var(--m-red);" onclick="if(confirm('Reset?')) {localStorage.clear(); location.reload();}">🗑️ Reset</button>
+    <div class="card">
+        <b>Settings</b>
+        <div class="sync-grid">
+            <button class="btn-mgmt" onclick="exportToFile()">💾 Save</button>
+            <label for="sync-upload-main" class="btn-mgmt">🔄 Sync/Import</label>
+            <input type="file" id="sync-upload-main" accept=".json,.csv" style="display:none" onchange="syncFromFile(event)">
         </div>
+        <button class="btn-danger" onclick="clearAllData()">🗑️ Reset</button>
     </div>
 
     <script>
@@ -116,6 +125,7 @@
         let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
         let activeTab = 'budget';
 
+        // ROGERS CATEGORY MAPPING LOGIC
         const rogersMap = {
             "Quick Payment Service-Fast Food Restaurants": "Dining",
             "Eating Places and Restaurants": "Dining",
@@ -123,54 +133,119 @@
             "Automotive Service Shops (Non-Dealer)": "Auto",
             "Automated Fuel Dispensers": "Auto",
             "Service Stations": "Auto",
-            "Drug Stores and Pharmacies": "Gym & Snacks", // Matches your recovery snacks
-            "Cosmetic Stores": "Gym & Snacks",
-            "Medical and Dental Laboratories": "Health",
-            "Parking Lots and Garages": "Auto"
+            "Drug Stores and Pharmacies": "Gym & Snacks", // Likely recovery snacks location
+            "Health and Beauty Spas": "Gym & Snacks",
+            "Cosmetic Stores": "Gym & Snacks"
         };
 
         function syncFromFile(event) {
             const file = event.target.files[0];
+            if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 const content = e.target.result;
-                if (content.includes("Date,Posted Date")) {
+                if (content.includes("Date,Posted Date,Reference Number")) {
                     const rows = content.split('\n').filter(r => r.trim() !== "");
                     const newEntries = [];
                     for(let i = 1; i < rows.length; i++) {
-                        const cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                        if (cols.length < 13) continue;
-                        const rCat = cols[6].replace(/"/g, '').trim();
-                        const desc = cols[7].replace(/"/g, '').trim();
-                        const amt = parseFloat(cols[12].replace(/[$,"]/g, ''));
+                        // Complex regex for CSV parsing with quotes
+                        const cols = rows[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                        if (!cols || cols.length < 13) continue;
+
+                        const date = cols[0].trim();
+                        const rogersCat = cols[6].replace(/"/g, '').trim();
+                        const rawDesc = cols[7].replace(/"/g, '').trim();
+                        const rawAmt = cols[12].replace(/[$,"]/g, '').trim();
+                        const amt = parseFloat(rawAmt);
+
                         if(!isNaN(amt)) {
-                            newEntries.push({ id: Date.now() + Math.random(), date: cols[0], desc, cat: rogersMap[rCat] || "Other", amt: -Math.abs(amt) });
+                            // Map to your budget category or keep the original description
+                            const mappedCat = rogersMap[rogersCat] || "Imported";
+                            
+                            newEntries.push({
+                                id: Date.now() + Math.random(),
+                                date: date,
+                                desc: rawDesc,
+                                cat: mappedCat,
+                                amt: -Math.abs(amt)
+                            });
                         }
                     }
                     txns = [...newEntries, ...txns];
+                    localStorage.setItem('m_last_sync', "Rogers Import: " + new Date().toLocaleString());
                     saveAndRefresh();
-                    alert(`Analyzed ${newEntries.length} Rogers transactions!`);
+                    alert(`Imported ${newEntries.length} transactions. Categories mapped using Rogers descriptions.`);
                 } else {
-                    const data = JSON.parse(content);
-                    txns = data.txns; planInc = data.planInc; planExp = data.planExp; assets = data.assets;
-                    saveAndRefresh();
+                    try {
+                        const data = JSON.parse(content);
+                        txns = data.txns || []; planInc = data.planInc || []; 
+                        planExp = data.planExp || []; assets = data.assets || [];
+                        saveAndRefresh();
+                    } catch (err) { alert("Format Error."); }
                 }
+                closeModal();
             };
             reader.readAsText(file);
         }
 
+        // --- Core Logic ---
+        window.onload = function() {
+            if (txns.length > 0 || planInc.length > 0 || assets.length > 0) {
+                document.getElementById('status-msg').innerText = "Session Active.";
+            } else { document.getElementById('continue-btn').style.display = 'none'; }
+            document.getElementById('txn-date').valueAsDate = new Date();
+            updateUI();
+        };
+
         function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-        function addCustom(type) { const n = prompt("Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveAndRefresh(); } }
-        
+        function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
+        function showInvWizard() { document.getElementById('wizard-view').style.display = 'none'; document.getElementById('wizard-inv-view').style.display = 'block'; if(assets.length === 0) addWizardInv(); }
+        function addWizardInv() {
+            const div = document.createElement('div');
+            div.innerHTML = `<div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" placeholder="e.g. TFSA" style="width:60%"><input type="number" placeholder="$" style="width:40%"></div>`;
+            document.getElementById('inv-setup-list').appendChild(div);
+        }
+        function finishWizard() {
+            planInc = []; planExp = []; assets = []; txns = [];
+            document.querySelectorAll('#wizard-list input:checked').forEach(c => {
+                const name = c.getAttribute('data-cat');
+                if(c.getAttribute('data-type') === 'inc') planInc.push({name, amt: 0});
+                else planExp.push({name, amt: 0});
+            });
+            document.querySelectorAll('#inv-setup-list div input').forEach((inp, idx, arr) => {
+                if(idx % 2 === 0 && inp.value) assets.push({name: inp.value, amt: parseFloat(arr[idx+1].value) || 0});
+            });
+            saveAndRefresh(); closeModal();
+        }
+        function exportToFile() {
+            const data = { txns, planInc, planExp, assets, exportedAt: new Date().toLocaleString() };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `budget_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+        function clearAllData() { if(confirm("Clear everything?")) { localStorage.clear(); location.reload(); } }
+        function switchTab(t) {
+            activeTab = t;
+            document.getElementById('view-budget').style.display = t === 'budget' ? 'block' : 'none';
+            document.getElementById('view-invest').style.display = t === 'invest' ? 'block' : 'none';
+            document.getElementById('tab-budget').className = 'tab ' + (t === 'budget' ? 'active' : '');
+            document.getElementById('tab-invest').className = 'tab ' + (t === 'invest' ? 'active' : '');
+            updateUI();
+        }
         function addTransaction() {
             const desc = document.getElementById('desc').value, cat = document.getElementById('cat-select').value;
             let amt = parseFloat(document.getElementById('amt').value);
             if(!desc || isNaN(amt)) return;
             amt = (planInc.some(p => p.name === cat)) ? Math.abs(amt) : -Math.abs(amt);
             txns.unshift({ id: Date.now(), desc, cat, date: document.getElementById('txn-date').value, amt });
+            document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
             saveAndRefresh();
         }
-
+        function addInvestItem() { const n = prompt("Name:"); if(n) { assets.push({name: n, amt: 0}); saveAndRefresh(); } }
+        function addCustom(type) { const n = prompt("Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveAndRefresh(); } }
         function saveAndRefresh() {
             localStorage.setItem('m_txns', JSON.stringify(txns));
             localStorage.setItem('m_p_inc', JSON.stringify(planInc));
@@ -178,82 +253,48 @@
             localStorage.setItem('m_assets', JSON.stringify(assets));
             updateUI();
         }
-
-        function switchTab(t) {
-            activeTab = t;
-            document.getElementById('view-budget').style.display = t === 'budget' ? 'block' : 'none';
-            document.getElementById('view-analysis').style.display = t === 'analysis' ? 'block' : 'none';
-            document.getElementById('view-invest').style.display = t === 'invest' ? 'block' : 'none';
-            ['budget', 'analysis', 'invest'].forEach(id => document.getElementById('tab-'+id).className = 'tab ' + (t === id ? 'active' : ''));
-            updateUI();
-        }
-
         function updateUI() {
-            const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), 
-                  txnL = document.getElementById('txn-list'), catS = document.getElementById('cat-select'),
-                  anaL = document.getElementById('analysis-list'), merL = document.getElementById('merchant-list');
-            
-            incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; catS.innerHTML = ''; anaL.innerHTML = ''; merL.innerHTML = '';
-            
-            let actInc = 0, actExp = 0, bInc = 0, bExp = 0;
-            let catTotals = {};
-            let merchantTotals = {};
-
-            txns.forEach(t => {
-                if(t.amt > 0) actInc += t.amt; 
-                else {
-                    actExp += Math.abs(t.amt);
-                    catTotals[t.cat] = (catTotals[t.cat] || 0) + Math.abs(t.amt);
-                    merchantTotals[t.desc] = (merchantTotals[t.desc] || 0) + Math.abs(t.amt);
-                }
+            const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), catS = document.getElementById('cat-select');
+            incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; catS.innerHTML = '';
+            let actInc = 0, actExp = 0, budIncT = 0, budExpT = 0, totalAssets = 0;
+            txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
+            assets.forEach((a, i) => {
+                totalAssets += a.amt;
+                invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" class="plan-input" style="width:100px;" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"></div>`;
             });
-
-            // Update Analysis Bars
-            const maxCat = Math.max(...Object.values(catTotals), 1);
-            Object.keys(catTotals).sort((a,b) => catTotals[b] - catTotals[a]).forEach(c => {
-                const percent = (catTotals[c] / maxCat) * 100;
-                anaL.innerHTML += `<div class="analysis-row">
-                    <div style="display:flex; justify-content:space-between; font-size:13px;"><span>${c}</span><b>$${catTotals[c].toFixed(0)}</b></div>
-                    <div class="bar-container"><div class="bar-fill" style="width:${percent}%"></div></div>
-                </div>`;
-            });
-
-            // Top Merchants
-            Object.keys(merchantTotals).sort((a,b) => merchantTotals[b] - merchantTotals[a]).slice(0, 5).forEach(m => {
-                merL.innerHTML += `<div class="cf-row"><span>${m}</span><b>$${merchantTotals[m].toFixed(0)}</b></div>`;
-            });
-
-            // Standard Lists
             planInc.forEach((p, i) => {
-                bInc += p.amt;
+                budIncT += p.amt;
+                const m = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 catS.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
-                incL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span>$${p.amt}</span><button class="del-btn" onclick="planInc.splice(${i},1);saveAndRefresh();">×</button></div>`;
+                incL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="pos">$${(p.amt-m).toFixed(0)}</span></div>`;
             });
-
             planExp.forEach((p, i) => {
-                bExp += p.amt;
-                const spent = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
+                budExpT += p.amt;
+                const m = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="${(p.amt-spent)<0?'neg':'pos'}">$${(p.amt-spent).toFixed(0)}</span><button class="del-btn" onclick="planExp.splice(${i},1);saveAndRefresh();">×</button></div>`;
+                expL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0;saveAndRefresh();"><span class="${(p.amt-m)<0?'neg':'pos'}">$${(p.amt-m).toFixed(0)}</span></div>`;
             });
-
-            document.getElementById('cf-inc').innerText = `$${actInc.toFixed(0)}`;
-            document.getElementById('cf-exp').innerText = `$${actExp.toFixed(0)}`;
-            document.getElementById('cf-sav').innerText = `$${(actInc - actExp).toFixed(0)}`;
-            document.getElementById('header-val').innerText = `$${(bInc - bExp).toFixed(0)}`;
-
-            txns.slice(0, 30).forEach(t => {
-                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; margin-bottom:5px; padding:10px;">
-                    <div style="font-size:12px;"><b>${t.cat}</b><br>${t.desc}</div>
-                    <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-weight:bold;">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
+            const actSavings = actInc - actExp;
+            document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
+            document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
+            document.getElementById('cf-sav').innerText = `$${actSavings.toLocaleString()}`;
+            const header = document.getElementById('main-header');
+            if(activeTab === 'budget') {
+                header.style.background = "var(--m-green)";
+                document.getElementById('header-label').innerText = "Budget Surplus";
+                document.getElementById('header-val').innerText = `$${(budIncT - budExpT).toLocaleString()}`;
+            } else {
+                header.style.background = "var(--m-blue)";
+                document.getElementById('header-label').innerText = "Net Worth";
+                document.getElementById('header-val').innerText = `$${(totalAssets + actSavings).toLocaleString()}`;
+            }
+            document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m_last_sync') || "Never");
+            txns.slice(0, 15).forEach(t => {
+                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
+                    <div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div>
+                    <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
                 </div>`;
             });
-        }
-
-        function exportToFile() {
-            const data = { txns, planInc, planExp, assets };
-            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `budget_backup.json`; a.click();
         }
     </script>
 </body>
