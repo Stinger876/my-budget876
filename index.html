@@ -305,6 +305,28 @@
                     <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="txns=txns.filter(x=>x.id!==${t.id});saveAndRefresh();">×</button></div>
                 </div>`;
             });
+
+            // Add this inside your <script> tag in the HTML file
+window.addEventListener("message", (event) => {
+    // Security: Only accept data from trusted sources if needed
+    if (event.data.type === "IMPORT_TXNS") {
+        const newTxns = event.data.payload; // Array of {desc, cat, amt, date}
+        
+        // Add IDs and merge with existing transactions
+        const formatted = newTxns.map(t => ({
+            id: Date.now() + Math.random(),
+            desc: t.desc,
+            cat: t.cat || "Uncategorized",
+            date: t.date || new Date().toISOString().split('T')[0],
+            amt: parseFloat(t.amt)
+        }));
+
+        txns = [...formatted, ...txns];
+        saveAndRefresh();
+        alert(`Imported ${formatted.length} transactions!`);
+    }
+}, false);
+
         }
     </script>
 </body>
