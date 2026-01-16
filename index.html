@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v13.8</title>
+    <title>Monarch-Lite v13.9</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -39,9 +39,9 @@
     <div id="startup-modal">
         <div class="modal-card">
             <h2 style="margin-top:0; color:var(--m-teal);">Welcome Back</h2>
-            <p style="font-size:14px; opacity:0.8; margin-bottom:25px;">Load your file to sync your budget.</p>
+            <p style="font-size:14px; opacity:0.8; margin-bottom:25px;">Open a saved file or clear all data.</p>
             <label for="sync-upload" class="btn-sync-alt">Yes, Open File</label>
-            <div class="btn-fresh-alt" onclick="closeModal()">No, Start Fresh</div>
+            <div class="btn-fresh-alt" onclick="startFresh()">No, Start Fresh</div>
         </div>
     </div>
 
@@ -83,7 +83,7 @@
     <div class="card">
         <div class="budget-row" style="border-bottom: 2px solid #333;">
             <span class="col-head" style="text-align:left">Category</span>
-            <span class="col-head">Budget</span>
+            <span class="col-head">Budgeted</span>
             <span class="col-head">Remaining</span>
             <span></span>
         </div>
@@ -97,7 +97,7 @@
     <div class="card">
         <div class="budget-row" style="border-bottom: 2px solid #333;">
             <span class="col-head" style="text-align:left">Category</span>
-            <span class="col-head">Budget</span>
+            <span class="col-head">Budgeted</span>
             <span class="col-head">Remaining</span>
             <span></span>
         </div>
@@ -108,13 +108,13 @@
         <b>Track Transaction</b>
         <input type="text" id="desc" placeholder="Merchant">
         <select id="cat-select">
-            <option value="💰">💰 Income</option>
-            <option value="🏠">🏠 Housing</option>
-            <option value="🛒">🛒 Groceries</option>
-            <option value="🍳">🍳 Dining</option>
-            <option value="🏋️">🏋️ Gym & Snacks</option>
-            <option value="🚗">🚗 Transport</option>
-            <option value="💊">💊 Medical</option>
+            <option value="Income">💰 Income</option>
+            <option value="Housing">🏠 Housing</option>
+            <option value="Groceries">🛒 Groceries</option>
+            <option value="Dining">🍳 Dining</option>
+            <option value="Gym & Snacks">🏋️ Gym & Snacks</option>
+            <option value="Transport">🚗 Transport</option>
+            <option value="Medical">💊 Medical</option>
         </select>
         <div style="display:flex; gap:10px;">
             <input type="date" id="txn-date" style="flex:1">
@@ -137,6 +137,14 @@
             updateUI();
         };
 
+        function startFresh() {
+            localStorage.clear();
+            txns = []; planInc = []; planExp = [];
+            saveAndRefresh();
+            document.getElementById('startup-modal').style.display = 'none';
+            alert("Memory Cleared. ✅");
+        }
+
         function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
 
         function syncFromFile(event) {
@@ -146,28 +154,26 @@
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    if (data.txns) {
-                        txns = data.txns; planInc = data.planInc || []; planExp = data.planExp || [];
-                        localStorage.setItem('m9_last_sync', data.exportedAt || new Date().toLocaleString());
-                        saveAndRefresh(); closeModal();
-                    }
+                    txns = data.txns || []; planInc = data.planInc || []; planExp = data.planExp || [];
+                    localStorage.setItem('m9_last_sync', data.exportedAt || new Date().toLocaleString());
+                    saveAndRefresh(); closeModal();
                 } catch (err) { alert("Invalid File"); }
             };
             reader.readAsText(file);
         }
 
         function exportNewFile() {
-            const bundle = { txns, planInc, planExp, version: "13.8", exportedAt: new Date().toLocaleString() };
+            const bundle = { txns, planInc, planExp, exportedAt: new Date().toLocaleString() };
             const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            link.download = "budget_working_copy.json";
+            link.download = "budget_sync.json";
             link.click();
         }
 
         function promptPlan(type) {
-            const name = prompt("Name (e.g. 🏠 Housing):");
-            const amt = parseFloat(prompt("Budgeted Amount:"));
+            const name = prompt("Name (MUST match dropdown name, e.g. Housing):");
+            const amt = parseFloat(prompt("Amount:"));
             if (name && !isNaN(amt)) {
                 if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
                 else planExp.push({ id: Date.now(), name, amt });
@@ -182,9 +188,8 @@
             let amt = parseFloat(document.getElementById('amt').value);
             if(!desc || isNaN(amt)) return;
             
-            // STRICT SIGN LOGIC
-            if (cat === "💰") { amt = Math.abs(amt); } 
-            else { amt = -Math.abs(amt); }
+            // Non-income is forced negative
+            amt = (cat === "Income") ? Math.abs(amt) : -Math.abs(amt);
 
             txns.unshift({ id: Date.now(), desc, cat, date, amt });
             document.getElementById('desc').value = '';
@@ -212,27 +217,23 @@
             const txnList = document.getElementById('txn-list');
             incList.innerHTML = ''; expList.innerHTML = ''; txnList.innerHTML = '';
             
-            let actInc = 0, actExp = 0, budInc = 0, budExp = 0;
+            let actInc = 0, actExp = 0, budInc = 0;
 
             txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
 
-            // RESTORED MATCHING: Transaction category (emoji) matches the plan name
+            // STRICT CATEGORY MATCHING (Dropdown value to Budget name)
             planInc.forEach(p => {
                 budInc += p.amt;
-                const matches = txns.filter(t => t.amt > 0 && (p.name.includes(t.cat) || t.cat.includes(p.name)))
-                                   .reduce((s, t) => s + t.amt, 0);
+                const matches = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 incList.innerHTML += `<div class="budget-row"><span>${p.name}</span><span style="text-align:right">$${p.amt}</span><span style="text-align:right" class="pos">$${p.amt - matches}</span><button class="del-btn" onclick="deleteItem('inc', ${p.id})">×</button></div>`;
             });
 
             planExp.forEach(p => {
-                budExp += p.amt;
-                const matches = txns.filter(t => t.amt < 0 && (p.name.includes(t.cat) || t.cat.includes(p.name)))
-                                   .reduce((s, t) => s + Math.abs(t.amt), 0);
+                const matches = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
                 const rem = p.amt - matches;
                 expList.innerHTML += `<div class="budget-row"><span>${p.name}</span><span style="text-align:right">$${p.amt}</span><span style="text-align:right" class="${rem < 0 ? 'neg' : 'pos'}">$${rem}</span><button class="del-btn" onclick="deleteItem('exp', ${p.id})">×</button></div>`;
             });
 
-            // Update Summaries
             document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
             document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
             const savings = actInc - actExp;
@@ -242,10 +243,10 @@
             document.getElementById('left-val').innerText = `$${(budInc - actExp).toLocaleString()}`;
             document.getElementById('sync-info').innerText = "Sync: " + (localStorage.getItem('m9_last_sync') || "Never");
 
-            txns.slice(0, 5).forEach(t => {
+            txns.slice(0, 10).forEach(t => {
                 const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
                 txnList.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:10px;">
-                    <div><b>${t.cat} ${t.desc}</b><br><small>${d}</small></div>
+                    <div><b>${t.cat}</b>: ${t.desc}<br><small>${d}</small></div>
                     <div style="text-align:right" class="${t.amt < 0 ? 'neg' : 'pos'}">$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="deleteItem('txn', ${t.id})">×</button></div>
                 </div>`;
             });
