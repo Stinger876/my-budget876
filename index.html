@@ -149,10 +149,13 @@
 
                     saveAndRefresh();
                     alert("Sync Complete! ✅ Data saved to Google Drive.");
-                } catch (err) {
-                    console.error(err);
-                    alert("Sync Failed ❌. If this is your first sync, try adding 1 transaction first.");
-                }
+               } catch (err) {
+    console.error(err);
+    // This will alert the specific error message from Google
+    alert("Sync Failed: " + (err.result?.error?.message || "Check for blocked pop-ups"));
+    headerVal.innerText = originalText;
+}
+
             };
             tokenClient.requestAccessToken({ prompt: '' });
         }
