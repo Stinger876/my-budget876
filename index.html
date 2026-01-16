@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.3</title>
+    <title>Monarch-Lite v14.4</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -47,9 +47,9 @@
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" id="btn-budget" onclick="showTab('budget')">BUDGET</button>
-        <button class="tab-btn" id="btn-assets" onclick="showTab('assets')">ASSETS</button>
-        <button class="tab-btn" id="btn-history" onclick="showTab('history')">HISTORY</button>
+        <button class="tab-btn active" id="t-budget" onclick="showTab('budget')">BUDGET</button>
+        <button class="tab-btn" id="t-assets" onclick="showTab('assets')">ASSETS</button>
+        <button class="tab-btn" id="t-history" onclick="showTab('history')">HISTORY</button>
     </div>
 
     <div id="budget" class="view active">
@@ -112,26 +112,23 @@
     </div>
 
     <script>
-        // Start fresh or load data
+        const DEFAULTS = [
+            {emoji: "💰", name: "Income"},
+            {emoji: "🏠", name: "Housing"},
+            {emoji: "🛒", name: "Groceries"},
+            {emoji: "🍳", name: "Dining"},
+            {emoji: "🚗", name: "Transport"}
+        ];
+
         let data = JSON.parse(localStorage.getItem('m9_data')) || { 
-            txns: [], 
-            planInc: [], 
-            planExp: [], 
-            assets: [],
-            categories: [
-                {emoji: "💰", name: "Income"},
-                {emoji: "🏠", name: "Housing"},
-                {emoji: "🛒", name: "Groceries"},
-                {emoji: "🍳", name: "Dining"},
-                {emoji: "🚗", name: "Transport"}
-            ]
+            txns: [], planInc: [], planExp: [], assets: [], categories: DEFAULTS 
         };
 
         function showTab(tabId) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            document.getElementById('btn-' + tabId).classList.add('active');
+            document.getElementById('t-' + tabId).classList.add('active');
         }
 
         function exportNewFile() {
@@ -140,7 +137,7 @@
             link.href = URL.createObjectURL(blob);
             link.download = "budget_master.json";
             link.click();
-            alert("File Saved! ✅ Overwrite your old one.");
+            alert("File Saved! ✅");
         }
 
         function syncFromFile(event) {
@@ -152,23 +149,24 @@
                     const imported = JSON.parse(e.target.result);
                     if (imported.txns) {
                         data = imported;
-                        if (!data.categories) data.categories = [{emoji: "💰", name: "Income"}];
                     } else if (Array.isArray(imported)) {
                         data.txns = imported;
                     }
+                    // Safety check: Ensure categories exist
+                    if (!data.categories || data.categories.length < 2) {
+                        data.categories = DEFAULTS;
+                    }
                     saveAndRefresh();
                     alert("Sync Successful! ✅");
-                } catch (err) { alert("Invalid File ❌"); }
+                } catch (err) { alert("Invalid File Format ❌"); }
             };
             reader.readAsText(file);
         }
 
-        // CATEGORY LOGIC
         function addCategory() {
-            const emoji = document.getElementById('new-cat-emoji').value || "📦";
             const name = document.getElementById('new-cat-name').value;
             if (!name) return;
-            data.categories.push({emoji, name});
+            data.categories.push({emoji: document.getElementById('new-cat-emoji').value || "📦", name});
             document.getElementById('new-cat-emoji').value = '';
             document.getElementById('new-cat-name').value = '';
             saveAndRefresh();
@@ -179,30 +177,24 @@
             saveAndRefresh();
         }
 
-        // TRANSACTION LOGIC
         function addTransaction() {
             const desc = document.getElementById('desc').value;
             const cat = document.getElementById('cat-select').value;
             const date = document.getElementById('txn-date').value;
             const amt = parseFloat(document.getElementById('amt').value);
-            if(!desc || !date || isNaN(amt)) {
-                alert("Please fill all fields correctly");
-                return;
-            }
+            if(!desc || !date || isNaN(amt)) return alert("Fill all fields");
             data.txns.unshift({ id: Date.now(), desc, cat, date, amt });
             document.getElementById('desc').value = '';
             document.getElementById('amt').value = '';
             saveAndRefresh();
         }
 
-        // ASSET LOGIC
         function addAsset() {
             const name = document.getElementById('asset-name').value;
             const val = parseFloat(document.getElementById('asset-val').value);
             if (!name || isNaN(val)) return;
             const existing = data.assets.find(a => a.name === name);
-            if (existing) existing.val = val; 
-            else data.assets.push({ id: Date.now(), name, val });
+            if (existing) existing.val = val; else data.assets.push({ id: Date.now(), name, val });
             document.getElementById('asset-name').value = '';
             document.getElementById('asset-val').value = '';
             saveAndRefresh();
@@ -211,10 +203,8 @@
         function deleteAsset(id) { data.assets = data.assets.filter(a => a.id !== id); saveAndRefresh(); }
         function deleteTxn(id) { data.txns = data.txns.filter(t => t.id !== id); saveAndRefresh(); }
 
-        // PLANNING LOGIC
         function promptPlan(type) {
-            const name = prompt("Enter Plan Name (e.g. Rent):");
-            const amt = parseFloat(prompt("Enter Amount:"));
+            const name = prompt("Name:"), amt = parseFloat(prompt("Amount:"));
             if (name && !isNaN(amt)) {
                 if (type === 'inc') data.planInc.push({ id: Date.now(), name, amt });
                 else data.planExp.push({ id: Date.now(), name, amt });
@@ -229,61 +219,50 @@
 
         function updateUI() {
             const curMonth = new Date().toISOString().substring(0, 7);
-            const selMonth = document.getElementById('month-filter').value || curMonth;
+            const filterEl = document.getElementById('month-filter');
+            const selMonth = filterEl.value || curMonth;
             
-            // 1. Update Dropdowns & Pills
+            // Sync Category UI
             const catSelect = document.getElementById('cat-select');
             catSelect.innerHTML = '';
-            data.categories.forEach(c => {
-                catSelect.innerHTML += `<option value="${c.emoji}">${c.emoji} ${c.name}</option>`;
-            });
+            data.categories.forEach(c => catSelect.innerHTML += `<option value="${c.emoji}">${c.emoji} ${c.name}</option>`);
 
             const pillList = document.getElementById('pill-list');
             pillList.innerHTML = '';
-            data.categories.forEach((c, index) => {
-                pillList.innerHTML += `<div class="pill">${c.emoji} ${c.name} <span onclick="deleteCategory(${index})" style="cursor:pointer; color:var(--m-red)">×</span></div>`;
-            });
+            data.categories.forEach((c, i) => pillList.innerHTML += `<div class="pill">${c.emoji} ${c.name} <span onclick="deleteCategory(${i})" style="color:var(--m-red); cursor:pointer">×</span></div>`);
 
-            // 2. Month Filter Logic
+            // Sync Month Selector
             const months = [...new Set(data.txns.map(t => t.date.substring(0, 7)))];
             if (!months.includes(curMonth)) months.push(curMonth);
-            const filterEl = document.getElementById('month-filter');
-            const prevVal = filterEl.value;
             filterEl.innerHTML = '';
-            months.sort().reverse().forEach(m => {
-                filterEl.innerHTML += `<option value="${m}" ${m === (prevVal || curMonth) ? 'selected' : ''}>${m}</option>`;
-            });
+            months.sort().reverse().forEach(m => filterEl.innerHTML += `<option value="${m}" ${m === selMonth ? 'selected' : ''}>${m}</option>`);
 
-            // 3. Financial Calcs
+            // Financials
             let aInc = 0, aExp = 0, pInc = 0, pExp = 0;
-            data.txns.forEach(t => {
-                if (t.date.startsWith(selMonth)) {
-                    if (t.amt > 0) aInc += t.amt; else aExp += Math.abs(t.amt);
-                }
-            });
+            data.txns.filter(t => t.date.startsWith(selMonth)).forEach(t => t.amt > 0 ? aInc += t.amt : aExp += Math.abs(t.amt));
             data.planInc.forEach(i => pInc += i.amt);
             data.planExp.forEach(e => pExp += e.amt);
 
             document.getElementById('total-p-inc').innerText = `$${pInc.toLocaleString()}`;
             document.getElementById('total-p-exp').innerText = `$${pExp.toLocaleString()}`;
             document.getElementById('left-val').innerText = `$${(pExp - aExp).toLocaleString()}`;
-            
             const pct = pExp > 0 ? Math.min((aExp/pExp)*100, 100) : 0;
             document.getElementById('budget-bar').style.width = pct + '%';
-            document.getElementById('plan-pct').innerText = Math.round(pct) + '% of Plan Spent';
+            document.getElementById('plan-pct').innerText = Math.round(pct) + '% Spent';
 
-            // 4. Render Lists
-            const assetListEl = document.getElementById('asset-display-list');
+            // Asset List
             let assetTotal = 0;
-            assetListEl.innerHTML = '<b>Account Balances</b>';
+            const assetListEl = document.getElementById('asset-display-list');
+            assetListEl.innerHTML = '<b>Balances</b>';
             data.assets.forEach(a => {
                 assetTotal += a.val;
                 assetListEl.innerHTML += `<div class="txn-row"><span>${a.name}</span><span>$${a.val.toLocaleString()} <button class="del-btn" onclick="deleteAsset(${a.id})">×</button></span></div>`;
             });
             document.getElementById('asset-total').innerText = `$${assetTotal.toLocaleString()}`;
 
+            // Txn List
             const txnList = document.getElementById('txn-list');
-            txnList.innerHTML = '<b>Transactions (' + selMonth + ')</b>';
+            txnList.innerHTML = `<b>Transactions (${selMonth})</b>`;
             data.txns.filter(t => t.date.startsWith(selMonth)).forEach(t => {
                 txnList.innerHTML += `<div class="txn-row"><span>${t.cat} ${t.desc}</span><span>$${Math.abs(t.amt).toFixed(2)} <button class="del-btn" onclick="deleteTxn(${t.id})">×</button></span></div>`;
             });
