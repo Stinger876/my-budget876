@@ -114,7 +114,7 @@
         }
 
         // This merges an existing file with your current app data
-    function syncFromFile(event) {
+function syncFromFile(event) {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -123,25 +123,37 @@
         try {
             let cloudData = JSON.parse(e.target.result);
             
-            // Safety check: If the file is wrapped in an object, grab the list
-            if (!Array.isArray(cloudData) && typeof cloudData === 'object') {
-                cloudData = cloudData.txns || Object.values(cloudData).find(val => Array.isArray(val)) || [];
+            // 1. Force the data into an array format regardless of how it was saved
+            let incomingTxns = [];
+            if (Array.isArray(cloudData)) {
+                incomingTxns = cloudData;
+            } else if (typeof cloudData === 'object' && cloudData !== null) {
+                // Look for any array inside the object (like 'txns' or 'transactions')
+                incomingTxns = Object.values(cloudData).find(val => Array.isArray(val)) || [];
             }
 
-            if (!Array.isArray(cloudData)) throw new Error("Not a valid list");
+            // 2. Filter out any items that don't look like transactions (must have an ID)
+            const validIncoming = incomingTxns.filter(t => t && t.id);
 
-            // Merge logic
-            const combined = [...txns, ...cloudData];
+            if (validIncoming.length === 0 && incomingTxns.length > 0) {
+                // If we found a list but it has no IDs, they might be old-style entries
+                incomingTxns.forEach((t, index) => { if (!t.id) t.id = Date.now() + index; });
+            }
+
+            // 3. Merge with current app data
+            const combined = [...txns, ...incomingTxns];
             
-            // Remove duplicates and save
+            // 4. De-duplicate by ID so you don't get double entries
             txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
             
+            // 5. Update the UI and Storage
             localStorage.setItem('m9_last_sync', new Date().toLocaleString());
             saveAndRefresh();
-            alert("Sync Complete! ✅ " + cloudData.length + " items processed.");
+            alert("Sync Success! ✅ Processed " + incomingTxns.length + " items.");
+            
         } catch (err) {
-            console.error("Sync Error:", err);
-            alert("Sync Failed: The file format is invalid. Ensure you are selecting the 'budget_backup.json' file.");
+            console.error("Detailed Sync Error:", err);
+            alert("Sync Failed: Could not read the file. Try creating a 'New Backup' first to see the required format.");
         }
     };
     reader.readAsText(file);
