@@ -3,10 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v13.2</title>
+    <title>Monarch-Lite v13.3</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
+        
+        /* Modal Overlay */
+        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; text-align: center; }
+        .modal-card { background: var(--m-card); padding: 30px; border-radius: 24px; border: 1px solid var(--m-teal); width: 85%; max-width: 400px; }
+        
         .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         .header-sub { font-size: 11px; opacity: 0.9; margin-top: 4px; }
@@ -14,19 +19,29 @@
         .net-worth-h1 { font-size: 2.2rem; margin: 8px 0; font-weight: 700; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         small { font-size: 10px; opacity: 0.6; text-transform: uppercase; font-weight: bold; }
-        .val { font-size: 18px; font-weight: 600; }
-        .bar-bg { background: #333; height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0;}
-        .bar-fill { height: 100%; transition: width 0.5s ease; background: var(--m-teal); }
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .btn-add { background: #333; color: var(--m-teal); border: 1px dashed var(--m-teal); padding: 8px; border-radius: 8px; width: 100%; font-size: 11px; font-weight: bold; cursor: pointer; }
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
+        .btn-sync-alt { background: var(--m-teal); color: var(--m-blue); padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; }
+        .btn-fresh-alt { background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; }
         .txn-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2a2a2a; }
         .txn-icon { width: 32px; height: 32px; background: #2a2a2a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 16px; }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
-        .plan-item { font-size: 12px; padding: 4px 0; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; }
+        .bar-bg { background: #333; height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0;}
+        .bar-fill { height: 100%; transition: width 0.5s ease; background: var(--m-teal); }
+        .plan-item { font-size: 12px; padding: 4px 0; display: flex; justify-content: space-between; border-bottom: 1px solid #2a2a2a; }
     </style>
 </head>
 <body>
+
+    <div id="startup-modal">
+        <div class="modal-card">
+            <h2 style="margin-top:0; color:var(--m-teal);">Welcome Back</h2>
+            <p style="font-size:14px; opacity:0.8; margin-bottom:25px;">Would you like to open a saved budget file?</p>
+            <label for="sync-upload" class="btn-sync-alt">Yes, Open File</label>
+            <div class="btn-fresh-alt" onclick="closeModal()">No, Start Fresh</div>
+        </div>
+    </div>
 
     <div id="header-container" class="budget-header">
         <div class="header-main">
@@ -101,8 +116,18 @@
 
         document.getElementById('txn-date').valueAsDate = new Date();
 
+        // Startup Logic
+        window.onload = function() {
+            document.getElementById('startup-modal').style.display = 'flex';
+            updateUI();
+        };
+
+        function closeModal() {
+            document.getElementById('startup-modal').style.display = 'none';
+        }
+
         function exportNewFile() {
-            const bundle = { txns, planInc, planExp, version: "13.2", exportedAt: new Date().toLocaleString() };
+            const bundle = { txns, planInc, planExp, version: "13.3", exportedAt: new Date().toLocaleString() };
             const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -125,6 +150,7 @@
                         txns = data;
                     }
                     saveAndRefresh();
+                    closeModal();
                     alert("Sync Successful! ✅");
                 } catch (err) { alert("Invalid File ❌"); }
             };
@@ -197,8 +223,6 @@
             document.getElementById('budget-bar').style.width = pct + '%';
             document.getElementById('plan-pct').innerText = Math.round(pct) + '% Spent';
         }
-
-        window.onload = updateUI;
     </script>
 </body>
 </html>
