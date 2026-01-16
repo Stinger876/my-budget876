@@ -91,112 +91,118 @@
 
     <h3 style="margin-left:10px;">Transactions</h3>
     <div class="card" id="txn-list"></div>
+<script>
+    // 1. CONFIG
+    const CLIENT_ID = '92806363831-ein0puf9e0fnhsss0m2objg4asa6ht6s.apps.googleusercontent.com';
+    const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
-    <script>
-        const CLIENT_ID = '92806363831-ein0puf9e0fnhsss0m2objg4asa6ht6s.apps.googleusercontent.com';
-        const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+    let tokenClient;
+    let gapiInited = false;
+    let gisInited = false;
 
-        let tokenClient, gapiInited = false, gisInited = false;
-        let txns = JSON.parse(localStorage.getItem('m11_txns')) || [];
-        let planInc = JSON.parse(localStorage.getItem('m9_p_inc')) || [];
-        let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
+    // Use m9 keys consistently for your data
+    let txns = JSON.parse(localStorage.getItem('m9_txns')) || [];
+    let planInc = JSON.parse(localStorage.getItem('m9_p_inc')) || [];
+    let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
 
-        document.getElementById('txn-date').valueAsDate = new Date();
+    // Initialize Google APIs
+    function gapiLoaded() { gapi.load('client', async () => { await gapi.client.init({ discoveryDocs: [DISCOVERY_DOC] }); gapiInited = true; }); }
+    function gisLoaded() { tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' }); gisInited = true; }
 
-        function gapiLoaded() { gapi.load('client', async () => { await gapi.client.init({ discoveryDocs: [DISCOVERY_DOC] }); gapiInited = true; }); }
-        function gisLoaded() { tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' }); gisInited = true; }
+    async function syncWithDrive() {
+        if (!gisInited) return alert("Google API not ready. Wait 3 seconds and try again.");
+        
+        tokenClient.callback = async (resp) => {
+            if (resp.error) return;
+            // Visual feedback that sync started
+            const headerVal = document.getElementById('left-val');
+            const originalText = headerVal.innerText;
+            headerVal.innerText = "Syncing...";
 
-        async function syncWithDrive() {
-            tokenClient.callback = async (resp) => {
-                if (resp.error) return;
-                document.getElementById('left-val').innerText = "Syncing...";
-                try {
-                    const list = await gapi.client.drive.files.list({ q: "name = 'budget_data.json' and trashed = false" });
-                    let fileId = list.result.files.length > 0 ? list.result.files[0].id : null;
-                    if (fileId) {
-                        const res = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
-                        let cloudTxns = res.result || [];
-                        const combined = [...txns, ...cloudTxns];
-                        txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
-                    }
-                    const content = JSON.stringify(txns);
-                    const metadata = { name: 'budget_data.json', mimeType: 'application/json' };
-                    if (!fileId) await gapi.client.drive.files.create({ resource: metadata, media: { mimeType: 'application/json', body: content } });
-                    else await gapi.client.drive.files.update({ fileId: fileId, media: { mimeType: 'application/json', body: content } });
-                    saveAndRefresh();
-                    alert("Sync Complete! ✅");
-                } catch (err) { console.error(err); alert("Sync Failed ❌"); }
-            };
-            tokenClient.requestAccessToken({ prompt: '' });
-        }
+            try {
+                // Find file in Google Drive
+                const list = await gapi.client.drive.files.list({ q: "name = 'budget_data.json' and trashed = false" });
+                let fileId = list.result.files.length > 0 ? list.result.files[0].id : null;
 
-        function promptPlan(type) {
-            const name = prompt("Enter name:");
-            const amt = parseFloat(prompt("Enter amount:"));
-            if (!name || isNaN(amt)) return;
-            if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
-            else planExp.push({ id: Date.now(), name, amt });
-            saveAndRefresh();
-        }
+                if (fileId) {
+                    // Download and Merge cloud data with local data
+                    const res = await gapi.client.drive.files.get({ fileId: fileId, alt: 'media' });
+                    let cloudTxns = res.result || [];
+                    const combined = [...txns, ...cloudTxns];
+                    txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
+                }
 
-        function deletePlan(type, id) {
-            if (type === 'inc') planInc = planInc.filter(i => i.id !== id);
-            else planExp = planExp.filter(i => i.id !== id);
-            saveAndRefresh();
-        }
+                // Save combined data back to Drive
+                const content = JSON.stringify(txns);
+                const metadata = { name: 'budget_data.json', mimeType: 'application/json' };
+                
+                if (!fileId) {
+                    await gapi.client.drive.files.create({ resource: metadata, media: { mimeType: 'application/json', body: content } });
+                } else {
+                    await gapi.client.drive.files.update({ fileId: fileId, media: { mimeType: 'application/json', body: content } });
+                }
 
-        function addTransaction() {
-            const desc = document.getElementById('desc').value, cat = document.getElementById('cat').value, date = document.getElementById('txn-date').value, amt = parseFloat(document.getElementById('amt').value);
-            if(!desc || !date || isNaN(amt)) return;
-            txns.unshift({ id: Date.now(), desc, cat, date, amt });
-            document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
-            saveAndRefresh();
-        }
+                saveAndRefresh();
+                alert("Sync Complete! ✅");
+            } catch (err) { 
+                console.error(err); 
+                alert("Sync Failed ❌. Check if you added your email as a Test User."); 
+                headerVal.innerText = originalText;
+            }
+        };
+        tokenClient.requestAccessToken({ prompt: '' });
+    }
 
-        function deleteTxn(id) { txns = txns.filter(t => t.id !== id); saveAndRefresh(); }
+    // App Logic Functions
+    function promptPlan(type) {
+        const name = prompt("Enter name:");
+        const amt = parseFloat(prompt("Enter amount:"));
+        if (!name || isNaN(amt)) return;
+        if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
+        else planExp.push({ id: Date.now(), name, amt });
+        saveAndRefresh();
+    }
 
-        function saveAndRefresh() {
-            localStorage.setItem('m11_txns', JSON.stringify(txns));
-            localStorage.setItem('m9_p_inc', JSON.stringify(planInc));
-            localStorage.setItem('m9_p_exp', JSON.stringify(planExp));
-            updateUI();
-        }
+    function addTransaction() {
+        const desc = document.getElementById('desc').value;
+        const cat = document.getElementById('cat').value;
+        const date = document.getElementById('txn-date').value;
+        const amt = parseFloat(document.getElementById('amt').value);
+        if(!desc || !date || isNaN(amt)) return;
+        txns.unshift({ id: Date.now(), desc, cat, date, amt });
+        document.getElementById('desc').value = '';
+        document.getElementById('amt').value = '';
+        saveAndRefresh();
+    }
 
-        function updateUI() {
-            const flowListEl = document.getElementById('cash-flow-list'), txnListEl = document.getElementById('txn-list');
-            document.getElementById('plan-inc-list').innerHTML = ''; document.getElementById('plan-exp-list').innerHTML = '';
-            flowListEl.innerHTML = ''; txnListEl.innerHTML = '';
-            let sumPInc = 0, sumPExp = 0, aInc = 0, aExp = 0, catTotals = {};
+    function saveAndRefresh() {
+        localStorage.setItem('m9_txns', JSON.stringify(txns));
+        localStorage.setItem('m9_p_inc', JSON.stringify(planInc));
+        localStorage.setItem('m9_p_exp', JSON.stringify(planExp));
+        updateUI();
+    }
 
-            txns.sort((a, b) => new Date(b.date) - new Date(a.date));
-            txns.forEach(t => {
-                if (t.amt > 0) aInc += t.amt; else aExp += Math.abs(t.amt);
-                catTotals[t.cat] = (catTotals[t.cat] || 0) + Math.abs(t.amt);
-                const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                txnListEl.innerHTML += `<div class="txn-row"><div class="txn-icon">${t.cat}</div><div style="flex-grow:1"><b>${t.desc}</b><br><small>${d}</small></div><div style="text-align:right"><span class="val" style="font-size:14px; color:${t.amt > 0 ? 'var(--m-green)' : '#fff'}">${t.amt > 0 ? '+' : '-'}$${Math.abs(t.amt).toFixed(2)}</span></div><button class="del-btn" style="margin-left:10px" onclick="deleteTxn(${t.id})">×</button></div>`;
-            });
+    function updateUI() {
+        const txnListEl = document.getElementById('txn-list');
+        const flowListEl = document.getElementById('cash-flow-list');
+        txnListEl.innerHTML = ''; flowListEl.innerHTML = '';
+        
+        let aInc = 0, aExp = 0;
+        txns.forEach(t => {
+            if (t.amt > 0) aInc += t.amt; else aExp += Math.abs(t.amt);
+            const d = new Date(t.date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            txnListEl.innerHTML += `<div class="txn-row"><div class="txn-icon">${t.cat}</div><div style="flex-grow:1"><b>${t.desc}</b><br><small>${d}</small></div><div style="text-align:right">$${Math.abs(t.amt).toFixed(2)}</div></div>`;
+        });
 
-            Object.keys(catTotals).forEach(cat => {
-                const total = catTotals[cat], pct = aExp > 0 ? (total / aExp) * 100 : 0;
-                flowListEl.innerHTML += `<div class="flow-row"><div>${cat}</div><div class="flow-bar-container"><div class="flow-bar-fill" style="width:${pct}%"></div></div><div style="text-align:right; font-size:12px;">$${total.toFixed(0)}</div></div>`;
-            });
+        document.getElementById('net-val').innerText = `$${(aInc - aExp).toLocaleString()}`;
+        document.getElementById('act-inc').innerText = `$${aInc.toLocaleString()}`;
+        document.getElementById('act-exp').innerText = `$${aExp.toLocaleString()}`;
+    }
 
-            planInc.forEach(i => { sumPInc += i.amt; document.getElementById('plan-inc-list').innerHTML += `<div class="plan-item"><div class="plan-row-top"><span>${i.name}</span><span>$${i.amt}</span></div><button class="del-btn" style="font-size:10px" onclick="deletePlan('inc', ${i.id})">Remove</button></div>`; });
-            planExp.forEach(i => { sumPExp += i.amt; document.getElementById('plan-exp-list').innerHTML += `<div class="plan-item"><div class="plan-row-top"><span>${i.name}</span><span>$${i.amt}</span></div><button class="del-btn" style="font-size:10px" onclick="deletePlan('exp', ${i.id})">Remove</button></div>`; });
-
-            const net = aInc - aExp, remaining = sumPExp - aExp, pctSpent = sumPExp > 0 ? (aExp / sumPExp) * 100 : 0;
-            document.getElementById('total-p-inc').innerText = `$${sumPInc}`; document.getElementById('total-p-exp').innerText = `$${sumPExp}`;
-            document.getElementById('net-val').innerText = (net < 0 ? '-$' : '$') + Math.abs(net).toLocaleString();
-            document.getElementById('act-inc').innerText = `$${aInc.toLocaleString()}`; document.getElementById('act-exp').innerText = `$${aExp.toLocaleString()}`;
-            document.getElementById('left-val').innerText = `$${remaining.toLocaleString()}`;
-            document.getElementById('left-desc').innerText = `Spent $${aExp.toLocaleString()} of $${sumPExp.toLocaleString()} budget.`;
-            document.getElementById('header-container').style.background = remaining < 0 ? 'var(--m-red)' : 'var(--m-green)';
-            document.getElementById('plan-pct').innerText = `${pctSpent.toFixed(0)}% Spent`;
-            document.getElementById('budget-bar').style.width = Math.min(pctSpent, 100) + '%';
-        }
-        window.onload = updateUI;
-    </script>
+    window.onload = updateUI;
+    document.getElementById('header-container').onclick = syncWithDrive;
+</script>
     <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
     <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>   
 </body>
