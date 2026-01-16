@@ -30,22 +30,17 @@
 </head>
 <body>
 
-    <div id="header-container" class="budget-header" onclick="syncWithDrive()">
-        <div class="header-main">
-            <span>Remaining to Spend</span>
-            <span id="left-val">$0</span>
-        </div>
-        <div class="header-sub" id="left-desc">Tap here to Sync with Google Drive</div>
+<div id="header-container" class="budget-header">
+    <div class="header-main">
+        <span>Remaining to Spend</span>
+        <span id="left-val">$0</span>
     </div>
-
-    <div class="card">
-        <small>Current Net Worth</small>
-        <div class="net-worth-h1" id="net-val">$0.00</div>
-        <div class="grid">
-            <div><small>Actual Inc</small><span id="act-inc" class="val" style="color:var(--m-teal)">$0</span></div>
-            <div><small>Actual Exp</small><span id="act-exp" class="val">$0</span></div>
-        </div>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="header-sub" id="left-desc">Tap "Sync File" to load backup</div>
+        <label for="sync-upload" style="background:rgba(255,255,255,0.2); padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">Sync File</label>
+        <input type="file" id="sync-upload" accept=".json" style="display:none" onchange="syncFromFile(event)">
     </div>
+</div>
 
     <div class="card">
         <div style="display:flex; justify-content:space-between">
@@ -109,50 +104,29 @@
         function gapiLoaded() { gapi.load('client', async () => { await gapi.client.init({ discoveryDocs: [DISCOVERY_DOC] }); gapiInited = true; }); }
         function gisLoaded() { tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' }); gisInited = true; }
 
-        async function syncWithDrive() {
-            if (!gisInited || !gapiInited) return alert("Google Services loading...");
+        function syncFromFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-            tokenClient.callback = async (resp) => {
-                if (resp.error) return;
-                const accessToken = resp.access_token;
-                alert("Syncing started...");
-
-                try {
-                    const list = await gapi.client.drive.files.list({ q: "name = 'budget_data.json' and trashed = false" });
-                    let fileId = list.result.files.length > 0 ? list.result.files[0].id : null;
-
-                    if (fileId) {
-                        const downloadRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-                            headers: { 'Authorization': `Bearer ${accessToken}` }
-                        });
-                        
-                        if (downloadRes.ok) {
-                            const cloudTxns = await downloadRes.json();
-                            const combined = [...txns, ...cloudTxns];
-                            txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
-                        }
-                    }
-
-                    const content = JSON.stringify(txns);
-                    const metadata = { name: 'budget_data.json', mimeType: 'application/json' };
-                    
-                    if (!fileId) {
-                        await gapi.client.drive.files.create({ resource: metadata, media: { mimeType: 'application/json', body: content } });
-                    } else {
-                        await gapi.client.drive.files.update({ fileId: fileId, media: { mimeType: 'application/json', body: content } });
-                    }
-
-                    localStorage.setItem('m9_last_sync', new Date().toLocaleString());
-                    saveAndRefresh();
-                    alert("Sync Complete! ✅");
-                } catch (err) {
-                    console.error(err);
-                    alert("Sync Failed: " + (err.result?.error?.message || "Check your connection"));
-                }
-            };
-            tokenClient.requestAccessToken({ prompt: '' });
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const cloudData = JSON.parse(e.target.result);
+            
+            // Merge logic (The same logic used in the Monarch Gist)
+            const combined = [...txns, ...cloudData];
+            // Remove duplicates by ID
+            txns = Array.from(new Map(combined.map(item => [item.id, item])).values());
+            
+            localStorage.setItem('m9_last_sync', new Date().toLocaleString());
+            saveAndRefresh();
+            alert("Sync Complete! ✅ Data merged from file.");
+        } catch (err) {
+            alert("Sync Failed: Invalid budget file ❌");
         }
-
+    };
+    reader.readAsText(file);
+}
         // 3. APP LOGIC
         function addTransaction() {
             const desc = document.getElementById('desc').value;
