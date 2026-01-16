@@ -25,7 +25,7 @@
         .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; opacity: 0.6; color: white; border: none; }
         .tab.active { background: var(--m-teal); color: var(--m-blue); opacity: 1; }
 
-        /* Budget Tables - Fixed Alignment */
+        /* Budget Tables */
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px 30px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
@@ -35,11 +35,14 @@
         .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
         
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; box-sizing: border-box; }
-        .btn-fresh-alt { width: 100%; background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; box-sizing: border-box; border: 1px solid transparent; }
+        .btn-fresh-alt { width: 100%; background: #333; color: white; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: block; margin-bottom: 10px; box-sizing: border-box; border: 1px solid transparent; text-align: center; text-decoration: none; }
+        .btn-outline { background: transparent; border: 1px solid var(--m-teal); color: var(--m-teal); }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 20px; cursor: pointer; display: flex; justify-content: flex-end; align-items: center; }
         
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
+
+        .sync-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -49,13 +52,13 @@
             <h2 style="color:var(--m-teal); margin-top:0;">Welcome Back</h2>
             <p id="status-msg" style="font-size:14px; opacity:0.8; margin-bottom:25px;">Budget data found in browser.</p>
             <button id="continue-btn" class="btn-track" style="margin-bottom:12px" onclick="closeModal()">Continue Session</button>
-            <label for="sync-upload" class="btn-fresh-alt">Sync from File</label>
+            <label for="sync-upload-modal" class="btn-fresh-alt">Sync from File</label>
             <button class="btn-fresh-alt" onclick="showWizard()" style="color:var(--m-red); border:1px solid var(--m-red);">Start Fresh Setup</button>
-            <input type="file" id="sync-upload" accept=".json" style="display:none" onchange="syncFromFile(event)">
+            <input type="file" id="sync-upload-modal" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
 
         <div class="modal-card" id="wizard-view" style="display:none;">
-            <h3 style="color:var(--m-teal);">Step 1: Budget</h3>
+            <h3 style="color:var(--m-teal);">Step 1: Budget Categories</h3>
             <div id="wizard-list" class="wizard-grid">
                 <div class="setup-row"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
                 <div class="setup-row"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
@@ -120,6 +123,15 @@
         <button class="btn-track" onclick="addInvestItem()">+ New Investment</button>
     </div>
 
+    <div class="card">
+        <b>Data Management</b>
+        <div class="sync-controls">
+            <button class="btn-fresh-alt btn-outline" onclick="exportToFile()" style="margin:0; padding:10px;">💾 Save to File</button>
+            <label for="sync-upload-main" class="btn-fresh-alt btn-outline" style="margin:0; padding:10px; font-size:14px; display:flex; align-items:center; justify-content:center;">🔄 Sync from File</label>
+            <input type="file" id="sync-upload-main" accept=".json" style="display:none" onchange="syncFromFile(event)">
+        </div>
+    </div>
+
     <script>
         let txns = JSON.parse(localStorage.getItem('m_txns')) || [];
         let planInc = JSON.parse(localStorage.getItem('m_p_inc')) || [];
@@ -128,13 +140,17 @@
         let activeTab = 'budget';
 
         window.onload = function() {
-            if (txns.length === 0 && planInc.length === 0 && assets.length === 0) {
+            if (txns.length > 0 || planInc.length > 0 || assets.length > 0) {
+                document.getElementById('status-msg').innerText = "Budget data found in browser.";
+            } else {
                 document.getElementById('continue-btn').style.display = 'none';
+                document.getElementById('status-msg').innerText = "No data found. Start fresh or sync a file.";
             }
             document.getElementById('txn-date').valueAsDate = new Date();
             updateUI();
         };
 
+        // --- Wizard Logic ---
         function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
         function showInvWizard() { document.getElementById('wizard-view').style.display = 'none'; document.getElementById('wizard-inv-view').style.display = 'block'; if(assets.length === 0) addWizardInv(); }
         function addWizardInv() {
@@ -142,7 +158,6 @@
             div.innerHTML = `<div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" placeholder="e.g. TFSA" style="width:60%"><input type="number" placeholder="$" style="width:40%"></div>`;
             document.getElementById('inv-setup-list').appendChild(div);
         }
-
         function finishWizard() {
             planInc = []; planExp = []; assets = []; txns = [];
             document.querySelectorAll('#wizard-list input:checked').forEach(c => {
@@ -157,6 +172,21 @@
             saveAndRefresh(); closeModal();
         }
 
+        // --- File I/O ---
+        function exportToFile() {
+            const data = {
+                txns, planInc, planExp, assets,
+                exportedAt: new Date().toLocaleString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `monarch_budget_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
         function syncFromFile(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -164,14 +194,19 @@
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    txns = data.txns || []; planInc = data.planInc || []; planExp = data.planExp || []; assets = data.assets || [];
+                    txns = data.txns || []; 
+                    planInc = data.planInc || []; 
+                    planExp = data.planExp || []; 
+                    assets = data.assets || [];
                     localStorage.setItem('m_last_sync', data.exportedAt || new Date().toLocaleString());
-                    saveAndRefresh(); closeModal();
-                } catch (err) { alert("Invalid File"); }
+                    saveAndRefresh(); 
+                    closeModal();
+                } catch (err) { alert("Invalid File Format"); }
             };
             reader.readAsText(file);
         }
 
+        // --- App Logic ---
         function switchTab(t) {
             activeTab = t;
             document.getElementById('view-budget').style.display = t === 'budget' ? 'block' : 'none';
@@ -238,7 +273,7 @@
                 header.style.background = "var(--m-green)";
                 document.getElementById('header-label').innerText = "Remaining to Spend";
                 document.getElementById('header-val').innerText = `$${(budIncTotal - actExp).toLocaleString()}`;
-                document.getElementById('header-subtext').innerText = "Planned Income - Total Expenses";
+                document.getElementById('header-subtext').innerText = "Planned Income - Actual Expenses";
             } else {
                 header.style.background = "var(--m-blue)";
                 document.getElementById('header-label').innerText = "Net Worth";
