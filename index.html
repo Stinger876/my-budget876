@@ -91,15 +91,15 @@
 
     <h3 style="margin-left:10px;">Transactions</h3>
     <div class="card" id="txn-list"></div>
-    <script>
-        // 1. CONFIG
+       <script>
+        // 1. CONFIG & GLOBALS
         const CLIENT_ID = '92806363831-ein0puf9e0fnhsss0m2objg4asa6ht6s.apps.googleusercontent.com';
         const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
         const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
         let tokenClient, gapiInited = false, gisInited = false;
         
-        // Unified data loading (using m9 keys consistently)
+        // Use m9 keys consistently so your current data isn't lost
         let txns = JSON.parse(localStorage.getItem('m9_txns')) || [];
         let planInc = JSON.parse(localStorage.getItem('m9_p_inc')) || [];
         let planExp = JSON.parse(localStorage.getItem('m9_p_exp')) || [];
@@ -111,7 +111,7 @@
         function gisLoaded() { tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' }); gisInited = true; }
 
         async function syncWithDrive() {
-            if (!gisInited || !gapiInited) return alert("Google Services loading... try again in 3 seconds.");
+            if (!gisInited || !gapiInited) return alert("Google Services loading...");
 
             tokenClient.callback = async (resp) => {
                 if (resp.error) return;
@@ -124,7 +124,7 @@
                     let fileId = list.result.files.length > 0 ? list.result.files[0].id : null;
 
                     if (fileId) {
-                        // Download existing cloud data
+                        // Download existing cloud data using fetch for reliability
                         const downloadRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
                             headers: { 'Authorization': `Bearer ${accessToken}` }
                         });
@@ -148,31 +148,16 @@
                     }
 
                     saveAndRefresh();
-                    alert("Sync Complete! ✅ Check your Google Drive for 'budget_data.json'");
+                    alert("Sync Complete! ✅ Data saved to Google Drive.");
                 } catch (err) {
                     console.error(err);
-                    alert("Sync Failed ❌. Please ensure you are not in Incognito mode.");
+                    alert("Sync Failed ❌. If this is your first sync, try adding 1 transaction first.");
                 }
             };
             tokenClient.requestAccessToken({ prompt: '' });
         }
 
         // 3. APP LOGIC
-        function promptPlan(type) {
-            const name = prompt("Enter name:");
-            const amt = parseFloat(prompt("Enter amount:"));
-            if (!name || isNaN(amt)) return;
-            if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
-            else planExp.push({ id: Date.now(), name, amt });
-            saveAndRefresh();
-        }
-
-        function deletePlan(type, id) {
-            if (type === 'inc') planInc = planInc.filter(i => i.id !== id);
-            else planExp = planExp.filter(i => i.id !== id);
-            saveAndRefresh();
-        }
-
         function addTransaction() {
             const desc = document.getElementById('desc').value;
             const cat = document.getElementById('cat').value;
@@ -188,6 +173,21 @@
 
         function deleteTxn(id) {
             txns = txns.filter(t => t.id !== id);
+            saveAndRefresh();
+        }
+
+        function promptPlan(type) {
+            const name = prompt("Enter name:");
+            const amt = parseFloat(prompt("Enter amount:"));
+            if (!name || isNaN(amt)) return;
+            if (type === 'inc') planInc.push({ id: Date.now(), name, amt });
+            else planExp.push({ id: Date.now(), name, amt });
+            saveAndRefresh();
+        }
+
+        function deletePlan(type, id) {
+            if (type === 'inc') planInc = planInc.filter(i => i.id !== id);
+            else planExp = planExp.filter(i => i.id !== id);
             saveAndRefresh();
         }
 
@@ -229,8 +229,5 @@
     </script>
     <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
     <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>   
-</body>
-</html>
-
 </body>
 </html>
