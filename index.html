@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v14.2</title>
+    <title>Monarch-Lite v14.3</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -20,8 +20,8 @@
         .bar-bg { background: #333; height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0;}
         .bar-fill { height: 100%; transition: width 0.5s ease; background: var(--m-teal); }
         input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
-        .btn-add { background: #333; color: var(--m-teal); border: 1px dashed var(--m-teal); padding: 8px; border-radius: 8px; width: 100%; font-size: 11px; font-weight: bold; }
-        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; }
+        .btn-add { background: #333; color: var(--m-teal); border: 1px dashed var(--m-teal); padding: 8px; border-radius: 8px; width: 100%; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
         .txn-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2a2a2a; }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
         .pill-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
@@ -47,9 +47,9 @@
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="showTab('budget')">BUDGET</button>
-        <button class="tab-btn" onclick="showTab('assets')">ASSETS</button>
-        <button class="tab-btn" onclick="showTab('history')">HISTORY</button>
+        <button class="tab-btn active" id="btn-budget" onclick="showTab('budget')">BUDGET</button>
+        <button class="tab-btn" id="btn-assets" onclick="showTab('assets')">ASSETS</button>
+        <button class="tab-btn" id="btn-history" onclick="showTab('history')">HISTORY</button>
     </div>
 
     <div id="budget" class="view active">
@@ -72,7 +72,7 @@
             <select id="cat-select"></select>
             <div class="grid">
                 <input type="date" id="txn-date">
-                <input type="text" inputmode="decimal" id="amt" placeholder="Amount">
+                <input type="text" inputmode="decimal" id="amt" placeholder="Amount (neg for exp)">
             </div>
             <button class="btn-track" onclick="addTransaction()">Add Entry</button>
         </div>
@@ -89,7 +89,7 @@
             <input type="text" id="asset-name" placeholder="Asset Name">
             <input type="text" inputmode="decimal" id="asset-val" placeholder="Value">
             <button class="btn-track" onclick="addAsset()">Add/Update Asset</button>
-            <div id="asset-list"></div>
+            <div id="asset-display-list" style="margin-top:15px;"></div>
         </div>
         
         <div class="card">
@@ -112,7 +112,7 @@
     </div>
 
     <script>
-        // Default data structure with fallback categories
+        // Start fresh or load data
         let data = JSON.parse(localStorage.getItem('m9_data')) || { 
             txns: [], 
             planInc: [], 
@@ -120,7 +120,7 @@
             assets: [],
             categories: [
                 {emoji: "💰", name: "Income"},
-                {emoji: "🏠", name: "Housing & Bills"},
+                {emoji: "🏠", name: "Housing"},
                 {emoji: "🛒", name: "Groceries"},
                 {emoji: "🍳", name: "Dining"},
                 {emoji: "🚗", name: "Transport"}
@@ -131,7 +131,7 @@
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            document.getElementById('btn-' + tabId).classList.add('active');
         }
 
         function exportNewFile() {
@@ -140,7 +140,7 @@
             link.href = URL.createObjectURL(blob);
             link.download = "budget_master.json";
             link.click();
-            alert("Master File Saved! ✅");
+            alert("File Saved! ✅ Overwrite your old one.");
         }
 
         function syncFromFile(event) {
@@ -163,6 +163,7 @@
             reader.readAsText(file);
         }
 
+        // CATEGORY LOGIC
         function addCategory() {
             const emoji = document.getElementById('new-cat-emoji').value || "📦";
             const name = document.getElementById('new-cat-name').value;
@@ -178,24 +179,30 @@
             saveAndRefresh();
         }
 
+        // TRANSACTION LOGIC
         function addTransaction() {
             const desc = document.getElementById('desc').value;
             const cat = document.getElementById('cat-select').value;
             const date = document.getElementById('txn-date').value;
             const amt = parseFloat(document.getElementById('amt').value);
-            if(!desc || !date || isNaN(amt)) return;
+            if(!desc || !date || isNaN(amt)) {
+                alert("Please fill all fields correctly");
+                return;
+            }
             data.txns.unshift({ id: Date.now(), desc, cat, date, amt });
             document.getElementById('desc').value = '';
             document.getElementById('amt').value = '';
             saveAndRefresh();
         }
 
+        // ASSET LOGIC
         function addAsset() {
             const name = document.getElementById('asset-name').value;
             const val = parseFloat(document.getElementById('asset-val').value);
             if (!name || isNaN(val)) return;
             const existing = data.assets.find(a => a.name === name);
-            if (existing) existing.val = val; else data.assets.push({ id: Date.now(), name, val });
+            if (existing) existing.val = val; 
+            else data.assets.push({ id: Date.now(), name, val });
             document.getElementById('asset-name').value = '';
             document.getElementById('asset-val').value = '';
             saveAndRefresh();
@@ -204,9 +211,10 @@
         function deleteAsset(id) { data.assets = data.assets.filter(a => a.id !== id); saveAndRefresh(); }
         function deleteTxn(id) { data.txns = data.txns.filter(t => t.id !== id); saveAndRefresh(); }
 
+        // PLANNING LOGIC
         function promptPlan(type) {
-            const name = prompt("Name:");
-            const amt = parseFloat(prompt("Amount:"));
+            const name = prompt("Enter Plan Name (e.g. Rent):");
+            const amt = parseFloat(prompt("Enter Amount:"));
             if (name && !isNaN(amt)) {
                 if (type === 'inc') data.planInc.push({ id: Date.now(), name, amt });
                 else data.planExp.push({ id: Date.now(), name, amt });
@@ -223,31 +231,30 @@
             const curMonth = new Date().toISOString().substring(0, 7);
             const selMonth = document.getElementById('month-filter').value || curMonth;
             
-            // Update Category Dropdown
+            // 1. Update Dropdowns & Pills
             const catSelect = document.getElementById('cat-select');
             catSelect.innerHTML = '';
             data.categories.forEach(c => {
                 catSelect.innerHTML += `<option value="${c.emoji}">${c.emoji} ${c.name}</option>`;
             });
 
-            // Update Category Pills (in Assets Tab)
             const pillList = document.getElementById('pill-list');
             pillList.innerHTML = '';
             data.categories.forEach((c, index) => {
                 pillList.innerHTML += `<div class="pill">${c.emoji} ${c.name} <span onclick="deleteCategory(${index})" style="cursor:pointer; color:var(--m-red)">×</span></div>`;
             });
 
-            // Fill Month Dropdown
+            // 2. Month Filter Logic
             const months = [...new Set(data.txns.map(t => t.date.substring(0, 7)))];
             if (!months.includes(curMonth)) months.push(curMonth);
             const filterEl = document.getElementById('month-filter');
-            const currentSel = filterEl.value;
+            const prevVal = filterEl.value;
             filterEl.innerHTML = '';
             months.sort().reverse().forEach(m => {
-                filterEl.innerHTML += `<option value="${m}" ${m === (currentSel || curMonth) ? 'selected' : ''}>${m}</option>`;
+                filterEl.innerHTML += `<option value="${m}" ${m === (prevVal || curMonth) ? 'selected' : ''}>${m}</option>`;
             });
 
-            // Calcs
+            // 3. Financial Calcs
             let aInc = 0, aExp = 0, pInc = 0, pExp = 0;
             data.txns.forEach(t => {
                 if (t.date.startsWith(selMonth)) {
@@ -265,13 +272,13 @@
             document.getElementById('budget-bar').style.width = pct + '%';
             document.getElementById('plan-pct').innerText = Math.round(pct) + '% of Plan Spent';
 
-            // Lists
-            const assetList = document.getElementById('asset-list');
+            // 4. Render Lists
+            const assetListEl = document.getElementById('asset-display-list');
             let assetTotal = 0;
-            assetList.innerHTML = '';
+            assetListEl.innerHTML = '<b>Account Balances</b>';
             data.assets.forEach(a => {
                 assetTotal += a.val;
-                assetList.innerHTML += `<div class="txn-row"><span>${a.name}</span><span>$${a.val.toLocaleString()} <button class="del-btn" onclick="deleteAsset(${a.id})">×</button></span></div>`;
+                assetListEl.innerHTML += `<div class="txn-row"><span>${a.name}</span><span>$${a.val.toLocaleString()} <button class="del-btn" onclick="deleteAsset(${a.id})">×</button></span></div>`;
             });
             document.getElementById('asset-total').innerText = `$${assetTotal.toLocaleString()}`;
 
