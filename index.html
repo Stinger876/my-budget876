@@ -3,16 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v20.1</title>
+    <title>Monarch-Lite v20.2</title>
     <style>
-        :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-header-green: #1b4d3e; --m-orange: #ff9f43; --m-text: #ffffff; }
+        :root { 
+            --m-blue: #0a192f; 
+            --m-teal: #17e9e1; 
+            --m-bg: #121212; 
+            --m-card: #1e1e1e; 
+            --m-red: #ff5252; 
+            --m-green: #2ecc71; 
+            --m-header-green: #1b4d3e; 
+            --m-orange: #ff9f43; 
+            --m-text: #ffffff; 
+        }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
+        /* Modals */
         #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px 0; }
         .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; text-align: center; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
         
+        /* Headers */
         .budget-header { color: white; padding: 20px; border-radius: 16px; margin-bottom: 12px; text-align: center; transition: background 0.3s; }
-        /* NEW GREEN THEME FOR SPENDING */
         .bg-spending { background: var(--m-header-green); border: 1px solid var(--m-green); }
         .bg-invest { background: var(--m-blue); border: 1px solid var(--m-teal); }
         .bg-liab { background: #3d2b1f; border: 1px solid var(--m-orange); }
@@ -21,10 +32,12 @@
         .spending-bar-bg { background: rgba(255,255,255,0.1); height: 12px; border-radius: 10px; margin: 10px 0; overflow: hidden; position: relative; }
         .spending-bar-fill { background: var(--m-green); height: 100%; width: 0%; transition: width 0.5s; }
 
+        /* Navigation */
         .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
         .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; border: none; opacity: 0.6; }
         .tab.active { background: var(--m-teal) !important; color: var(--m-blue) !important; opacity: 1; }
 
+        /* UI Components */
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
@@ -33,14 +46,15 @@
         .wizard-row span { flex: 1; text-align: left; }
         .wizard-row input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; margin-left: 10px; }
 
+        /* Charts */
         .chart-container { position: relative; width: 180px; height: 180px; margin: 10px auto; }
         .pie-chart { width: 100%; height: 100%; border-radius: 50%; position: relative; }
         .pie-center { position: absolute; top: 20%; left: 20%; width: 60%; height: 60%; background: var(--m-bg); border-radius: 50%; z-index: 2; }
         .category-icon { position: absolute; transform: translate(-50%, -50%); z-index: 3; font-size: 16px; pointer-events: none; }
 
+        /* Forms */
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         
-        .mgmt-group { display: flex; gap: 10px; margin-top: 10px; }
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; text-align: center; }
         .btn-mgmt { flex: 1; background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; min-height: 45px; box-sizing: border-box; }
         .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 16px; border-radius: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
@@ -48,6 +62,12 @@
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
+
+        /* Calculator Specific Styles */
+        .calc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; text-align: center; }
+        .calc-item { background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #444; }
+        .calc-label { font-size: 10px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px; }
+        .calc-val { font-weight: bold; color: var(--m-orange); font-size: 13px; }
     </style>
 </head>
 <body>
@@ -56,7 +76,7 @@
         <div class="modal-card" id="initial-choice">
             <h2 style="color:var(--m-teal); margin-top:0;">Welcome</h2>
             <button class="btn-track" onclick="closeModal()">Continue Session</button>
-            <div class="mgmt-group">
+            <div class="mgmt-group" style="display:flex; gap:10px; margin-top:10px;">
                 <label for="sync-upload-modal" class="btn-mgmt">Import File</label>
                 <button class="btn-mgmt" onclick="showWizard()" style="color:var(--m-red);">Start Fresh</button>
             </div>
@@ -65,7 +85,7 @@
         <div class="modal-card" id="wizard-view" style="display:none;">
             <h3 style="margin-top:0;">Setup Categories</h3>
             <div id="wizard-list">
-                <p style="font-size: 11px; color: var(--m-green); font-weight:bold; text-align:left;">INCOME (From your Screenshot)</p>
+                <p style="font-size: 11px; color: var(--m-green); font-weight:bold; text-align:left;">INCOME</p>
                 <div class="wizard-row"><span>💵 Paychecks</span><input type="checkbox" checked data-cat="💵 Paychecks" data-type="inc"></div>
                 <div class="wizard-row"><span>💸 Interest</span><input type="checkbox" checked data-cat="💸 Interest" data-type="inc"></div>
                 <div class="wizard-row"><span>💰 Other Income</span><input type="checkbox" checked data-cat="💰 Other Income" data-type="inc"></div>
@@ -88,13 +108,12 @@
     <div class="budget-header bg-spending" id="main-header">
         <div id="header-content">
             <div class="header-main">Monthly Spending</div>
-            <div id="spending-summary" style="font-weight: bold; font-size: 1.1rem;">$0 spent of $0</div>
-            <div class="spending-bar-bg"><div id="spending-bar" class="spending-bar-fill"></div></div>
-            <div id="spending-perc" style="font-size: 14px; opacity: 0.9;">0% spent</div>
+            <div style="font-weight: bold; font-size: 1.1rem;">$0 spent</div>
+            <div class="spending-bar-bg"><div class="spending-bar-fill"></div></div>
         </div>
     </div>
 
-    <select id="month-filter" class="month-selector" onchange="updateUI()" style="margin-bottom:10px;">
+    <select id="month-filter" onchange="updateUI()" style="margin-bottom:10px;">
         <option value="01">January</option><option value="02">February</option><option value="03">March</option>
         <option value="04">April</option><option value="05">May</option><option value="06">June</option>
         <option value="07">July</option><option value="08">August</option><option value="09">September</option>
@@ -116,20 +135,14 @@
             </div>
         </div>
         <div class="card">
-            <div style="font-size: 12px; color: var(--m-green); font-weight: bold; margin-bottom: 8px; text-transform: uppercase;">Income Sources</div>
+            <div style="font-size: 11px; color: var(--m-green); font-weight: bold; margin-bottom: 8px;">INCOME SOURCES</div>
             <div id="income-list"></div>
-            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
-                <span>Total Budgeted Income</span>
-                <span id="total-planned-inc" class="pos">$0</span>
-            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;"><span>Planned Income</span><span id="total-planned-inc" class="pos">$0</span></div>
         </div>
         <div class="card">
-            <div style="font-size: 12px; color: var(--m-red); font-weight: bold; margin-bottom: 8px; text-transform: uppercase;">Expense Categories</div>
+            <div style="font-size: 11px; color: var(--m-red); font-weight: bold; margin-bottom: 8px;">EXPENSE CATEGORIES</div>
             <div id="expense-list"></div>
-            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
-                <span>Total Budgeted Expenses</span>
-                <span id="total-planned-exp" class="neg">$0</span>
-            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;"><span>Planned Expenses</span><span id="total-planned-exp" class="neg">$0</span></div>
         </div>
         <div class="card">
             <b>Add Transaction</b>
@@ -141,12 +154,45 @@
         <div id="txn-list"></div>
     </div>
 
-    <div id="view-invest" style="display:none;"><div class="card" id="invest-main-list"></div><button class="btn-track" onclick="addInvestItem()">+ New Asset Account</button></div>
-    <div id="view-liab" style="display:none;"><div class="card" id="liab-main-list"></div><button class="btn-track" style="background: var(--m-orange); color: var(--m-blue);" onclick="addLiabItem()">+ New Liability</button></div>
+    <div id="view-invest" style="display:none;">
+        <div class="card" id="invest-main-list"></div>
+        <button class="btn-track" onclick="addInvestItem()">+ New Asset Account</button>
+    </div>
+
+    <div id="view-liab" style="display:none;">
+        <div class="card" id="liab-main-list"></div>
+        <button class="btn-track" style="background: var(--m-orange); color: var(--m-blue);" onclick="addLiabItem()">+ New Liability</button>
+        
+        <div class="card" style="margin-top: 20px; border: 1px solid var(--m-orange);">
+            <b style="color: var(--m-orange);">Loan & Mortgage Calculator</b>
+            <div style="margin-top:10px;">
+                <input type="text" inputmode="decimal" id="calc-bal" placeholder="Loan Amount ($)" oninput="calcInterest()">
+                <div style="display:flex; gap:10px;">
+                    <input type="text" inputmode="decimal" id="calc-rate" placeholder="APR %" style="flex:1" oninput="calcInterest()">
+                    <input type="text" inputmode="decimal" id="calc-term" placeholder="Term (Years)" style="flex:1" oninput="calcInterest()">
+                </div>
+            </div>
+            <div class="calc-grid">
+                <div class="calc-item"><div class="calc-label">Daily</div><div id="res-day" class="calc-val">$0.00</div></div>
+                <div class="calc-item"><div class="calc-label">Monthly</div><div id="res-mo" class="calc-val">$0.00</div></div>
+                <div class="calc-item"><div class="calc-label">Yearly</div><div id="res-yr" class="calc-val">$0.00</div></div>
+            </div>
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #444;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span style="font-size:12px; opacity:0.8;">Est. Monthly Payment:</span>
+                    <span id="res-pmt" style="font-weight:bold; color:var(--m-teal);">$0.00</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="font-size:12px; opacity:0.8;">Total Interest over Term:</span>
+                    <span id="res-total-int" style="font-weight:bold; color:var(--m-red);">$0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="card">
         <b>Data Management</b>
-        <div class="mgmt-group">
+        <div class="mgmt-group" style="display:flex; gap:10px; margin-top:10px;">
             <button class="btn-mgmt" onclick="exportToFile()">💾 Backup</button>
             <label for="sync-upload-main" class="btn-mgmt">🔄 Import</label>
             <input type="file" id="sync-upload-main" accept=".json" style="display:none" onchange="syncFromFile(event)">
@@ -163,21 +209,6 @@
         let activeTab = 'budget';
         const colors = ['#17e9e1', '#2ecc71', '#ff5252', '#f1c40f', '#9b59b6', '#e67e22', '#3498db', '#95a5a6'];
 
-        function syncFromFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    txns = data.txns || []; planInc = data.planInc || []; 
-                    planExp = data.planExp || []; assets = data.assets || [];
-                    liabs = data.liabs || []; saveInternal(); closeModal();
-                } catch (err) { alert("File error."); }
-            };
-            reader.readAsText(file);
-        }
-
         window.onload = function() {
             const today = new Date();
             document.getElementById('month-filter').value = String(today.getMonth() + 1).padStart(2, '0');
@@ -185,7 +216,6 @@
             updateUI();
         };
 
-        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
         function saveInternal() {
             localStorage.setItem('m_txns', JSON.stringify(txns));
             localStorage.setItem('m_p_inc', JSON.stringify(planInc));
@@ -193,6 +223,35 @@
             localStorage.setItem('m_assets', JSON.stringify(assets));
             localStorage.setItem('m_liabs', JSON.stringify(liabs));
             updateUI();
+        }
+
+        function calcInterest() {
+            const P = parseFloat(document.getElementById('calc-bal').value) || 0;
+            const annualRate = parseFloat(document.getElementById('calc-rate').value) || 0;
+            const years = parseFloat(document.getElementById('calc-term').value) || 0;
+
+            if (P <= 0 || annualRate <= 0) {
+                document.getElementById('res-day').innerText = "$0.00";
+                document.getElementById('res-mo').innerText = "$0.00";
+                document.getElementById('res-yr').innerText = "$0.00";
+                document.getElementById('res-pmt').innerText = "$0.00";
+                document.getElementById('res-total-int').innerText = "$0.00";
+                return;
+            }
+
+            const yearlyInt = P * (annualRate / 100);
+            document.getElementById('res-day').innerText = `$${(yearlyInt / 365).toFixed(2)}`;
+            document.getElementById('res-mo').innerText = `$${(yearlyInt / 12).toFixed(2)}`;
+            document.getElementById('res-yr').innerText = `$${yearlyInt.toFixed(2)}`;
+
+            if (years > 0) {
+                const r = (annualRate / 100) / 12;
+                const n = years * 12;
+                const pmt = P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+                const totalInterest = (pmt * n) - P;
+                document.getElementById('res-pmt').innerText = `$${pmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                document.getElementById('res-total-int').innerText = `$${totalInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            }
         }
 
         function updateUI() {
@@ -215,28 +274,26 @@
                 }
             });
 
-            let currentPercentage = 0; let gradientParts = []; let i = 0;
+            // Pie Chart logic
+            let currPerc = 0; let gParts = []; let i = 0;
             for (let catName in expenseGroups) {
-                let perc = (expenseGroups[catName] / actExp) * 100;
-                let color = colors[i % colors.length];
-                gradientParts.push(`${color} ${currentPercentage}% ${currentPercentage + perc}%`);
-                const angle = (currentPercentage + (perc / 2)) * 3.6 - 90;
-                const rad = angle * (Math.PI / 180);
-                const x = 50 + 35 * Math.cos(rad);
-                const y = 50 + 35 * Math.sin(rad);
-                const emoji = catName.split(' ')[0];
-                iconWrap.innerHTML += `<div class="category-icon" style="left:${x}%; top:${y}%;">${emoji}</div>`;
-                currentPercentage += perc; i++;
+                let p = (expenseGroups[catName] / actExp) * 100;
+                let col = colors[i % colors.length];
+                gParts.push(`${col} ${currPerc}% ${currPerc + p}%`);
+                const ang = (currPerc + (p / 2)) * 3.6 - 90;
+                const rad = ang * (Math.PI / 180);
+                iconWrap.innerHTML += `<div class="category-icon" style="left:${50 + 35 * Math.cos(rad)}%; top:${50 + 35 * Math.sin(rad)}%;">${catName.split(' ')[0]}</div>`;
+                currPerc += p; i++;
             }
-            pie.style.background = actExp > 0 ? `conic-gradient(${gradientParts.join(', ')})` : '#333';
+            pie.style.background = actExp > 0 ? `conic-gradient(${gParts.join(', ')})` : '#333';
 
             planInc.forEach((p, idx) => { budIncT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                incL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`;
+                incL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`;
             });
             document.getElementById('total-planned-inc').innerText = `$${budIncT.toLocaleString()}`;
 
             planExp.forEach((p, idx) => { budExpT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`;
+                expL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`;
             });
             document.getElementById('total-planned-exp').innerText = `$${budExpT.toLocaleString()}`;
 
@@ -248,19 +305,19 @@
                     <div class="header-main">Monthly Spending</div>
                     <div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}</div>
                     <div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>
-                    <div style="font-size: 14px; opacity: 0.9;">${pSpent}% of budget used</div>`;
+                    <div style="font-size: 14px; opacity: 0.9;">${pSpent}% used</div>`;
             } else if(activeTab === 'invest') {
                 header.className = "budget-header bg-invest";
                 assets.forEach(a => totAssets += a.amt); liabs.forEach(l => totLiabs += l.amt);
-                document.getElementById('header-content').innerHTML = `<div class="header-main">Net Worth</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-teal)">$${(totAssets - totLiabs).toLocaleString()}</div><div style="font-size: 12px; margin-top:5px; opacity:0.8">Assets: $${totAssets.toLocaleString()} | Debt: $${totLiabs.toLocaleString()}</div>`;
+                document.getElementById('header-content').innerHTML = `<div class="header-main">Net Worth</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-teal)">$${(totAssets - totLiabs).toLocaleString()}</div>`;
             } else {
                 header.className = "budget-header bg-liab";
                 liabs.forEach(l => totLiabs += l.amt);
-                document.getElementById('header-content').innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totLiabs.toLocaleString()}</div><div style="font-size: 12px; margin-top:5px; opacity:0.8">Total across all liabilities</div>`;
+                document.getElementById('header-content').innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totLiabs.toLocaleString()}</div>`;
             }
 
-            assets.forEach((a, idx) => invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" class="plan-input" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
-            liabs.forEach((l, idx) => liabL.innerHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" class="plan-input" style="width:100px; color:var(--m-red)" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
+            assets.forEach((a, idx) => invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
+            liabs.forEach((l, idx) => liabL.innerHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" style="width:100px; color:var(--m-red)" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
             filteredTxns.forEach(t => {
                 const mIdx = txns.findIndex(m => m.id === t.id);
                 txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;"><div style="font-size:13px; flex:1;"><b>${t.cat}</b>: ${t.desc}</div><div style="display:flex; align-items:center; gap:10px;"><div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTransaction(${mIdx})">✕</button></div></div>`;
@@ -269,20 +326,18 @@
 
         function switchTab(t) { 
             activeTab = t; 
-            document.getElementById('tab-budget').className = (t==='budget') ? 'tab active' : 'tab';
-            document.getElementById('tab-invest').className = (t==='invest') ? 'tab active' : 'tab';
-            document.getElementById('tab-liab').className = (t==='liab') ? 'tab active' : 'tab';
-            document.getElementById('view-budget').style.display = (t==='budget') ? 'block' : 'none'; 
-            document.getElementById('view-invest').style.display = (t==='invest') ? 'block' : 'none'; 
-            document.getElementById('view-liab').style.display = (t==='liab') ? 'block' : 'none'; 
+            ['budget', 'invest', 'liab'].forEach(tab => {
+                document.getElementById(`tab-${tab}`).className = (t === tab) ? 'tab active' : 'tab';
+                document.getElementById(`view-${tab}`).style.display = (t === tab) ? 'block' : 'none';
+            });
             updateUI(); 
         }
 
         function addTransaction() {
             const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, aV = parseFloat(document.getElementById('amt').value);
             if(!d || isNaN(aV)) return;
-            const a = (planInc.some(p => p.name === c)) ? Math.abs(aV) : -Math.abs(aV);
-            txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: a });
+            const isInc = planInc.some(p => p.name === c);
+            txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(aV) : -Math.abs(aV) });
             document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
             saveInternal();
         }
@@ -300,9 +355,20 @@
         function addInvestItem() { const n = prompt("Asset Name:"); if(n) { assets.push({name: n, amt: 0}); saveInternal(); } }
         function addLiabItem() { const n = prompt("Liability Name:"); if(n) { liabs.push({name: n, amt: 0}); saveInternal(); } }
         function deleteTransaction(idx) { if(confirm("Delete?")) { txns.splice(idx,1); saveInternal(); } }
+        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
         function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
-        function exportToFile() { const data = { txns, planInc, planExp, assets, liabs }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `budget_backup.json`; a.click(); }
+        function exportToFile() { const data = { txns, planInc, planExp, assets, liabs }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `monarch_backup.json`; a.click(); }
         function clearAllData() { if(confirm("Reset everything?")) { localStorage.clear(); location.reload(); } }
+        function syncFromFile(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const d = JSON.parse(ev.target.result);
+                txns = d.txns || []; planInc = d.planInc || []; planExp = d.planExp || []; assets = d.assets || []; liabs = d.liabs || [];
+                saveInternal(); closeModal();
+            };
+            reader.readAsText(file);
+        }
     </script>
 </body>
 </html>
