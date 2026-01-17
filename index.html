@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v19.1</title>
+    <title>Monarch-Lite v19.2</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-orange: #ff9f43; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -34,13 +34,18 @@
         .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
         .month-selector { background: var(--m-blue); border: 1px solid var(--m-teal); color: var(--m-teal); font-weight: bold; margin-bottom: 15px; padding: 12px; border-radius: 12px; text-align: center; width: 100%; }
         
-        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; }
-        .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; min-height: 45px; }
+        /* Unified Button Styles */
+        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; text-align: center; box-sizing: border-box; }
+        .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; min-height: 45px; width: 100%; box-sizing: border-box; }
         .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 16px; border-radius: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
+
+        /* Wizard Checkbox Alignment */
+        .wizard-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; }
+        .wizard-row input[type="checkbox"] { width: 20px; height: 20px; margin: 0; }
     </style>
 </head>
 <body>
@@ -49,27 +54,28 @@
         <div class="modal-card" id="initial-choice">
             <h2 style="color:var(--m-teal); margin-top:0;">Welcome</h2>
             <button class="btn-track" onclick="closeModal()">Continue Session</button>
-            <label for="sync-upload-modal" class="btn-mgmt" style="width:100%; margin-top:10px;">Import from File</label>
-            <button class="btn-mgmt" onclick="showWizard()" style="width:100%; color:var(--m-red); margin-top:10px;">Start Fresh</button>
+            <label for="sync-upload-modal" class="btn-mgmt" style="margin-top:10px;">Import from File</label>
+            <button class="btn-mgmt" onclick="showWizard()" style="margin-top:10px; color:var(--m-red);">Start Fresh</button>
             <input type="file" id="sync-upload-modal" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
         <div class="modal-card" id="wizard-view" style="display:none;">
-            <h3>Setup Categories</h3>
+            <h3 style="margin-top:0;">Setup Categories</h3>
             <div id="wizard-list" style="text-align:left;">
-                <p style="font-size: 12px; color: var(--m-teal);">Income</p>
-                <div class="cf-row"><span>💵 Paychecks</span><input type="checkbox" checked data-cat="💵 Paychecks" data-type="inc"></div>
-                <div class="cf-row"><span>💸 Interest</span><input type="checkbox" checked data-cat="💸 Interest" data-type="inc"></div>
-                <div class="cf-row"><span>💰 Other Income</span><input type="checkbox" checked data-cat="💰 Other Income" data-type="inc"></div>
-                <div class="cf-row"><span>🤑 RogersWE Cash</span><input type="checkbox" checked data-cat="🤑 RogersWE Cash" data-type="inc"></div>
-                <p style="font-size: 12px; color: var(--m-teal); margin-top: 10px;">Expenses</p>
-                <div class="cf-row"><span>🏢 Parking & Tolls</span><input type="checkbox" checked data-cat="🏢 Parking & Tolls" data-type="exp"></div>
-                <div class="cf-row"><span>🏠 Mortgage</span><input type="checkbox" checked data-cat="🏠 Mortgage" data-type="exp"></div>
-                <div class="cf-row"><span>💧 Water</span><input type="checkbox" checked data-cat="💧 Water" data-type="exp"></div>
-                <div class="cf-row"><span>⚡ Gas & Electric</span><input type="checkbox" checked data-cat="⚡ Gas & Electric" data-type="exp"></div>
-                <div class="cf-row"><span>🌐 Internet & Cable</span><input type="checkbox" checked data-cat="🌐 Internet & Cable" data-type="exp"></div>
-                <div class="cf-row"><span>📱 Phone</span><input type="checkbox" checked data-cat="📱 Phone" data-type="exp"></div>
-                <div class="cf-row"><span>👶 Child Care</span><input type="checkbox" checked data-cat="👶 Child Care" data-type="exp"></div>
-                <div class="cf-row"><span>☂️ Insurance</span><input type="checkbox" checked data-cat="☂️ Insurance" data-type="exp"></div>
+                <p style="font-size: 12px; color: var(--m-teal); font-weight:bold;">INCOME</p>
+                <div class="wizard-row"><span>💵 Paychecks</span><input type="checkbox" checked data-cat="💵 Paychecks" data-type="inc"></div>
+                <div class="wizard-row"><span>💸 Interest</span><input type="checkbox" checked data-cat="💸 Interest" data-type="inc"></div>
+                <div class="wizard-row"><span>💰 Other Income</span><input type="checkbox" checked data-cat="💰 Other Income" data-type="inc"></div>
+                <div class="wizard-row"><span>🤑 RogersWE Cash</span><input type="checkbox" checked data-cat="🤑 RogersWE Cash" data-type="inc"></div>
+                
+                <p style="font-size: 12px; color: var(--m-teal); margin-top: 15px; font-weight:bold;">EXPENSES</p>
+                <div class="wizard-row"><span>🏢 Parking & Tolls</span><input type="checkbox" checked data-cat="🏢 Parking & Tolls" data-type="exp"></div>
+                <div class="wizard-row"><span>🏠 Mortgage</span><input type="checkbox" checked data-cat="🏠 Mortgage" data-type="exp"></div>
+                <div class="wizard-row"><span>💧 Water</span><input type="checkbox" checked data-cat="💧 Water" data-type="exp"></div>
+                <div class="wizard-row"><span>⚡ Gas & Electric</span><input type="checkbox" checked data-cat="⚡ Gas & Electric" data-type="exp"></div>
+                <div class="wizard-row"><span>🌐 Internet & Cable</span><input type="checkbox" checked data-cat="🌐 Internet & Cable" data-type="exp"></div>
+                <div class="wizard-row"><span>📱 Phone</span><input type="checkbox" checked data-cat="📱 Phone" data-type="exp"></div>
+                <div class="wizard-row"><span>👶 Child Care</span><input type="checkbox" checked data-cat="👶 Child Care" data-type="exp"></div>
+                <div class="wizard-row"><span>☂️ Insurance</span><input type="checkbox" checked data-cat="☂️ Insurance" data-type="exp"></div>
             </div>
             <button class="btn-track" onclick="finishWizard()">Finish Setup</button>
         </div>
@@ -136,16 +142,6 @@
         <div class="budget-label" style="color:var(--m-orange)">Credit Cards & Loans</div>
         <div class="card" id="liab-main-list"></div>
         <button class="btn-track" style="background: var(--m-orange); color: var(--m-blue);" onclick="addLiabItem()">+ New Liability</button>
-        
-        <div class="budget-label" style="color:var(--m-orange)">Debt Paydown Calculator</div>
-        <div class="card">
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div><label style="font-size:10px">Monthly Pay</label><input type="number" id="calc-pay" placeholder="$500"></div>
-                <div><label style="font-size:10px">Interest %</label><input type="number" id="calc-int" placeholder="19.9"></div>
-            </div>
-            <button class="btn-mgmt" style="width:100%; margin-top:10px;" onclick="calculateDebt()">Calculate Freedom Date</button>
-            <div id="debt-result" style="margin-top:15px; font-weight:bold; text-align:center; color:var(--m-orange)"></div>
-        </div>
     </div>
 
     <div class="card">
@@ -179,7 +175,7 @@
                     liabs = data.liabs || []; 
                     saveInternal(); 
                     closeModal();
-                } catch (err) { alert("Invalid file format. Please use a saved JSON file."); }
+                } catch (err) { alert("Invalid file format."); }
             };
             reader.readAsText(file);
         }
@@ -274,27 +270,15 @@
         }
 
         function finishWizard() {
-            let newPlanInc = [];
-            let newPlanExp = [];
+            planInc = []; planExp = [];
             document.querySelectorAll('#wizard-list input:checked').forEach(c => {
                 const n = c.getAttribute('data-cat');
-                if(c.getAttribute('data-type') === 'inc') newPlanInc.push({name:n, amt: 0});
-                else newPlanExp.push({name:n, amt: 0});
+                if(c.getAttribute('data-type') === 'inc') planInc.push({name:n, amt: 0});
+                else planExp.push({name:n, amt: 0});
             });
-            planInc = newPlanInc;
-            planExp = newPlanExp;
             txns = []; assets = []; liabs = [];
             saveInternal();
             closeModal();
-        }
-
-        function calculateDebt() {
-            const pay = parseFloat(document.getElementById('calc-pay').value);
-            const rate = parseFloat(document.getElementById('calc-int').value) / 100 / 12;
-            const balance = liabs.length > 0 ? Math.max(...liabs.map(l => l.amt)) : 0;
-            if(!pay || balance <= 0) { alert("Enter pay & balance."); return; }
-            const months = -Math.log(1 - (rate * balance) / pay) / Math.log(1 + rate);
-            document.getElementById('debt-result').innerText = isNaN(months) ? "Payment too low!" : `Debt Free in ${Math.ceil(months)} months`;
         }
 
         function switchTab(t) { 
