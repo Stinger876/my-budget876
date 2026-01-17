@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v15.0.4 (Enhanced)</title>
+    <title>Monarch-Lite v16.0 (Monthly)</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -29,6 +29,8 @@
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; }
         .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; height: 45px; box-sizing: border-box; }
         
+        .month-selector { background: var(--m-blue); border: 1px solid var(--m-teal); color: var(--m-teal); font-weight: bold; margin-bottom: 15px; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; }
+
         .unsaved-glow { background: var(--m-teal) !important; color: var(--m-blue) !important; border-color: white !important; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
@@ -69,23 +71,38 @@
         </div>
     </div>
 
+    <select id="month-filter" class="month-selector" onchange="updateUI()">
+        <option value="01">January</option>
+        <option value="02">February</option>
+        <option value="03">March</option>
+        <option value="04">April</option>
+        <option value="05">May</option>
+        <option value="06">June</option>
+        <option value="07">July</option>
+        <option value="08">August</option>
+        <option value="09">September</option>
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+    </select>
+
     <div class="tab-bar">
         <button class="tab active" id="tab-budget" onclick="switchTab('budget')">Budget</button>
         <button class="tab" id="tab-invest" onclick="switchTab('invest')">Investments</button>
     </div>
 
     <div id="view-budget">
-        <div class="budget-label">Cash Flow</div>
+        <div class="budget-label">Cash Flow (Monthly)</div>
         <div class="card">
             <div class="cf-row"><span>Actual Income</span><span id="cf-inc" class="pos">$0</span></div>
             <div class="cf-row"><span>Actual Expenses</span><span id="cf-exp" class="neg">$0</span></div>
             <div class="cf-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
         </div>
 
-        <div class="budget-label">Income <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
+        <div class="budget-label">Income Goals <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
         <div class="card" id="income-list"></div>
 
-        <div class="budget-label">Expenses <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
+        <div class="budget-label">Expense Limits <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
         <div class="card" id="expense-list"></div>
 
         <div class="card">
@@ -148,7 +165,13 @@
                 document.getElementById('status-msg').innerText = "No local data.";
                 document.getElementById('continue-btn').style.display = 'none'; 
             }
-            document.getElementById('txn-date').valueAsDate = new Date();
+            
+            // Set current month and date
+            const today = new Date();
+            const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+            document.getElementById('month-filter').value = currentMonth;
+            document.getElementById('txn-date').valueAsDate = today;
+            
             updateUI();
         };
 
@@ -177,50 +200,55 @@
 
         function updateUI() {
             const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), catS = document.getElementById('cat-select');
+            const selectedMonth = document.getElementById('month-filter').value;
+            
             incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; catS.innerHTML = '';
             
             let actInc = 0, actExp = 0, budIncT = 0, budExpT = 0, totalAssets = 0;
             
-            txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
+            // Filter transactions by month
+            const filteredTxns = txns.filter(t => t.date.split('-')[1] === selectedMonth);
 
-            // Plan Income + Total
+            filteredTxns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
+
+            // Assets (Net worth usually counts current balance, not monthly)
+            assets.forEach((a, i) => {
+                totalAssets += a.amt;
+                invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" class="plan-input" style="width:100px;" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"></div>`;
+            });
+
             planInc.forEach((p, i) => {
                 budIncT += p.amt;
-                const received = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
+                const received = filteredTxns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 const remain = p.amt - received;
                 catS.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
                 incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('inc', ${i})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span class="pos" style="text-align:right">$${remain.toLocaleString()}</span></div>`;
             });
             incL.innerHTML += `<div class="cf-row" style="border-top:1px solid #333; margin-top:8px;"><b>Total Income Goal</b> <b class="pos">$${budIncT.toLocaleString()}</b></div>`;
 
-            // Plan Expense + Total
             planExp.forEach((p, i) => {
                 budExpT += p.amt;
-                const spent = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
+                const spent = filteredTxns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
                 const remain = p.amt - spent;
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
                 expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('exp', ${i})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span class="${remain < 0 ? 'neg' : ''}" style="text-align:right">$${remain.toLocaleString()}</span></div>`;
             });
             expL.innerHTML += `<div class="cf-row" style="border-top:1px solid #333; margin-top:8px;"><b>Total Expense Limit</b> <b class="neg">$${budExpT.toLocaleString()}</b></div>`;
 
-            // Transactions with Editing/Deletion
-            txns.forEach((t, i) => {
+            // Filtered Transaction List
+            filteredTxns.forEach((t) => {
+                // Find original index in master list for edit/delete
+                const originalIndex = txns.findIndex(master => master.id === t.id);
                 txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:8px;">
-                    <div style="font-size:13px; flex:1;" onclick="editTransaction(${i})">
+                    <div style="font-size:13px; flex:1;" onclick="editTransaction(${originalIndex})">
                         <small style="opacity:0.6">${t.date}</small><br>
                         <b>${t.cat}</b>: ${t.desc} <span style="font-size:10px; opacity:0.5;">✏️</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:12px;">
                         <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:14px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div>
-                        <button class="del-btn" style="font-size:16px;" onclick="deleteTransaction(${i})">✕</button>
+                        <button class="del-btn" style="font-size:16px;" onclick="deleteTransaction(${originalIndex})">✕</button>
                     </div>
                 </div>`;
-            });
-
-            // Assets
-            assets.forEach((a, i) => {
-                totalAssets += a.amt;
-                invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" class="plan-input" style="width:100px;" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"></div>`;
             });
 
             const actSavings = actInc - actExp;
@@ -249,36 +277,42 @@
             let amt = parseFloat(document.getElementById('amt').value);
             if(!desc || isNaN(amt)) return;
             amt = (planInc.some(p => p.name === cat)) ? Math.abs(amt) : -Math.abs(amt);
-            txns.unshift({ id: Date.now(), desc, cat, date: document.getElementById('txn-date').value, amt });
+            
+            const dateVal = document.getElementById('txn-date').value;
+            txns.unshift({ id: Date.now(), desc, cat, date: dateVal, amt });
+            
+            // Set filter to match the month of the transaction just added
+            document.getElementById('month-filter').value = dateVal.split('-')[1];
+            
             document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
             hasUnsavedChanges = true;
             saveInternal();
         }
 
-        function editTransaction(index) {
-            const t = txns[index];
+        function editTransaction(masterIndex) {
+            const t = txns[masterIndex];
             const newDesc = prompt("Edit Description:", t.desc);
             if (newDesc === null) return;
             const newAmt = prompt("Edit Amount:", Math.abs(t.amt));
             if (newAmt === null || isNaN(parseFloat(newAmt))) return;
             
-            txns[index].desc = newDesc;
+            txns[masterIndex].desc = newDesc;
             const sign = t.amt >= 0 ? 1 : -1;
-            txns[index].amt = parseFloat(newAmt) * sign;
+            txns[masterIndex].amt = parseFloat(newAmt) * sign;
             hasUnsavedChanges = true;
             saveInternal();
         }
 
-        function deleteTransaction(index) {
+        function deleteTransaction(masterIndex) {
             if(confirm("Delete transaction?")) {
-                txns.splice(index, 1);
+                txns.splice(masterIndex, 1);
                 hasUnsavedChanges = true;
                 saveInternal();
             }
         }
 
         function deleteCategory(type, index) {
-            if(confirm("Delete category? History remains but totals will change.")) {
+            if(confirm("Delete category? history will stay.")) {
                 if(type === 'inc') planInc.splice(index, 1);
                 else planExp.splice(index, 1);
                 hasUnsavedChanges = true;
