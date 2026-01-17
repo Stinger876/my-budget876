@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v18.5</title>
+    <title>Monarch-Lite v19.0</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-orange: #ff9f43; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -11,37 +11,37 @@
         #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px 0; }
         .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; text-align: center; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
         
-        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; transition: background 0.3s; }
-        .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
-        
-        .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
-        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; opacity: 0.6; color: white; border: none; min-width: 90px; }
+        .budget-header { background: #2c3e50; color: white; padding: 20px; border-radius: 16px; margin-bottom: 12px; text-align: center; }
+        .header-main { font-size: 1.4rem; font-weight: 800; margin-bottom: 5px; }
+        .spending-bar-bg { background: rgba(255,255,255,0.1); height: 12px; border-radius: 10px; margin: 10px 0; overflow: hidden; position: relative; }
+        .spending-bar-fill { background: var(--m-teal); height: 100%; width: 0%; transition: width 0.5s; }
+
+        .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; border: none; opacity: 0.6; }
         .tab.active { background: var(--m-teal) !important; color: var(--m-blue) !important; opacity: 1; }
 
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
-        .total-row { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; font-weight: 800; margin-top: 5px; display: flex; justify-content: space-between; font-size: 14px; border: 1px solid #333; }
+        .total-row { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; font-weight: 800; margin-top: 5px; display: flex; justify-content: space-between; font-size: 14px; }
         
-        .budget-label { font-size: 16px; font-weight: bold; margin: 15px 0 8px 0; display: flex; justify-content: space-between; align-items: center; color: var(--m-teal); }
-        
-        .chart-container { display: flex; flex-direction: column; align-items: center; padding: 10px 0; border-top: 1px solid #2a2a2a; margin-top: 10px;}
-        .pie-chart { width: 160px; height: 160px; border-radius: 50%; border: 4px solid #333; margin: 15px 0; position: relative; }
-        .legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; font-size: 12px; }
-        .legend-item { display: flex; align-items: center; gap: 6px; background: #2a2a2a; padding: 6px 10px; border-radius: 8px; border: 1px solid #444; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        /* Advanced Pie Chart Styles */
+        .chart-container { position: relative; width: 220px; height: 220px; margin: 20px auto; }
+        .pie-chart { width: 100%; height: 100%; border-radius: 50%; position: relative; }
+        .pie-center { position: absolute; top: 20%; left: 20%; width: 60%; height: 60%; background: var(--m-bg); border-radius: 50%; z-index: 2; }
+        .category-icon { position: absolute; transform: translate(-50%, -50%); z-index: 3; font-size: 18px; pointer-events: none; }
 
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
         .month-selector { background: var(--m-blue); border: 1px solid var(--m-teal); color: var(--m-teal); font-weight: bold; margin-bottom: 15px; padding: 12px; border-radius: 12px; text-align: center; width: 100%; }
         
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; }
-        .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; min-height: 45px; box-sizing: border-box; }
+        .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; min-height: 45px; }
         .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 16px; border-radius: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
-        .del-btn { color: var(--m-red); background: none; border: none; font-size: 20px; cursor: pointer; }
+        .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -77,10 +77,10 @@
     </div>
 
     <div class="budget-header" id="main-header">
-        <div class="header-main"><span id="header-label">Budget Surplus</span><span id="header-val">$0</span></div>
-        <div style="font-size: 10px; margin-top:5px; display:flex; justify-content:space-between; opacity: 0.9;">
-            <span id="save-info">Last Saved: Never</span><span id="loc-info">Source: Browser</span>
-        </div>
+        <div class="header-main">Monthly Spending</div>
+        <div id="spending-summary" style="font-weight: bold; font-size: 1.1rem;">$0 spent of $0</div>
+        <div class="spending-bar-bg"><div id="spending-bar" class="spending-bar-fill"></div></div>
+        <div id="spending-perc" style="font-size: 14px; opacity: 0.9;">0%</div>
     </div>
 
     <select id="month-filter" class="month-selector" onchange="updateUI()">
@@ -97,14 +97,11 @@
     </div>
 
     <div id="view-budget">
-        <div class="budget-label">Cash Flow</div>
         <div class="card">
-            <div class="cf-row"><span>Actual Income</span><span id="cf-inc" class="pos">$0</span></div>
-            <div class="cf-row"><span>Actual Expenses</span><span id="cf-exp" class="neg">$0</span></div>
-            <div class="cf-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
-            <div class="chart-container">
+            <div class="chart-container" id="chart-wrap">
                 <div id="pie" class="pie-chart"></div>
-                <div id="legend" class="legend"></div>
+                <div class="pie-center"></div>
+                <div id="pie-icons"></div>
             </div>
         </div>
         
@@ -140,6 +137,16 @@
         <div class="budget-label" style="color:var(--m-orange)">Credit Cards & Loans</div>
         <div class="card" id="liab-main-list"></div>
         <button class="btn-track" style="background: var(--m-orange); color: var(--m-blue);" onclick="addLiabItem()">+ New Liability</button>
+        
+        <div class="budget-label" style="color:var(--m-orange)">Debt Paydown Calculator</div>
+        <div class="card">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div><label style="font-size:10px">Monthly Pay</label><input type="number" id="calc-pay" placeholder="$500"></div>
+                <div><label style="font-size:10px">Interest %</label><input type="number" id="calc-int" placeholder="19.9"></div>
+            </div>
+            <button class="btn-mgmt" style="width:100%; margin-top:10px;" onclick="calculateDebt()">Calculate Freedom Date</button>
+            <div id="debt-result" style="margin-top:15px; font-weight:bold; text-align:center; color:var(--m-orange)"></div>
+        </div>
     </div>
 
     <div class="card">
@@ -198,40 +205,47 @@
             const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), 
                   txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), 
                   liabL = document.getElementById('liab-main-list'), catS = document.getElementById('cat-select'), 
-                  pie = document.getElementById('pie'), legend = document.getElementById('legend');
+                  pie = document.getElementById('pie'), iconWrap = document.getElementById('pie-icons');
             
             const selectedMonth = document.getElementById('month-filter').value;
-            incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; liabL.innerHTML = ''; catS.innerHTML = ''; legend.innerHTML = '';
+            incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; liabL.innerHTML = ''; catS.innerHTML = ''; iconWrap.innerHTML = '';
 
-            let actInc = 0, actExp = 0, budIncT = 0, budExpT = 0, totAssets = 0, totLiabs = 0;
+            let actExp = 0, budIncT = 0, budExpT = 0, totAssets = 0, totLiabs = 0;
             const filteredTxns = txns.filter(t => t.date.split('-')[1] === selectedMonth);
             
             let expenseGroups = {};
             filteredTxns.forEach(t => {
-                if(t.amt > 0) actInc += t.amt; 
-                else {
+                if(t.amt < 0) {
                     actExp += Math.abs(t.amt);
                     expenseGroups[t.cat] = (expenseGroups[t.cat] || 0) + Math.abs(t.amt);
                 }
             });
 
-            // Pie Chart with Icons in Legend
+            // Pie Chart with Central Slice Icons
             let currentPercentage = 0; let gradientParts = []; let i = 0;
             for (let catName in expenseGroups) {
                 let perc = (expenseGroups[catName] / actExp) * 100;
                 let color = colors[i % colors.length];
                 gradientParts.push(`${color} ${currentPercentage}% ${currentPercentage + perc}%`);
-                legend.innerHTML += `<div class="legend-item"><div class="dot" style="background:${color}"></div>${catName}</div>`;
+                
+                // Calculate emoji position
+                const angle = (currentPercentage + (perc / 2)) * 3.6 - 90;
+                const rad = angle * (Math.PI / 180);
+                const x = 50 + 35 * Math.cos(rad);
+                const y = 50 + 35 * Math.sin(rad);
+                const emoji = catName.split(' ')[0];
+                iconWrap.innerHTML += `<div class="category-icon" style="left:${x}%; top:${y}%;">${emoji}</div>`;
+                
                 currentPercentage += perc; i++;
             }
             pie.style.background = actExp > 0 ? `conic-gradient(${gradientParts.join(', ')})` : '#333';
 
-            // Planned Lists & Totals
+            // Planned Totals
             planInc.forEach((p, idx) => {
                 budIncT += p.amt;
                 const rec = filteredTxns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('inc', ${idx})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span class="pos">$${(p.amt-rec).toLocaleString()}</span></div>`;
+                incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" onclick="deleteCategory('inc', ${idx})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span class="pos">$${(p.amt-rec).toLocaleString()}</span></div>`;
             });
             document.getElementById('total-planned-inc').innerText = `$${budIncT.toLocaleString()}`;
 
@@ -239,11 +253,18 @@
                 budExpT += p.amt;
                 const spnt = filteredTxns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('exp', ${idx})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${(p.amt-spnt).toLocaleString()}</span></div>`;
+                expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" onclick="deleteCategory('exp', ${idx})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${(p.amt-spnt).toLocaleString()}</span></div>`;
             });
             document.getElementById('total-planned-exp').innerText = `$${budExpT.toLocaleString()}`;
 
-            // Transactions & Balances
+            // Monthly Spending Header Logic
+            const perc = budExpT > 0 ? Math.round((actExp / budExpT) * 100) : 0;
+            document.getElementById('spending-summary').innerText = `$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}`;
+            document.getElementById('spending-bar').style.width = Math.min(perc, 100) + "%";
+            document.getElementById('spending-perc').innerText = `${perc}% spent`;
+            document.getElementById('spending-bar').style.background = perc > 100 ? "var(--m-red)" : "var(--m-teal)";
+
+            // Transactions
             filteredTxns.forEach(t => {
                 const mIdx = txns.findIndex(m => m.id === t.id);
                 txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;"><div style="font-size:13px; flex:1;" onclick="editTransaction(${mIdx})"><b>${t.cat}</b>: ${t.desc} ✏️</div><div style="display:flex; align-items:center; gap:10px;"><div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTransaction(${mIdx})">✕</button></div></div>`;
@@ -257,25 +278,16 @@
                 liabL.innerHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" class="plan-input" style="width:100px; color:var(--m-red)" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`;
             });
 
-            const header = document.getElementById('main-header');
-            if(activeTab === 'budget') {
-                header.style.background = "var(--m-green)";
-                document.getElementById('header-label').innerText = "Budget Surplus";
-                document.getElementById('header-val').innerText = `$${(budIncT - budExpT).toLocaleString()}`;
-            } else if (activeTab === 'invest') {
-                header.style.background = "var(--m-blue)";
-                document.getElementById('header-label').innerText = "Net Worth";
-                document.getElementById('header-val').innerText = `$${(totAssets - totLiabs).toLocaleString()}`;
-            } else {
-                header.style.background = "var(--m-orange)";
-                document.getElementById('header-label').innerText = "Total Debt";
-                document.getElementById('header-val').innerText = `$${totLiabs.toLocaleString()}`;
-            }
-
-            document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
-            document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
-            document.getElementById('cf-sav').innerText = `$${(actInc-actExp).toLocaleString()}`;
             document.getElementById('save-info').innerText = "Last Saved: " + (localStorage.getItem('m_last_save_time') || "Never");
+        }
+
+        function calculateDebt() {
+            const pay = parseFloat(document.getElementById('calc-pay').value);
+            const rate = parseFloat(document.getElementById('calc-int').value) / 100 / 12;
+            const balance = liabs.length > 0 ? Math.max(...liabs.map(l => l.amt)) : 0;
+            if(!pay || balance <= 0) { alert("Enter pay & balance."); return; }
+            const months = -Math.log(1 - (rate * balance) / pay) / Math.log(1 + rate);
+            document.getElementById('debt-result').innerText = isNaN(months) ? "Payment too low!" : `Debt Free in ${Math.ceil(months)} months`;
         }
 
         function switchTab(t) { 
