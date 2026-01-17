@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v20.7</title>
+    <title>Monarch-Lite v20.8</title>
     <style>
         :root { 
             --m-blue: #0a192f; 
@@ -18,9 +18,11 @@
         }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
+        /* Modals */
         #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px 0; }
         .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; text-align: center; }
         
+        /* Headers */
         .budget-header { color: white; padding: 20px; border-radius: 16px; margin-bottom: 12px; text-align: center; position: relative; min-height: 100px; display: flex; flex-direction: column; justify-content: center; }
         .bg-spending { background: var(--m-header-green); border: 1px solid var(--m-green); }
         .bg-invest { background: var(--m-blue); border: 1px solid var(--m-teal); }
@@ -29,6 +31,7 @@
         .header-meta { font-size: 10px; opacity: 0.7; margin-bottom: 8px; display: flex; justify-content: space-between; font-family: monospace; position: absolute; top: 10px; left: 20px; right: 20px; }
         .header-main { font-size: 1.4rem; font-weight: 800; margin-top: 15px; }
 
+        /* Navigation */
         .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
         .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; border: none; opacity: 0.6; }
         .tab.active { background: var(--m-teal) !important; color: var(--m-blue) !important; opacity: 1; }
@@ -41,6 +44,7 @@
         .wizard-row span { text-align: left; flex: 1; }
         .wizard-row input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; }
 
+        /* Controls */
         input, select { width: 100%; padding: 10px; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
         .btn-mgmt { flex: 1; background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; display: flex; align-items: center; justify-content: center; }
@@ -55,15 +59,15 @@
         }
         .pulse { animation: pulse-save-alt 2s infinite ease-in-out; border-color: var(--m-teal) !important; }
 
-        .calc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; text-align: center; }
-        .calc-item { background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #444; }
-        .calc-label { font-size: 10px; text-transform: uppercase; opacity: 0.7; margin-bottom: 4px; }
-        .calc-val { font-weight: bold; color: var(--m-orange); font-size: 13px; }
-
         .spending-bar-bg { background: rgba(255,255,255,0.1); height: 12px; border-radius: 10px; margin: 10px 0; overflow: hidden; position: relative; width: 100%; }
         .spending-bar-fill { height: 100%; width: 0%; transition: width 0.5s; }
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
+        
+        .calc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .calc-item { background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #444; text-align: center; }
+        .calc-label { font-size: 10px; text-transform: uppercase; opacity: 0.7; }
+        .calc-val { font-weight: bold; color: var(--m-orange); font-size: 13px; }
     </style>
 </head>
 <body>
@@ -105,8 +109,7 @@
             <span id="meta-file">File: Browser Storage</span>
             <span id="meta-saved">Last Saved: Never</span>
         </div>
-        <div id="header-content">
-            </div>
+        <div id="header-content"></div>
     </div>
 
     <select id="month-filter" onchange="updateUI()" style="margin-bottom:10px;">
@@ -150,21 +153,13 @@
     <div id="view-liab" style="display:none;">
         <div class="card" id="liab-main-list"></div>
         <button class="btn-track" style="background:var(--m-orange); color:var(--m-blue);" onclick="addItem('liabs')">+ New Liability</button>
-        
         <div class="card" style="margin-top: 20px; border: 1px solid var(--m-orange);">
             <b style="color: var(--m-orange);">Loan & Mortgage Calculator</b>
             <div style="margin-top:10px;">
                 <input type="text" inputmode="decimal" id="calc-bal" placeholder="Loan Amount ($)" oninput="calcInterest()">
-                <div style="display:flex; gap:10px; margin-top:5px;">
-                    <input type="text" inputmode="decimal" id="calc-rate" placeholder="APR %" style="flex:1" oninput="calcInterest()">
-                    <input type="text" inputmode="decimal" id="calc-term" placeholder="Term (Years)" style="flex:1" oninput="calcInterest()">
-                </div>
+                <div style="display:flex; gap:10px; margin-top:5px;"><input type="text" inputmode="decimal" id="calc-rate" placeholder="APR %" style="flex:1" oninput="calcInterest()"><input type="text" inputmode="decimal" id="calc-term" placeholder="Term (Years)" style="flex:1" oninput="calcInterest()"></div>
             </div>
-            <div class="calc-grid">
-                <div class="calc-item"><div class="calc-label">Daily</div><div id="res-day" class="calc-val">$0.00</div></div>
-                <div class="calc-item"><div class="calc-label">Monthly</div><div id="res-mo" class="calc-val">$0.00</div></div>
-                <div class="calc-item"><div class="calc-label">Yearly</div><div id="res-yr" class="calc-val">$0.00</div></div>
-            </div>
+            <div class="calc-grid"><div class="calc-item"><div class="calc-label">Daily</div><div id="res-day" class="calc-val">$0.00</div></div><div class="calc-item"><div class="calc-label">Monthly</div><div id="res-mo" class="calc-val">$0.00</div></div><div class="calc-item"><div class="calc-label">Yearly</div><div id="res-yr" class="calc-val">$0.00</div></div></div>
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #444;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span style="font-size:12px; opacity:0.8;">Est. Monthly Payment:</span><span id="res-pmt" style="font-weight:bold; color:var(--m-teal);">$0.00</span></div>
                 <div style="display:flex; justify-content:space-between;"><span style="font-size:12px; opacity:0.8;">Total Interest over Term:</span><span id="res-total-int" style="font-weight:bold; color:var(--m-red);">$0.00</span></div>
@@ -188,15 +183,21 @@
         let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [];
         let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
         let liabs = JSON.parse(localStorage.getItem('m_liabs')) || [];
+        let curFile = localStorage.getItem('m_cur_file') || 'Browser Storage';
         let activeTab = 'budget';
 
         window.onload = () => {
             const today = new Date();
             document.getElementById('month-filter').value = String(today.getMonth() + 1).padStart(2, '0');
             document.getElementById('txn-date').valueAsDate = today;
-            document.getElementById('meta-saved').innerText = `Last Saved: ${localStorage.getItem('m_last_saved') || 'Never'}`;
+            updateMetaHeader();
             updateUI();
         };
+
+        function updateMetaHeader() {
+            document.getElementById('meta-saved').innerText = `Last Saved: ${localStorage.getItem('m_last_saved') || 'Never'}`;
+            document.getElementById('meta-file').innerText = `File: ${curFile}`;
+        }
 
         function saveInternal() {
             localStorage.setItem('m_txns', JSON.stringify(txns));
@@ -220,17 +221,12 @@
             let actExp = 0, budIncT = 0, budExpT = 0, totA = 0, totL = 0;
             txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth).forEach(t => { if(t.amt < 0) actExp += Math.abs(t.amt); });
 
-            // Headers
             const headerMain = document.getElementById('main-header');
             if(activeTab === 'budget') {
                 headerMain.className = "budget-header bg-spending";
                 planExp.forEach(p => budExpT += p.amt);
                 const pSpent = budExpT > 0 ? Math.round((actExp / budExpT) * 100) : 0;
-                headerBox.innerHTML = `
-                    <div class="header-main">Monthly Spending</div>
-                    <div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}</div>
-                    <div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>
-                `;
+                headerBox.innerHTML = `<div class="header-main">Monthly Spending</div><div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}</div><div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>`;
             } else if(activeTab === 'invest') {
                 headerMain.className = "budget-header bg-invest";
                 assets.forEach(a => totA += a.amt); liabs.forEach(l => totL += l.amt);
@@ -241,29 +237,50 @@
                 headerBox.innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totL.toLocaleString()}</div>`;
             }
 
-            // Category Lists
-            budIncT = 0; planInc.forEach((p, idx) => {
-                budIncT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                incL.innerHTML += `<div class="budget-row"><button class="del-btn" onclick="removeCat('inc', ${idx})">✕</button><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`;
-            });
+            planInc.forEach((p, idx) => { budIncT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; incL.innerHTML += `<div class="budget-row"><button class="del-btn" onclick="removeCat('inc', ${idx})">✕</button><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`; });
             document.getElementById('total-planned-inc').innerText = `$${budIncT.toLocaleString()}`;
-
-            budExpT = 0; planExp.forEach((p, idx) => {
-                budExpT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="budget-row"><button class="del-btn" onclick="removeCat('exp', ${idx})">✕</button><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`;
-            });
+            planExp.forEach((p, idx) => { budExpT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; expL.innerHTML += `<div class="budget-row"><button class="del-btn" onclick="removeCat('exp', ${idx})">✕</button><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`; });
             document.getElementById('total-planned-exp').innerText = `$${budExpT.toLocaleString()}`;
 
-            // Asset/Liab Lists
             assets.forEach((a, idx) => invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
             liabs.forEach((l, idx) => liabL.innerHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" style="width:100px;" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
             
-            // Transactions
-            const filteredTxns = txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth);
-            filteredTxns.forEach((t) => {
+            txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth).forEach((t) => {
                 const globalIdx = txns.findIndex(x => x.id === t.id);
                 txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;"><div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div><div style="display:flex; align-items:center; gap:10px;"><div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTxn(${globalIdx})">✕</button></div></div>`;
             });
+        }
+
+        function exportToFile() {
+            const fileName = `monarch_backup_${new Date().toISOString().split('T')[0]}.json`;
+            const data = { txns, planInc, planExp, assets, liabs };
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = fileName;
+            a.click();
+            
+            curFile = fileName;
+            localStorage.setItem('m_cur_file', curFile);
+            localStorage.setItem('m_last_saved', new Date().toLocaleTimeString());
+            document.getElementById('save-btn').classList.remove('pulse');
+            updateMetaHeader();
+        }
+
+        function syncFromFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const d = JSON.parse(ev.target.result);
+                txns = d.txns || []; planInc = d.planInc || []; planExp = d.planExp || []; assets = d.assets || []; liabs = d.liabs || [];
+                curFile = file.name;
+                localStorage.setItem('m_cur_file', curFile);
+                saveInternal();
+                updateMetaHeader();
+                closeModal();
+            };
+            reader.readAsText(file);
         }
 
         function switchTab(t) { activeTab = t; ['budget', 'invest', 'liab'].forEach(tab => { document.getElementById(`tab-${tab}`).className = (t === tab) ? 'tab active' : 'tab'; document.getElementById(`view-${tab}`).style.display = (t === tab) ? 'block' : 'none'; }); updateUI(); }
@@ -273,37 +290,4 @@
         function addItem(key) { const n = prompt("Name:"); if(n) { if(key==='assets') assets.push({name:n, amt:0}); else liabs.push({name:n, amt:0}); saveInternal(); } }
         function deleteTxn(idx) { txns.splice(idx,1); saveInternal(); }
         function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-        function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
-        function clearAllData() { if(confirm("Reset everything?")) { localStorage.clear(); location.reload(); } }
-        
-        function calcInterest() {
-            const P = parseFloat(document.getElementById('calc-bal').value) || 0, rate = parseFloat(document.getElementById('calc-rate').value) || 0, years = parseFloat(document.getElementById('calc-term').value) || 0;
-            if (P <= 0 || rate <= 0) return;
-            const yInt = P * (rate / 100);
-            document.getElementById('res-day').innerText = `$${(yInt / 365).toFixed(2)}`;
-            document.getElementById('res-mo').innerText = `$${(yInt / 12).toFixed(2)}`;
-            document.getElementById('res-yr').innerText = `$${yInt.toFixed(2)}`;
-            if (years > 0) {
-                const r = (rate / 100) / 12, n = years * 12;
-                const pmt = P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-                document.getElementById('res-pmt').innerText = `$${pmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                document.getElementById('res-total-int').innerText = `$${((pmt * n) - P).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            }
-        }
-
-        function exportToFile() {
-            const data = { txns, planInc, planExp, assets, liabs };
-            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `monarch_backup_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            localStorage.setItem('m_last_saved', new Date().toLocaleTimeString());
-            document.getElementById('meta-saved').innerText = `Last Saved: ${localStorage.getItem('m_last_saved')}`;
-            document.getElementById('save-btn').classList.remove('pulse');
-        }
-        function syncFromFile(e) { const reader = new FileReader(); reader.onload = (ev) => { const d = JSON.parse(ev.target.result); txns = d.txns || []; planInc = d.planInc || []; planExp = d.planExp || []; assets = d.assets || []; liabs = d.liabs || []; saveInternal(); closeModal(); }; reader.readAsText(e.target.files[0]); }
-        function finishWizard() { planInc = []; planExp = []; document.querySelectorAll('#wizard-list input:checked').forEach(c => { const n = c.getAttribute('data-cat'); if(c.getAttribute('data-type') === 'inc') planInc.push({name:n, amt: 0}); else planExp.push({name:n, amt: 0}); }); saveInternal(); closeModal(); }
-    </script>
-</body>
-</html>
+        function showWizard() { document.getElementById
