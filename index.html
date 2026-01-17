@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v19.4</title>
+    <title>Monarch-Lite v20.1</title>
     <style>
-        :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-orange: #ff9f43; --m-text: #ffffff; }
+        :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-header-green: #1b4d3e; --m-orange: #ff9f43; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
         #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px 0; }
         .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; text-align: center; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
         
         .budget-header { color: white; padding: 20px; border-radius: 16px; margin-bottom: 12px; text-align: center; transition: background 0.3s; }
-        .bg-spending { background: #2c3e50; }
+        /* NEW GREEN THEME FOR SPENDING */
+        .bg-spending { background: var(--m-header-green); border: 1px solid var(--m-green); }
         .bg-invest { background: var(--m-blue); border: 1px solid var(--m-teal); }
         .bg-liab { background: #3d2b1f; border: 1px solid var(--m-orange); }
 
         .header-main { font-size: 1.4rem; font-weight: 800; margin-bottom: 5px; }
         .spending-bar-bg { background: rgba(255,255,255,0.1); height: 12px; border-radius: 10px; margin: 10px 0; overflow: hidden; position: relative; }
-        .spending-bar-fill { background: var(--m-teal); height: 100%; width: 0%; transition: width 0.5s; }
+        .spending-bar-fill { background: var(--m-green); height: 100%; width: 0%; transition: width 0.5s; }
 
         .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
         .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; border: none; opacity: 0.6; }
@@ -28,7 +29,6 @@
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         
-        /* Wizard Row Alignment Fix */
         .wizard-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .wizard-row span { flex: 1; text-align: left; }
         .wizard-row input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; margin-left: 10px; }
@@ -40,7 +40,6 @@
 
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         
-        /* Button Management Flexbox */
         .mgmt-group { display: flex; gap: 10px; margin-top: 10px; }
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; text-align: center; }
         .btn-mgmt { flex: 1; background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; min-height: 45px; box-sizing: border-box; }
@@ -66,8 +65,10 @@
         <div class="modal-card" id="wizard-view" style="display:none;">
             <h3 style="margin-top:0;">Setup Categories</h3>
             <div id="wizard-list">
-                <p style="font-size: 11px; color: var(--m-teal); font-weight:bold; text-align:left;">INCOME</p>
+                <p style="font-size: 11px; color: var(--m-green); font-weight:bold; text-align:left;">INCOME (From your Screenshot)</p>
                 <div class="wizard-row"><span>💵 Paychecks</span><input type="checkbox" checked data-cat="💵 Paychecks" data-type="inc"></div>
+                <div class="wizard-row"><span>💸 Interest</span><input type="checkbox" checked data-cat="💸 Interest" data-type="inc"></div>
+                <div class="wizard-row"><span>💰 Other Income</span><input type="checkbox" checked data-cat="💰 Other Income" data-type="inc"></div>
                 <div class="wizard-row"><span>🤑 RogersWE Cash</span><input type="checkbox" checked data-cat="🤑 RogersWE Cash" data-type="inc"></div>
                 
                 <p style="font-size: 11px; color: var(--m-teal); margin-top: 15px; font-weight:bold; text-align:left;">EXPENSES</p>
@@ -79,7 +80,6 @@
                 <div class="wizard-row"><span>🌐 Internet & Cable</span><input type="checkbox" checked data-cat="🌐 Internet & Cable" data-type="exp"></div>
                 <div class="wizard-row"><span>📱 Phone</span><input type="checkbox" checked data-cat="📱 Phone" data-type="exp"></div>
                 <div class="wizard-row"><span>👶 Child Care</span><input type="checkbox" checked data-cat="👶 Child Care" data-type="exp"></div>
-                <div class="wizard-row"><span>☂️ Insurance</span><input type="checkbox" checked data-cat="☂️ Insurance" data-type="exp"></div>
             </div>
             <button class="btn-track" onclick="finishWizard()">Finish Setup</button>
         </div>
@@ -94,7 +94,7 @@
         </div>
     </div>
 
-    <select id="month-filter" class="month-selector" onchange="updateUI()">
+    <select id="month-filter" class="month-selector" onchange="updateUI()" style="margin-bottom:10px;">
         <option value="01">January</option><option value="02">February</option><option value="03">March</option>
         <option value="04">April</option><option value="05">May</option><option value="06">June</option>
         <option value="07">July</option><option value="08">August</option><option value="09">September</option>
@@ -115,8 +115,22 @@
                 <div id="pie-icons"></div>
             </div>
         </div>
-        <div class="card"><div id="income-list"></div><div style="display:flex; justify-content:space-between; font-weight:800;"><span>Total Planned Income</span><span id="total-planned-inc" class="pos">$0</span></div></div>
-        <div class="card"><div id="expense-list"></div><div style="display:flex; justify-content:space-between; font-weight:800;"><span>Total Planned Expenses</span><span id="total-planned-exp" class="neg">$0</span></div></div>
+        <div class="card">
+            <div style="font-size: 12px; color: var(--m-green); font-weight: bold; margin-bottom: 8px; text-transform: uppercase;">Income Sources</div>
+            <div id="income-list"></div>
+            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
+                <span>Total Budgeted Income</span>
+                <span id="total-planned-inc" class="pos">$0</span>
+            </div>
+        </div>
+        <div class="card">
+            <div style="font-size: 12px; color: var(--m-red); font-weight: bold; margin-bottom: 8px; text-transform: uppercase;">Expense Categories</div>
+            <div id="expense-list"></div>
+            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top: 10px; border-top: 1px solid #333; padding-top: 10px;">
+                <span>Total Budgeted Expenses</span>
+                <span id="total-planned-exp" class="neg">$0</span>
+            </div>
+        </div>
         <div class="card">
             <b>Add Transaction</b>
             <input type="text" id="desc" placeholder="Merchant">
@@ -233,7 +247,7 @@
                 document.getElementById('header-content').innerHTML = `
                     <div class="header-main">Monthly Spending</div>
                     <div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}</div>
-                    <div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-teal)'}"></div></div>
+                    <div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>
                     <div style="font-size: 14px; opacity: 0.9;">${pSpent}% of budget used</div>`;
             } else if(activeTab === 'invest') {
                 header.className = "budget-header bg-invest";
