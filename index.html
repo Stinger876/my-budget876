@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v15.0.4 (Stable Revert)</title>
+    <title>Monarch-Lite v15.0.4 (Enhanced)</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -178,28 +178,49 @@
         function updateUI() {
             const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), catS = document.getElementById('cat-select');
             incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; catS.innerHTML = '';
+            
             let actInc = 0, actExp = 0, budIncT = 0, budExpT = 0, totalAssets = 0;
             
             txns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
-            assets.forEach((a, i) => {
-                totalAssets += a.amt;
-                invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" class="plan-input" style="width:100px;" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"></div>`;
-            });
 
+            // Plan Income + Total
             planInc.forEach((p, i) => {
                 budIncT += p.amt;
                 const received = txns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 const remain = p.amt - received;
                 catS.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
-                incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="planInc.splice(${i},1); hasUnsavedChanges=true; saveInternal();">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span class="pos" style="text-align:right">$${remain.toLocaleString()}</span></div>`;
+                incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('inc', ${i})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span class="pos" style="text-align:right">$${remain.toLocaleString()}</span></div>`;
             });
+            incL.innerHTML += `<div class="cf-row" style="border-top:1px solid #333; margin-top:8px;"><b>Total Income Goal</b> <b class="pos">$${budIncT.toLocaleString()}</b></div>`;
 
+            // Plan Expense + Total
             planExp.forEach((p, i) => {
                 budExpT += p.amt;
                 const spent = txns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
                 const remain = p.amt - spent;
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="planExp.splice(${i},1); hasUnsavedChanges=true; saveInternal();">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span class="${remain < 0 ? 'neg' : ''}" style="text-align:right">$${remain.toLocaleString()}</span></div>`;
+                expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('exp', ${i})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span class="${remain < 0 ? 'neg' : ''}" style="text-align:right">$${remain.toLocaleString()}</span></div>`;
+            });
+            expL.innerHTML += `<div class="cf-row" style="border-top:1px solid #333; margin-top:8px;"><b>Total Expense Limit</b> <b class="neg">$${budExpT.toLocaleString()}</b></div>`;
+
+            // Transactions with Editing/Deletion
+            txns.forEach((t, i) => {
+                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:8px;">
+                    <div style="font-size:13px; flex:1;" onclick="editTransaction(${i})">
+                        <small style="opacity:0.6">${t.date}</small><br>
+                        <b>${t.cat}</b>: ${t.desc} <span style="font-size:10px; opacity:0.5;">✏️</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:14px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div>
+                        <button class="del-btn" style="font-size:16px;" onclick="deleteTransaction(${i})">✕</button>
+                    </div>
+                </div>`;
+            });
+
+            // Assets
+            assets.forEach((a, i) => {
+                totalAssets += a.amt;
+                invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" class="plan-input" style="width:100px;" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"></div>`;
             });
 
             const actSavings = actInc - actExp;
@@ -221,13 +242,6 @@
             document.getElementById('save-info').innerText = "Last Saved: " + (localStorage.getItem('m_last_save_time') || "Never");
             document.getElementById('loc-info').innerText = "Source: " + (localStorage.getItem('m_data_loc') || "Browser");
             document.getElementById('save-btn').className = hasUnsavedChanges ? 'btn-mgmt unsaved-glow' : 'btn-mgmt';
-
-            txns.slice(0, 5).forEach(t => {
-                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
-                    <div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div>
-                    <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div>
-                </div>`;
-            });
         }
 
         function addTransaction() {
@@ -239,6 +253,37 @@
             document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
             hasUnsavedChanges = true;
             saveInternal();
+        }
+
+        function editTransaction(index) {
+            const t = txns[index];
+            const newDesc = prompt("Edit Description:", t.desc);
+            if (newDesc === null) return;
+            const newAmt = prompt("Edit Amount:", Math.abs(t.amt));
+            if (newAmt === null || isNaN(parseFloat(newAmt))) return;
+            
+            txns[index].desc = newDesc;
+            const sign = t.amt >= 0 ? 1 : -1;
+            txns[index].amt = parseFloat(newAmt) * sign;
+            hasUnsavedChanges = true;
+            saveInternal();
+        }
+
+        function deleteTransaction(index) {
+            if(confirm("Delete transaction?")) {
+                txns.splice(index, 1);
+                hasUnsavedChanges = true;
+                saveInternal();
+            }
+        }
+
+        function deleteCategory(type, index) {
+            if(confirm("Delete category? History remains but totals will change.")) {
+                if(type === 'inc') planInc.splice(index, 1);
+                else planExp.splice(index, 1);
+                hasUnsavedChanges = true;
+                saveInternal();
+            }
         }
 
         function switchTab(t) { activeTab = t; updateUI(); document.getElementById('view-budget').style.display = t === 'budget' ? 'block' : 'none'; document.getElementById('view-invest').style.display = t === 'invest' ? 'block' : 'none'; }
