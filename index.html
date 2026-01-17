@@ -223,16 +223,20 @@
             const selectedMonth = document.getElementById('month-filter').value;
             incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; liabL.innerHTML = ''; catS.innerHTML = '';
 
-            // Filter transactions for the current month
             const monthTxns = txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth);
 
             let actExp = 0, budIncT = 0, budExpT = 0, totA = 0, totL = 0;
+            
+            // Calculate actual total spent (sum of negative amounts)
             monthTxns.forEach(t => { if(t.amt < 0) actExp += Math.abs(t.amt); });
+            
+            // Calculate base budget totals outside the loop
+            budIncT = planInc.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
+            budExpT = planExp.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
 
             const headerMain = document.getElementById('main-header');
             if(activeTab === 'budget') {
                 headerMain.className = "budget-header bg-spending";
-                planExp.forEach(p => budExpT += p.amt);
                 const pSpent = budExpT > 0 ? Math.round((actExp / budExpT) * 100) : 0;
                 headerBox.innerHTML = `<div class="header-main">Monthly Spending</div><div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}</div><div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>`;
             } else if(activeTab === 'invest') {
@@ -245,9 +249,8 @@
                 headerBox.innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totL.toLocaleString()}</div>`;
             }
 
-            // INCOME: Calculate total income transactions per category
+            // INCOME rows
             planInc.forEach((p, idx) => { 
-                budIncT += p.amt; 
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
                 const catTotal = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + t.amt, 0);
                 const remaining = p.amt - catTotal;
@@ -255,11 +258,9 @@
             });
             document.getElementById('total-planned-inc').innerText = `$${budIncT.toLocaleString()}`;
 
-            // EXPENSES: Calculate total expense transactions per category
+            // EXPENSE rows
             planExp.forEach((p, idx) => { 
-                budExpT += p.amt; 
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
-                // Sum actual spending (we use Math.abs because expenses are stored as negative)
                 const catSpent = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + Math.abs(t.amt), 0);
                 const remaining = p.amt - catSpent;
                 expL.innerHTML += `<div class="budget-row"><span></span><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${remaining.toLocaleString()}</span></div>`; 
