@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v16.0 (Monthly)</title>
+    <title>Monarch-Lite v16.2 (Visuals)</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -23,21 +23,25 @@
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         .budget-label { font-size: 16px; font-weight: bold; margin: 15px 0 8px 0; display: flex; justify-content: space-between; align-items: center; color: var(--m-teal); }
         
+        /* Pie Chart Styles */
+        .chart-container { display: flex; flex-direction: column; align-items: center; padding: 10px 0; }
+        .pie-chart { width: 180px; height: 180px; border-radius: 50%; border: 4px solid #333; margin-bottom: 15px; }
+        .legend { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; font-size: 11px; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .dot { width: 10px; height: 10px; border-radius: 2px; }
+
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
+        .month-selector { background: var(--m-blue); border: 1px solid var(--m-teal); color: var(--m-teal); font-weight: bold; margin-bottom: 15px; padding: 12px; border-radius: 12px; text-align: center; width: 100%; }
         
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; }
-        .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; height: 45px; box-sizing: border-box; }
+        .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; min-height: 45px; box-sizing: border-box; }
         
-        .month-selector { background: var(--m-blue); border: 1px solid var(--m-teal); color: var(--m-teal); font-weight: bold; margin-bottom: 15px; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; }
-
-        .unsaved-glow { background: var(--m-teal) !important; color: var(--m-blue) !important; border-color: white !important; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-
-        .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; }
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 20px; cursor: pointer; }
+        .unsaved-glow { background: var(--m-teal) !important; color: var(--m-blue) !important; border-color: white !important; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -47,9 +51,8 @@
             <h2 style="color:var(--m-teal); margin-top:0;">Welcome</h2>
             <p id="status-msg" style="font-size:14px; opacity:0.8; margin-bottom:25px;">Initializing...</p>
             <button id="continue-btn" class="btn-track" onclick="closeModal()">Continue Session</button>
-            <label for="sync-upload-modal" class="btn-mgmt" style="width:100%; margin-top:10px;">Import from File</label>
+            <button class="btn-mgmt" onclick="syncFromClipboard()" style="width:100%; margin-top:10px;">📥 Paste from Clipboard</button>
             <button class="btn-mgmt" onclick="showWizard()" style="width:100%; color:var(--m-red); margin-top:10px;">Start Fresh</button>
-            <input type="file" id="sync-upload-modal" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
 
         <div class="modal-card" id="wizard-view" style="display:none;">
@@ -67,23 +70,15 @@
     <div class="budget-header" id="main-header">
         <div class="header-main"><span id="header-label">Budget Surplus</span><span id="header-val">$0</span></div>
         <div style="font-size: 10px; margin-top:5px; display:flex; justify-content:space-between; opacity: 0.9;">
-            <span id="save-info">Last Saved: Never</span><span id="loc-info">Source: Browser</span>
+            <span id="save-info">Last Saved: Never</span><span id="loc-info">Sync: Browser</span>
         </div>
     </div>
 
     <select id="month-filter" class="month-selector" onchange="updateUI()">
-        <option value="01">January</option>
-        <option value="02">February</option>
-        <option value="03">March</option>
-        <option value="04">April</option>
-        <option value="05">May</option>
-        <option value="06">June</option>
-        <option value="07">July</option>
-        <option value="08">August</option>
-        <option value="09">September</option>
-        <option value="10">October</option>
-        <option value="11">November</option>
-        <option value="12">December</option>
+        <option value="01">January</option><option value="02">February</option><option value="03">March</option>
+        <option value="04">April</option><option value="05">May</option><option value="06">June</option>
+        <option value="07">July</option><option value="08">August</option><option value="09">September</option>
+        <option value="10">October</option><option value="11">November</option><option value="12">December</option>
     </select>
 
     <div class="tab-bar">
@@ -92,11 +87,16 @@
     </div>
 
     <div id="view-budget">
-        <div class="budget-label">Cash Flow (Monthly)</div>
+        <div class="budget-label">Monthly Flow</div>
         <div class="card">
             <div class="cf-row"><span>Actual Income</span><span id="cf-inc" class="pos">$0</span></div>
             <div class="cf-row"><span>Actual Expenses</span><span id="cf-exp" class="neg">$0</span></div>
-            <div class="cf-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
+            <div class="cf-row"><span>Net Savings</span><span id="cf-sav">$0</span></div>
+            
+            <div class="chart-container">
+                <div id="pie" class="pie-chart"></div>
+                <div id="legend" class="legend"></div>
+            </div>
         </div>
 
         <div class="budget-label">Income Goals <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
@@ -124,10 +124,10 @@
     <div class="card">
         <b>Data Management</b>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-            <button id="save-btn" class="btn-mgmt" onclick="exportToFile()">💾 Save to File</button>
-            <label for="sync-upload-main" class="btn-mgmt">🔄 Import Data</label>
-            <input type="file" id="sync-upload-main" accept=".json" style="display:none" onchange="syncFromFile(event)">
+            <button id="save-btn" class="btn-mgmt" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+            <button class="btn-mgmt" onclick="syncFromClipboard()">📥 Paste from Clipboard</button>
         </div>
+        <button class="btn-mgmt" onclick="exportToFile()" style="width:100%; margin-top:10px;">💾 Backup to File (JSON)</button>
         <button class="btn-danger" onclick="clearAllData()">🗑️ Reset App</button>
     </div>
 
@@ -138,45 +138,20 @@
         let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
         let hasUnsavedChanges = false;
         let activeTab = 'budget';
-
-        function syncFromFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            localStorage.setItem('m_data_loc', file.name);
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    txns = data.txns || []; planInc = data.planInc || []; 
-                    planExp = data.planExp || []; assets = data.assets || [];
-                    hasUnsavedChanges = false;
-                    saveInternal();
-                    closeModal();
-                } catch (err) { alert("Please use a valid JSON budget file."); }
-            };
-            reader.readAsText(file);
-        }
+        const colors = ['#17e9e1', '#2ecc71', '#ff5252', '#f1c40f', '#9b59b6', '#e67e22', '#3498db', '#95a5a6'];
 
         window.onload = function() {
             if (txns.length > 0 || planInc.length > 0) {
                 document.getElementById('status-msg').innerText = "Session found.";
                 document.getElementById('continue-btn').style.display = 'block';
-            } else { 
-                document.getElementById('status-msg').innerText = "No local data.";
-                document.getElementById('continue-btn').style.display = 'none'; 
             }
-            
-            // Set current month and date
             const today = new Date();
-            const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
-            document.getElementById('month-filter').value = currentMonth;
+            document.getElementById('month-filter').value = String(today.getMonth() + 1).padStart(2, '0');
             document.getElementById('txn-date').valueAsDate = today;
-            
             updateUI();
         };
 
         function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-        
         function saveInternal() {
             localStorage.setItem('m_txns', JSON.stringify(txns));
             localStorage.setItem('m_p_inc', JSON.stringify(planInc));
@@ -185,147 +160,119 @@
             updateUI();
         }
 
-        function exportToFile() {
-            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            localStorage.setItem('m_last_save_time', now);
-            hasUnsavedChanges = false;
-            const data = { txns, planInc, planExp, assets };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `budget_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            updateUI();
+        function copyToClipboard() {
+            const data = JSON.stringify({ txns, planInc, planExp, assets });
+            navigator.clipboard.writeText(data).then(() => {
+                alert("Copied! Paste in Google Drive/Keep for backup.");
+                localStorage.setItem('m_last_save_time', new Date().toLocaleTimeString());
+                hasUnsavedChanges = false;
+                updateUI();
+            });
+        }
+
+        function syncFromClipboard() {
+            const input = prompt("Paste backup data:");
+            if (!input) return;
+            try {
+                const data = JSON.parse(input);
+                txns = data.txns || []; planInc = data.planInc || []; 
+                planExp = data.planExp || []; assets = data.assets || [];
+                saveInternal(); closeModal();
+            } catch (err) { alert("Invalid format."); }
         }
 
         function updateUI() {
-            const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), catS = document.getElementById('cat-select');
+            const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), catS = document.getElementById('cat-select'), pie = document.getElementById('pie'), legend = document.getElementById('legend');
             const selectedMonth = document.getElementById('month-filter').value;
-            
-            incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; catS.innerHTML = '';
-            
+            incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; catS.innerHTML = ''; legend.innerHTML = '';
+
             let actInc = 0, actExp = 0, budIncT = 0, budExpT = 0, totalAssets = 0;
-            
-            // Filter transactions by month
             const filteredTxns = txns.filter(t => t.date.split('-')[1] === selectedMonth);
-
-            filteredTxns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
-
-            // Assets (Net worth usually counts current balance, not monthly)
-            assets.forEach((a, i) => {
-                totalAssets += a.amt;
-                invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" class="plan-input" style="width:100px;" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"></div>`;
+            
+            // Group expenses for pie chart
+            let expenseGroups = {};
+            filteredTxns.forEach(t => {
+                if(t.amt > 0) actInc += t.amt; 
+                else {
+                    actExp += Math.abs(t.amt);
+                    expenseGroups[t.cat] = (expenseGroups[t.cat] || 0) + Math.abs(t.amt);
+                }
             });
 
-            planInc.forEach((p, i) => {
+            // Build Pie Chart
+            let currentPercentage = 0;
+            let gradientParts = [];
+            let i = 0;
+            for (let cat in expenseGroups) {
+                let perc = (expenseGroups[cat] / actExp) * 100;
+                let color = colors[i % colors.length];
+                gradientParts.push(`${color} ${currentPercentage}% ${currentPercentage + perc}%`);
+                legend.innerHTML += `<div class="legend-item"><div class="dot" style="background:${color}"></div>${cat} ($${expenseGroups[cat].toFixed(0)})</div>`;
+                currentPercentage += perc;
+                i++;
+            }
+            pie.style.background = actExp > 0 ? `conic-gradient(${gradientParts.join(', ')})` : '#333';
+
+            // Plan Lists
+            planInc.forEach((p, idx) => {
                 budIncT += p.amt;
-                const received = filteredTxns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
-                const remain = p.amt - received;
+                const rec = filteredTxns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 catS.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
-                incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('inc', ${i})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span class="pos" style="text-align:right">$${remain.toLocaleString()}</span></div>`;
+                incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('inc', ${idx})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span class="pos">$${(p.amt-rec).toLocaleString()}</span></div>`;
             });
-            incL.innerHTML += `<div class="cf-row" style="border-top:1px solid #333; margin-top:8px;"><b>Total Income Goal</b> <b class="pos">$${budIncT.toLocaleString()}</b></div>`;
+            incL.innerHTML += `<div class="cf-row" style="border-top:1px solid #333;"><b>Total Goal</b> <b class="pos">$${budIncT.toLocaleString()}</b></div>`;
 
-            planExp.forEach((p, i) => {
+            planExp.forEach((p, idx) => {
                 budExpT += p.amt;
-                const spent = filteredTxns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
-                const remain = p.amt - spent;
+                const spnt = filteredTxns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('exp', ${i})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span class="${remain < 0 ? 'neg' : ''}" style="text-align:right">$${remain.toLocaleString()}</span></div>`;
+                expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('exp', ${idx})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span>$${(p.amt-spnt).toLocaleString()}</span></div>`;
             });
-            expL.innerHTML += `<div class="cf-row" style="border-top:1px solid #333; margin-top:8px;"><b>Total Expense Limit</b> <b class="neg">$${budExpT.toLocaleString()}</b></div>`;
+            expL.innerHTML += `<div class="cf-row" style="border-top:1px solid #333;"><b>Total Limit</b> <b class="neg">$${budExpT.toLocaleString()}</b></div>`;
 
-            // Filtered Transaction List
-            filteredTxns.forEach((t) => {
-                // Find original index in master list for edit/delete
-                const originalIndex = txns.findIndex(master => master.id === t.id);
-                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:8px;">
-                    <div style="font-size:13px; flex:1;" onclick="editTransaction(${originalIndex})">
-                        <small style="opacity:0.6">${t.date}</small><br>
-                        <b>${t.cat}</b>: ${t.desc} <span style="font-size:10px; opacity:0.5;">✏️</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:14px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div>
-                        <button class="del-btn" style="font-size:16px;" onclick="deleteTransaction(${originalIndex})">✕</button>
-                    </div>
+            filteredTxns.forEach(t => {
+                const mIdx = txns.findIndex(m => m.id === t.id);
+                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
+                    <div style="font-size:13px; flex:1;" onclick="editTransaction(${mIdx})"><b>${t.cat}</b>: ${t.desc} ✏️</div>
+                    <div style="display:flex; align-items:center; gap:10px;"><div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTransaction(${mIdx})">✕</button></div>
                 </div>`;
             });
 
+            // Net worth calculation and display updates
+            assets.forEach((a, i) => totalAssets += a.amt);
             const actSavings = actInc - actExp;
             document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
             document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
             document.getElementById('cf-sav').innerText = `$${actSavings.toLocaleString()}`;
-            
-            const header = document.getElementById('main-header');
-            if(activeTab === 'budget') {
-                header.style.background = "var(--m-green)";
-                document.getElementById('header-label').innerText = "Budget Surplus";
-                document.getElementById('header-val').innerText = `$${(budIncT - budExpT).toLocaleString()}`;
-            } else {
-                header.style.background = "var(--m-blue)";
-                document.getElementById('header-label').innerText = "Net Worth";
-                document.getElementById('header-val').innerText = `$${(totalAssets + actSavings).toLocaleString()}`;
-            }
-            
-            document.getElementById('save-info').innerText = "Last Saved: " + (localStorage.getItem('m_last_save_time') || "Never");
-            document.getElementById('loc-info').innerText = "Source: " + (localStorage.getItem('m_data_loc') || "Browser");
+            document.getElementById('header-val').innerText = (activeTab==='budget') ? `$${(budIncT-budExpT).toLocaleString()}` : `$${(totalAssets+actSavings).toLocaleString()}`;
+            document.getElementById('save-info').innerText = "Last Sync: " + (localStorage.getItem('m_last_save_time') || "Never");
             document.getElementById('save-btn').className = hasUnsavedChanges ? 'btn-mgmt unsaved-glow' : 'btn-mgmt';
         }
 
         function addTransaction() {
-            const desc = document.getElementById('desc').value, cat = document.getElementById('cat-select').value;
-            let amt = parseFloat(document.getElementById('amt').value);
-            if(!desc || isNaN(amt)) return;
-            amt = (planInc.some(p => p.name === cat)) ? Math.abs(amt) : -Math.abs(amt);
-            
-            const dateVal = document.getElementById('txn-date').value;
-            txns.unshift({ id: Date.now(), desc, cat, date: dateVal, amt });
-            
-            // Set filter to match the month of the transaction just added
-            document.getElementById('month-filter').value = dateVal.split('-')[1];
-            
+            const desc = document.getElementById('desc').value, cat = document.getElementById('cat-select').value, amtVal = parseFloat(document.getElementById('amt').value);
+            if(!desc || isNaN(amtVal)) return;
+            const amt = (planInc.some(p => p.name === cat)) ? Math.abs(amtVal) : -Math.abs(amtVal);
+            txns.unshift({ id: Date.now(), desc, cat, date: document.getElementById('txn-date').value, amt });
             document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
-            hasUnsavedChanges = true;
-            saveInternal();
+            hasUnsavedChanges = true; saveInternal();
         }
 
-        function editTransaction(masterIndex) {
-            const t = txns[masterIndex];
-            const newDesc = prompt("Edit Description:", t.desc);
-            if (newDesc === null) return;
-            const newAmt = prompt("Edit Amount:", Math.abs(t.amt));
-            if (newAmt === null || isNaN(parseFloat(newAmt))) return;
-            
-            txns[masterIndex].desc = newDesc;
-            const sign = t.amt >= 0 ? 1 : -1;
-            txns[masterIndex].amt = parseFloat(newAmt) * sign;
-            hasUnsavedChanges = true;
-            saveInternal();
+        function editTransaction(idx) {
+            const nD = prompt("Description:", txns[idx].desc);
+            const nA = prompt("Amount:", Math.abs(txns[idx].amt));
+            if(nD && nA) { txns[idx].desc = nD; txns[idx].amt = parseFloat(nA) * (txns[idx].amt >= 0 ? 1 : -1); hasUnsavedChanges=true; saveInternal(); }
         }
 
-        function deleteTransaction(masterIndex) {
-            if(confirm("Delete transaction?")) {
-                txns.splice(masterIndex, 1);
-                hasUnsavedChanges = true;
-                saveInternal();
-            }
-        }
-
-        function deleteCategory(type, index) {
-            if(confirm("Delete category? history will stay.")) {
-                if(type === 'inc') planInc.splice(index, 1);
-                else planExp.splice(index, 1);
-                hasUnsavedChanges = true;
-                saveInternal();
-            }
-        }
-
+        function addInvestItem() { const n = prompt("Asset Name:"); if(n) { assets.push({name: n, amt: 0}); hasUnsavedChanges=true; saveInternal(); } }
+        function addCustom(type) { const n = prompt("Category Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); hasUnsavedChanges=true; saveInternal(); } }
+        function deleteTransaction(idx) { if(confirm("Delete?")) { txns.splice(idx,1); hasUnsavedChanges=true; saveInternal(); } }
+        function deleteCategory(type, idx) { if(confirm("Delete category?")) { if(type==='inc') planInc.splice(idx,1); else planExp.splice(idx,1); hasUnsavedChanges=true; saveInternal(); } }
         function switchTab(t) { activeTab = t; updateUI(); document.getElementById('view-budget').style.display = t === 'budget' ? 'block' : 'none'; document.getElementById('view-invest').style.display = t === 'invest' ? 'block' : 'none'; }
-        function addCustom(type) { const n = prompt("Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); hasUnsavedChanges=true; saveInternal(); } }
-        function addInvestItem() { const n = prompt("Name:"); if(n) { assets.push({name: n, amt: 0}); hasUnsavedChanges=true; saveInternal(); } }
         function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
-        function finishWizard() { planInc = []; planExp = []; assets = []; txns = []; document.querySelectorAll('#wizard-list input:checked').forEach(c => { const name = c.getAttribute('data-cat'); if(c.getAttribute('data-type') === 'inc') planInc.push({name, amt: 0}); else planExp.push({name, amt: 0}); }); hasUnsavedChanges=true; saveInternal(); closeModal(); }
-        function clearAllData() { if(confirm("Clear all data?")) { localStorage.clear(); location.reload(); } }
+        function finishWizard() { planInc = []; planExp = []; assets = []; txns = []; document.querySelectorAll('#wizard-list input:checked').forEach(c => { const name = c.getAttribute('data-cat'); if(c.getAttribute('data-type') === 'inc') planInc.push({name, amt: 0}); else planExp.push({name, amt: 0}); }); saveInternal(); closeModal(); }
+        function exportToFile() { const data = { txns, planInc, planExp, assets }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `budget_backup.json`; a.click(); }
+        function clearAllData() { if(confirm("Clear?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>
