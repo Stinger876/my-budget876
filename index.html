@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v19.0</title>
+    <title>Monarch-Lite v19.1</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-orange: #ff9f43; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -25,7 +25,6 @@
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         .total-row { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; font-weight: 800; margin-top: 5px; display: flex; justify-content: space-between; font-size: 14px; }
         
-        /* Advanced Pie Chart Styles */
         .chart-container { position: relative; width: 220px; height: 220px; margin: 20px auto; }
         .pie-chart { width: 100%; height: 100%; border-radius: 50%; position: relative; }
         .pie-center { position: absolute; top: 20%; left: 20%; width: 60%; height: 60%; background: var(--m-bg); border-radius: 50%; z-index: 2; }
@@ -177,8 +176,10 @@
                     const data = JSON.parse(e.target.result);
                     txns = data.txns || []; planInc = data.planInc || []; 
                     planExp = data.planExp || []; assets = data.assets || [];
-                    liabs = data.liabs || []; saveInternal(); closeModal();
-                } catch (err) { alert("Invalid file."); }
+                    liabs = data.liabs || []; 
+                    saveInternal(); 
+                    closeModal();
+                } catch (err) { alert("Invalid file format. Please use a saved JSON file."); }
             };
             reader.readAsText(file);
         }
@@ -211,7 +212,7 @@
             incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; liabL.innerHTML = ''; catS.innerHTML = ''; iconWrap.innerHTML = '';
 
             let actExp = 0, budIncT = 0, budExpT = 0, totAssets = 0, totLiabs = 0;
-            const filteredTxns = txns.filter(t => t.date.split('-')[1] === selectedMonth);
+            const filteredTxns = txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth);
             
             let expenseGroups = {};
             filteredTxns.forEach(t => {
@@ -221,26 +222,21 @@
                 }
             });
 
-            // Pie Chart with Central Slice Icons
             let currentPercentage = 0; let gradientParts = []; let i = 0;
             for (let catName in expenseGroups) {
                 let perc = (expenseGroups[catName] / actExp) * 100;
                 let color = colors[i % colors.length];
                 gradientParts.push(`${color} ${currentPercentage}% ${currentPercentage + perc}%`);
-                
-                // Calculate emoji position
                 const angle = (currentPercentage + (perc / 2)) * 3.6 - 90;
                 const rad = angle * (Math.PI / 180);
                 const x = 50 + 35 * Math.cos(rad);
                 const y = 50 + 35 * Math.sin(rad);
                 const emoji = catName.split(' ')[0];
                 iconWrap.innerHTML += `<div class="category-icon" style="left:${x}%; top:${y}%;">${emoji}</div>`;
-                
                 currentPercentage += perc; i++;
             }
             pie.style.background = actExp > 0 ? `conic-gradient(${gradientParts.join(', ')})` : '#333';
 
-            // Planned Totals
             planInc.forEach((p, idx) => {
                 budIncT += p.amt;
                 const rec = filteredTxns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
@@ -257,14 +253,12 @@
             });
             document.getElementById('total-planned-exp').innerText = `$${budExpT.toLocaleString()}`;
 
-            // Monthly Spending Header Logic
             const perc = budExpT > 0 ? Math.round((actExp / budExpT) * 100) : 0;
             document.getElementById('spending-summary').innerText = `$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}`;
             document.getElementById('spending-bar').style.width = Math.min(perc, 100) + "%";
             document.getElementById('spending-perc').innerText = `${perc}% spent`;
             document.getElementById('spending-bar').style.background = perc > 100 ? "var(--m-red)" : "var(--m-teal)";
 
-            // Transactions
             filteredTxns.forEach(t => {
                 const mIdx = txns.findIndex(m => m.id === t.id);
                 txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;"><div style="font-size:13px; flex:1;" onclick="editTransaction(${mIdx})"><b>${t.cat}</b>: ${t.desc} ✏️</div><div style="display:flex; align-items:center; gap:10px;"><div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTransaction(${mIdx})">✕</button></div></div>`;
@@ -277,8 +271,21 @@
             liabs.forEach((l, idx) => { totLiabs += l.amt;
                 liabL.innerHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" class="plan-input" style="width:100px; color:var(--m-red)" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`;
             });
+        }
 
-            document.getElementById('save-info').innerText = "Last Saved: " + (localStorage.getItem('m_last_save_time') || "Never");
+        function finishWizard() {
+            let newPlanInc = [];
+            let newPlanExp = [];
+            document.querySelectorAll('#wizard-list input:checked').forEach(c => {
+                const n = c.getAttribute('data-cat');
+                if(c.getAttribute('data-type') === 'inc') newPlanInc.push({name:n, amt: 0});
+                else newPlanExp.push({name:n, amt: 0});
+            });
+            planInc = newPlanInc;
+            planExp = newPlanExp;
+            txns = []; assets = []; liabs = [];
+            saveInternal();
+            closeModal();
         }
 
         function calculateDebt() {
@@ -322,7 +329,6 @@
         function deleteTransaction(idx) { if(confirm("Delete?")) { txns.splice(idx,1); saveInternal(); } }
         function deleteCategory(t, idx) { if(confirm("Delete?")) { if(t==='inc') planInc.splice(idx,1); else planExp.splice(idx,1); saveInternal(); } }
         function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
-        function finishWizard() { planInc = []; planExp = []; assets = []; liabs = []; txns = []; document.querySelectorAll('#wizard-list input:checked').forEach(c => { const n = c.getAttribute('data-cat'); if(c.getAttribute('data-type') === 'inc') planInc.push({name:n, amt: 0}); else planExp.push({name:n, amt: 0}); }); saveInternal(); closeModal(); }
         function exportToFile() { const data = { txns, planInc, planExp, assets, liabs }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `budget_backup.json`; a.click(); localStorage.setItem('m_last_save_time', new Date().toLocaleTimeString()); updateUI(); }
         function clearAllData() { if(confirm("Clear Everything?")) { localStorage.clear(); location.reload(); } }
     </script>
