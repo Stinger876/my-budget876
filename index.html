@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v17.0</title>
+    <title>Monarch-Lite v17.5</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-orange: #ff9f43; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -11,11 +11,11 @@
         #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px 0; }
         .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; text-align: center; box-sizing: border-box; }
         
-        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; transition: background 0.4s ease; }
+        .budget-header { background: var(--m-green); color: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; transition: background 0.3s; }
         .header-main { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; }
         
         .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
-        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; opacity: 0.6; color: white; border: none; min-width: 100px; }
+        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; opacity: 0.6; color: white; border: none; min-width: 90px; }
         .tab.active { background: var(--m-teal) !important; color: var(--m-blue) !important; opacity: 1; }
 
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
@@ -23,6 +23,12 @@
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         .budget-label { font-size: 16px; font-weight: bold; margin: 15px 0 8px 0; display: flex; justify-content: space-between; align-items: center; color: var(--m-teal); }
         
+        .chart-container { display: flex; flex-direction: column; align-items: center; padding: 10px 0; border-top: 1px solid #2a2a2a; margin-top: 10px;}
+        .pie-chart { width: 150px; height: 150px; border-radius: 50%; border: 3px solid #333; margin: 15px 0; }
+        .legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; font-size: 11px; }
+        .legend-item { display: flex; align-items: center; gap: 5px; background: #2a2a2a; padding: 4px 8px; border-radius: 6px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
         .month-selector { background: var(--m-blue); border: 1px solid var(--m-teal); color: var(--m-teal); font-weight: bold; margin-bottom: 15px; padding: 12px; border-radius: 12px; text-align: center; width: 100%; }
@@ -42,9 +48,12 @@
 
     <div id="startup-modal">
         <div class="modal-card" id="initial-choice">
-            <h2 style="color:var(--m-teal); margin-top:0;">Monarch Lite</h2>
-            <button id="continue-btn" class="btn-track" onclick="closeModal()">Resume Session</button>
+            <h2 style="color:var(--m-teal); margin-top:0;">Welcome</h2>
+            <p id="status-msg" style="font-size:14px; opacity:0.8; margin-bottom:25px;">Initializing...</p>
+            <button id="continue-btn" class="btn-track" onclick="closeModal()">Continue Session</button>
+            <label for="sync-upload-modal" class="btn-mgmt" style="width:100%; margin-top:10px;">Import from File</label>
             <button class="btn-mgmt" onclick="showWizard()" style="width:100%; color:var(--m-red); margin-top:10px;">Start Fresh</button>
+            <input type="file" id="sync-upload-modal" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
         <div class="modal-card" id="wizard-view" style="display:none;">
             <h3>Categories</h3>
@@ -52,6 +61,7 @@
                 <div class="cf-row"><span>💰 Income</span><input type="checkbox" checked data-cat="Income" data-type="inc"></div>
                 <div class="cf-row"><span>🏠 Housing</span><input type="checkbox" checked data-cat="Housing" data-type="exp"></div>
                 <div class="cf-row"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="Groceries" data-type="exp"></div>
+                <div class="cf-row"><span>🚗 Auto</span><input type="checkbox" checked data-cat="Auto" data-type="exp"></div>
             </div>
             <button class="btn-track" onclick="finishWizard()">Finish Setup</button>
         </div>
@@ -60,9 +70,16 @@
     <div class="budget-header" id="main-header">
         <div class="header-main"><span id="header-label">Budget Surplus</span><span id="header-val">$0</span></div>
         <div style="font-size: 10px; margin-top:5px; display:flex; justify-content:space-between; opacity: 0.9;">
-            <span id="save-info">Last Saved: Never</span><span id="loc-info">Net Worth Focus</span>
+            <span id="save-info">Last Saved: Never</span><span id="loc-info">Source: Browser</span>
         </div>
     </div>
+
+    <select id="month-filter" class="month-selector" onchange="updateUI()">
+        <option value="01">January</option><option value="02">February</option><option value="03">March</option>
+        <option value="04">April</option><option value="05">May</option><option value="06">June</option>
+        <option value="07">July</option><option value="08">August</option><option value="09">September</option>
+        <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+    </select>
 
     <div class="tab-bar">
         <button class="tab active" id="tab-budget" onclick="switchTab('budget')">Budget</button>
@@ -71,27 +88,26 @@
     </div>
 
     <div id="view-budget">
-        <select id="month-filter" class="month-selector" onchange="updateUI()">
-            <option value="01">January</option><option value="02">February</option><option value="03">March</option>
-            <option value="04">April</option><option value="05">May</option><option value="06">June</option>
-            <option value="07">July</option><option value="08">August</option><option value="09">September</option>
-            <option value="10">October</option><option value="11">November</option><option value="12">December</option>
-        </select>
+        <div class="budget-label">Cash Flow</div>
         <div class="card">
             <div class="cf-row"><span>Actual Income</span><span id="cf-inc" class="pos">$0</span></div>
             <div class="cf-row"><span>Actual Expenses</span><span id="cf-exp" class="neg">$0</span></div>
             <div class="cf-row" style="border-bottom:none"><span>Net Savings</span><span id="cf-sav">$0</span></div>
+            <div class="chart-container">
+                <div id="pie" class="pie-chart"></div>
+                <div id="legend" class="legend"></div>
+            </div>
         </div>
         <div class="budget-label">Income <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
         <div class="card" id="income-list"></div>
         <div class="budget-label">Expenses <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
         <div class="card" id="expense-list"></div>
         <div class="card">
-            <b>Add Transaction</b>
+            <b>Transactions</b>
             <input type="text" id="desc" placeholder="Merchant">
             <select id="cat-select"></select>
             <div style="display:flex; gap:10px;"><input type="date" id="txn-date" style="flex:1"><input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1"></div>
-            <button class="btn-track" onclick="addTransaction()">Post Transaction</button>
+            <button class="btn-track" onclick="addTransaction()">Add Transaction</button>
         </div>
         <div id="txn-list"></div>
     </div>
@@ -106,10 +122,10 @@
         <div class="budget-label" style="color:var(--m-orange)">Credit Cards & Loans</div>
         <div class="card" id="liab-main-list"></div>
         <button class="btn-track" style="background: var(--m-orange); color: var(--m-blue);" onclick="addLiabItem()">+ New Liability</button>
-
+        
         <div class="budget-label" style="color:var(--m-orange)">Debt Paydown Calculator</div>
         <div class="card">
-            <small>Estimate payoff for your largest debt:</small>
+            <small>Estimated payoff for largest balance:</small>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
                 <div><label style="font-size:10px">Monthly Pay</label><input type="number" id="calc-pay" placeholder="$500"></div>
                 <div><label style="font-size:10px">Interest %</label><input type="number" id="calc-int" placeholder="19.9"></div>
@@ -120,11 +136,15 @@
     </div>
 
     <div class="card">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <button id="save-btn" class="btn-mgmt" onclick="exportToFile()">💾 Backup</button>
-            <button class="btn-danger" style="margin-top:0; padding:12px;" onclick="clearAllData()">🗑️ Reset</button>
+        <b>Data Management</b>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+            <button id="save-btn" class="btn-mgmt" onclick="exportToFile()">💾 Save to File</button>
+            <label for="sync-upload-main" class="btn-mgmt">🔄 Import Data</label>
+            <input type="file" id="sync-upload-main" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
     </div>
+
+    <button class="btn-danger" onclick="clearAllData()">🗑️ Reset App</button>
 
     <script>
         let txns = JSON.parse(localStorage.getItem('m_txns')) || [];
@@ -132,8 +152,25 @@
         let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [];
         let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
         let liabs = JSON.parse(localStorage.getItem('m_liabs')) || [];
-        let activeTab = 'budget';
         let hasUnsavedChanges = false;
+        let activeTab = 'budget';
+        const colors = ['#17e9e1', '#2ecc71', '#ff5252', '#f1c40f', '#9b59b6', '#e67e22', '#3498db', '#95a5a6'];
+
+        function syncFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    txns = data.txns || []; planInc = data.planInc || []; 
+                    planExp = data.planExp || []; assets = data.assets || [];
+                    liabs = data.liabs || [];
+                    saveInternal(); closeModal();
+                } catch (err) { alert("Invalid file."); }
+            };
+            reader.readAsText(file);
+        }
 
         window.onload = function() {
             const today = new Date();
@@ -142,6 +179,8 @@
             updateUI();
         };
 
+        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
+        
         function saveInternal() {
             localStorage.setItem('m_txns', JSON.stringify(txns));
             localStorage.setItem('m_p_inc', JSON.stringify(planInc));
@@ -152,61 +191,99 @@
         }
 
         function updateUI() {
-            const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), 
-                  txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'),
-                  liabL = document.getElementById('liab-main-list'), catS = document.getElementById('cat-select');
+            const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), txnL = document.getElementById('txn-list'), 
+                  invL = document.getElementById('invest-main-list'), liabL = document.getElementById('liab-main-list'), 
+                  catS = document.getElementById('cat-select'), pie = document.getElementById('pie'), legend = document.getElementById('legend');
             
             const selectedMonth = document.getElementById('month-filter').value;
-            incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; liabL.innerHTML = ''; catS.innerHTML = '';
+            incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; liabL.innerHTML = ''; catS.innerHTML = ''; legend.innerHTML = '';
 
-            let actInc = 0, actExp = 0, budIncT = 0, budExpT = 0, totAssets = 0, totLiabs = 0;
+            let actInc = 0, actExp = 0, budIncT = 0, budExpT = 0, totalAssets = 0, totalLiabs = 0;
             const filteredTxns = txns.filter(t => t.date.split('-')[1] === selectedMonth);
             
-            filteredTxns.forEach(t => { if(t.amt > 0) actInc += t.amt; else actExp += Math.abs(t.amt); });
-
-            // Render Budget Lists
-            planInc.forEach((p, i) => {
-                budIncT += p.amt; catS.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
-                incL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${i}].amt=parseFloat(this.value);saveInternal()"><span></span></div>`;
-            });
-            planExp.forEach((p, i) => {
-                budExpT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${i}].amt=parseFloat(this.value);saveInternal()"><span></span></div>`;
+            let expenseGroups = {};
+            filteredTxns.forEach(t => {
+                if(t.amt > 0) actInc += t.amt; 
+                else {
+                    actExp += Math.abs(t.amt);
+                    expenseGroups[t.cat] = (expenseGroups[t.cat] || 0) + Math.abs(t.amt);
+                }
             });
 
-            // Render Assets
-            assets.forEach((a, i) => { totAssets += a.amt;
-                invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" class="plan-input" style="width:100px;" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value);saveInternal()"></div>`;
+            // Pie Chart
+            let currentPercentage = 0; let gradientParts = []; let i = 0;
+            for (let catName in expenseGroups) {
+                let perc = (expenseGroups[catName] / actExp) * 100;
+                let color = colors[i % colors.length];
+                gradientParts.push(`${color} ${currentPercentage}% ${currentPercentage + perc}%`);
+                legend.innerHTML += `<div class="legend-item"><div class="dot" style="background:${color}"></div>${catName}</div>`;
+                currentPercentage += perc; i++;
+            }
+            pie.style.background = actExp > 0 ? `conic-gradient(${gradientParts.join(', ')})` : '#333';
+
+            // Budget Lists
+            planInc.forEach((p, idx) => {
+                budIncT += p.amt;
+                const rec = filteredTxns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
+                catS.innerHTML += `<option value="${p.name}">💰 ${p.name}</option>`;
+                incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('inc', ${idx})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span class="pos">$${(p.amt-rec).toLocaleString()}</span></div>`;
             });
 
-            // Render Liabilities
-            liabs.forEach((l, i) => { totLiabs += l.amt;
-                liabL.innerHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" class="plan-input" style="width:100px; color:var(--m-red)" value="${l.amt}" onchange="liabs[${i}].amt=parseFloat(this.value);saveInternal()"></div>`;
+            planExp.forEach((p, idx) => {
+                budExpT += p.amt;
+                const spnt = filteredTxns.filter(t => t.amt < 0 && t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
+                catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+                expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('exp', ${idx})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"><span>$${(p.amt-spnt).toLocaleString()}</span></div>`;
             });
 
-            // Header Logic
+            // Assets & Liabilities
+            assets.forEach((a, idx) => {
+                totalAssets += a.amt;
+                invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" class="plan-input" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"></div>`;
+            });
+
+            liabs.forEach((l, idx) => {
+                totalLiabs += l.amt;
+                liabL.innerHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" class="plan-input" style="width:100px; color:var(--m-red)" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value)||0; hasUnsavedChanges=true; saveInternal();"></div>`;
+            });
+
+            // Transactions List
+            filteredTxns.forEach(t => {
+                const mIdx = txns.findIndex(m => m.id === t.id);
+                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;"><div style="font-size:13px; flex:1;" onclick="editTransaction(${mIdx})"><b>${t.cat}</b>: ${t.desc} ✏️</div><div style="display:flex; align-items:center; gap:10px;"><div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTransaction(${mIdx})">✕</button></div></div>`;
+            });
+
             const header = document.getElementById('main-header');
-            const hLab = document.getElementById('header-label'), hVal = document.getElementById('header-val');
-            
             if(activeTab === 'budget') {
-                header.style.background = "var(--m-green)"; hLab.innerText = "Budget Surplus"; hVal.innerText = `$${(budIncT - budExpT).toLocaleString()}`;
+                header.style.background = "var(--m-green)";
+                document.getElementById('header-label').innerText = "Budget Surplus";
+                document.getElementById('header-val').innerText = `$${(budIncT - budExpT).toLocaleString()}`;
             } else if (activeTab === 'invest') {
-                header.style.background = "var(--m-blue)"; hLab.innerText = "Net Worth"; hVal.innerText = `$${(totAssets - totLiabs).toLocaleString()}`;
+                header.style.background = "var(--m-blue)";
+                document.getElementById('header-label').innerText = "Net Worth";
+                document.getElementById('header-val').innerText = `$${(totalAssets + (txns.reduce((s,t)=>s+t.amt,0)) - totalLiabs).toLocaleString()}`;
             } else {
-                header.style.background = "var(--m-orange)"; hLab.innerText = "Total Debt"; hVal.innerText = `$${totLiabs.toLocaleString()}`;
+                header.style.background = "var(--m-orange)";
+                document.getElementById('header-label').innerText = "Total Liabilities";
+                document.getElementById('header-val').innerText = `$${totalLiabs.toLocaleString()}`;
             }
 
             document.getElementById('cf-inc').innerText = `$${actInc.toLocaleString()}`;
             document.getElementById('cf-exp').innerText = `$${actExp.toLocaleString()}`;
             document.getElementById('cf-sav').innerText = `$${(actInc-actExp).toLocaleString()}`;
+            document.getElementById('save-info').innerText = "Last Saved: " + (localStorage.getItem('m_last_save_time') || "Never");
+            document.getElementById('save-btn').className = hasUnsavedChanges ? 'btn-mgmt unsaved-glow' : 'btn-mgmt';
         }
 
         function switchTab(t) { 
             activeTab = t; 
-            ['budget', 'invest', 'liab'].forEach(id => {
-                document.getElementById('tab-'+id).className = (t===id) ? 'tab active' : 'tab';
-                document.getElementById('view-'+id).style.display = (t===id) ? 'block' : 'none';
-            });
+            document.getElementById('tab-budget').className = (t==='budget') ? 'tab active' : 'tab';
+            document.getElementById('tab-invest').className = (t==='invest') ? 'tab active' : 'tab';
+            document.getElementById('tab-liab').className = (t==='liab') ? 'tab active' : 'tab';
+            
+            document.getElementById('view-budget').style.display = (t==='budget') ? 'block' : 'none'; 
+            document.getElementById('view-invest').style.display = (t==='invest') ? 'block' : 'none'; 
+            document.getElementById('view-liab').style.display = (t==='liab') ? 'block' : 'none'; 
             updateUI(); 
         }
 
@@ -215,34 +292,34 @@
             if(!d || isNaN(aV)) return;
             const a = (planInc.some(p => p.name === c)) ? Math.abs(aV) : -Math.abs(aV);
             txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: a });
-            saveInternal();
+            document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
+            hasUnsavedChanges = true; saveInternal();
         }
 
         function calculateDebt() {
             const pay = parseFloat(document.getElementById('calc-pay').value);
             const rate = parseFloat(document.getElementById('calc-int').value) / 100 / 12;
             const balance = liabs.length > 0 ? Math.max(...liabs.map(l => l.amt)) : 0;
-            
-            if(!pay || balance <= 0) { alert("Add a liability balance and payment amount first."); return; }
-            
-            // Formula: n = -log(1 - (r*B)/P) / log(1 + r)
+            if(!pay || balance <= 0) { alert("Enter a payment and ensure you have a liability balance."); return; }
             const months = -Math.log(1 - (rate * balance) / pay) / Math.log(1 + rate);
-            
-            if(isNaN(months) || months <= 0) {
-                document.getElementById('debt-result').innerText = "Payment too low to cover interest!";
-            } else {
-                document.getElementById('debt-result').innerText = `Debt Free in ${Math.ceil(months)} months`;
-            }
+            document.getElementById('debt-result').innerText = isNaN(months) ? "Payment too low!" : `Debt Free in ${Math.ceil(months)} months`;
         }
 
-        function addInvestItem() { const n = prompt("Account Name:"); if(n) { assets.push({name: n, amt: 0}); saveInternal(); } }
-        function addLiabItem() { const n = prompt("Liability Name (e.g. Visa):"); if(n) { liabs.push({name: n, amt: 0}); saveInternal(); } }
-        function addCustom(type) { const n = prompt("Category Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveInternal(); } }
-        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
+        function editTransaction(idx) {
+            const nD = prompt("Description:", txns[idx].desc);
+            const nA = prompt("Amount:", Math.abs(txns[idx].amt));
+            if(nD && nA) { txns[idx].desc = nD; txns[idx].amt = parseFloat(nA) * (txns[idx].amt >= 0 ? 1 : -1); hasUnsavedChanges=true; saveInternal(); }
+        }
+
+        function addInvestItem() { const n = prompt("Account Name:"); if(n) { assets.push({name: n, amt: 0}); hasUnsavedChanges=true; saveInternal(); } }
+        function addLiabItem() { const n = prompt("Liability Name:"); if(n) { liabs.push({name: n, amt: 0}); hasUnsavedChanges=true; saveInternal(); } }
+        function addCustom(type) { const n = prompt("Category Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); hasUnsavedChanges=true; saveInternal(); } }
+        function deleteTransaction(idx) { if(confirm("Delete?")) { txns.splice(idx,1); hasUnsavedChanges=true; saveInternal(); } }
+        function deleteCategory(t, idx) { if(confirm("Delete?")) { if(t==='inc') planInc.splice(idx,1); else planExp.splice(idx,1); hasUnsavedChanges=true; saveInternal(); } }
         function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
         function finishWizard() { planInc = []; planExp = []; assets = []; liabs = []; txns = []; document.querySelectorAll('#wizard-list input:checked').forEach(c => { const n = c.getAttribute('data-cat'); if(c.getAttribute('data-type') === 'inc') planInc.push({name:n, amt: 0}); else planExp.push({name:n, amt: 0}); }); saveInternal(); closeModal(); }
-        function clearAllData() { if(confirm("Wipe all data?")) { localStorage.clear(); location.reload(); } }
-        function exportToFile() { const data = { txns, planInc, planExp, assets, liabs }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `monarch_backup.json`; a.click(); }
+        function exportToFile() { const data = { txns, planInc, planExp, assets, liabs }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `budget_backup.json`; a.click(); hasUnsavedChanges = false; localStorage.setItem('m_last_save_time', new Date().toLocaleTimeString()); updateUI(); }
+        function clearAllData() { if(confirm("Clear Everything?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
 </html>
