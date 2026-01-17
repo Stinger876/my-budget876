@@ -39,7 +39,7 @@
         /* Cards & Rows */
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
-        .budget-row { display: grid; grid-template-columns: 30px 1fr 80px 70px; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
+        .budget-row { display: grid; grid-template-columns: 10px 1fr 80px 70px; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         
         .wizard-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .wizard-row span { text-align: left; flex: 1; font-size: 14px; }
@@ -133,13 +133,13 @@
         <div class="card">
             <div style="font-size: 11px; color: var(--m-green); font-weight: bold; margin-bottom: 8px;">INCOME SOURCES</div>
             <div id="income-list"></div>
-            <button class="btn-add-cat" onclick="addCustomCat('inc')">+ Add Income Category</button>
+            <button class="btn-add-cat" onclick="addCustomCat('inc')">+ Add/Remove Income Category</button>
             <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;"><span>Total Budget Income</span><span id="total-planned-inc" class="pos">$0</span></div>
         </div>
         <div class="card">
             <div style="font-size: 11px; color: var(--m-red); font-weight: bold; margin-bottom: 8px;">EXPENSE CATEGORIES</div>
             <div id="expense-list"></div>
-            <button class="btn-add-cat" onclick="addCustomCat('exp')">+ Add Expense Category</button>
+            <button class="btn-add-cat" onclick="addCustomCat('exp')">+ Add/Remove Expense Category</button>
             <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;"><span>Total Budget Expenses</span><span id="total-planned-exp" class="neg">$0</span></div>
         </div>
         <div class="card">
@@ -242,9 +242,10 @@
                 headerBox.innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totL.toLocaleString()}</div>`;
             }
 
-            planInc.forEach((p, idx) => { budIncT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; incL.innerHTML += `<div class="budget-row"><button class="del-btn" onclick="removeCat('inc', ${idx})">✕</button><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`; });
+            // Category rows updated to remove the X button
+            planInc.forEach((p, idx) => { budIncT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; incL.innerHTML += `<div class="budget-row"><span></span><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`; });
             document.getElementById('total-planned-inc').innerText = `$${budIncT.toLocaleString()}`;
-            planExp.forEach((p, idx) => { budExpT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; expL.innerHTML += `<div class="budget-row"><button class="del-btn" onclick="removeCat('exp', ${idx})">✕</button><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`; });
+            planExp.forEach((p, idx) => { budExpT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; expL.innerHTML += `<div class="budget-row"><span></span><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`; });
             document.getElementById('total-planned-exp').innerText = `$${budExpT.toLocaleString()}`;
 
             assets.forEach((a, idx) => invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
@@ -303,8 +304,28 @@
 
         function switchTab(t) { activeTab = t; ['budget', 'invest', 'liab'].forEach(tab => { document.getElementById(`tab-${tab}`).className = (t === tab) ? 'tab active' : 'tab'; document.getElementById(`view-${tab}`).style.display = (t === tab) ? 'block' : 'none'; }); updateUI(); }
         function addTransaction() { const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, aV = parseFloat(document.getElementById('amt').value); if(!d || isNaN(aV)) return; const isInc = planInc.some(p => p.name === c); txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(aV) : -Math.abs(aV) }); document.getElementById('desc').value = ''; document.getElementById('amt').value = ''; saveInternal(); }
-        function addCustomCat(type) { const n = prompt("Category Name:"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveInternal(); } }
-        function removeCat(type, idx) { if(confirm("Delete category?")) { if(type==='inc') planInc.splice(idx,1); else planExp.splice(idx,1); saveInternal(); } }
+        
+        // Updated Category Management
+        function addCustomCat(type) {
+            const action = prompt("Type 'add' to create a new category or 'remove' to delete one:").toLowerCase();
+            if (action === 'add') {
+                const n = prompt("Category Name:");
+                if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveInternal(); }
+            } else if (action === 'remove') {
+                const list = type === 'inc' ? planInc : planExp;
+                const n = prompt("Enter the exact name of the category to remove:");
+                const index = list.findIndex(cat => cat.name === n);
+                if (index !== -1) {
+                    if (confirm(`Delete "${n}"?`)) {
+                        list.splice(index, 1);
+                        saveInternal();
+                    }
+                } else {
+                    alert("Category not found.");
+                }
+            }
+        }
+
         function addItem(key) { const n = prompt("Name:"); if(n) { if(key==='assets') assets.push({name:n, amt:0}); else liabs.push({name:n, amt:0}); saveInternal(); } }
         function deleteTxn(idx) { txns.splice(idx,1); saveInternal(); }
         function clearAllData() { if(confirm("Reset everything?")) { localStorage.clear(); location.reload(); } }
@@ -325,3 +346,4 @@
     </script>
 </body>
 </html>
+
