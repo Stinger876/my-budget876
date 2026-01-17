@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v20.3</title>
+    <title>Monarch-Lite v20.4</title>
     <style>
         :root { 
             --m-blue: #0a192f; 
@@ -19,12 +19,15 @@
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
         #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px 0; }
-        .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; text-align: center; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
+        .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; }
         
-        .budget-header { color: white; padding: 20px; border-radius: 16px; margin-bottom: 12px; text-align: center; transition: background 0.3s; }
+        /* Headers */
+        .budget-header { color: white; padding: 20px; border-radius: 16px; margin-bottom: 12px; text-align: center; position: relative; }
         .bg-spending { background: var(--m-header-green); border: 1px solid var(--m-green); }
         .bg-invest { background: var(--m-blue); border: 1px solid var(--m-teal); }
         .bg-liab { background: #3d2b1f; border: 1px solid var(--m-orange); }
+        
+        .header-meta { font-size: 10px; opacity: 0.7; margin-bottom: 8px; display: flex; justify-content: space-between; font-family: monospace; }
 
         .header-main { font-size: 1.4rem; font-weight: 800; margin-bottom: 5px; }
         .spending-bar-bg { background: rgba(255,255,255,0.1); height: 12px; border-radius: 10px; margin: 10px 0; overflow: hidden; position: relative; }
@@ -38,22 +41,34 @@
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         
-        .wizard-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
-
-        .chart-container { position: relative; width: 180px; height: 180px; margin: 10px auto; }
-        .pie-chart { width: 100%; height: 100%; border-radius: 50%; position: relative; }
-        .pie-center { position: absolute; top: 20%; left: 20%; width: 60%; height: 60%; background: var(--m-bg); border-radius: 50%; z-index: 2; }
-        .category-icon { position: absolute; transform: translate(-50%, -50%); z-index: 3; font-size: 16px; pointer-events: none; }
+        /* Wizard Row Fix */
+        .wizard-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; }
+        .wizard-row span { font-size: 14px; }
+        .wizard-row input[type="checkbox"] { width: 20px; height: 20px; margin: 0; cursor: pointer; }
 
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         
-        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; text-align: center; }
-        .btn-mgmt { flex: 1; background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; min-height: 45px; box-sizing: border-box; }
+        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
+        .btn-mgmt { flex: 1; background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+        
+        /* Pulsing Save Button */
+        @keyframes pulse-save {
+            0% { box-shadow: 0 0 0 0 rgba(23, 233, 225, 0.7); background: var(--m-teal); color: var(--m-blue); }
+            70% { box-shadow: 0 0 0 10px rgba(23, 233, 225, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(23, 233, 225, 0); background: var(--m-teal); color: var(--m-blue); }
+        }
+        .pulse { animation: pulse-save 1.5s infinite; border-color: var(--m-teal) !important; }
+
         .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 16px; border-radius: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
+
+        .chart-container { position: relative; width: 180px; height: 180px; margin: 10px auto; }
+        .pie-chart { width: 100%; height: 100%; border-radius: 50%; position: relative; }
+        .pie-center { position: absolute; top: 20%; left: 20%; width: 60%; height: 60%; background: var(--m-bg); border-radius: 50%; z-index: 2; }
+        .category-icon { position: absolute; transform: translate(-50%, -50%); z-index: 3; font-size: 16px; pointer-events: none; }
 
         .calc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; text-align: center; }
         .calc-item { background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #444; }
@@ -76,12 +91,12 @@
         <div class="modal-card" id="wizard-view" style="display:none;">
             <h3 style="margin-top:0;">Setup Categories</h3>
             <div id="wizard-list">
-                <p style="font-size: 11px; color: var(--m-green); font-weight:bold; text-align:left;">INCOME</p>
+                <p style="font-size: 11px; color: var(--m-green); font-weight:bold; text-align:left; margin-bottom:5px;">INCOME</p>
                 <div class="wizard-row"><span>💵 Paychecks</span><input type="checkbox" checked data-cat="💵 Paychecks" data-type="inc"></div>
                 <div class="wizard-row"><span>💸 Interest</span><input type="checkbox" checked data-cat="💸 Interest" data-type="inc"></div>
                 <div class="wizard-row"><span>💰 Other Income</span><input type="checkbox" checked data-cat="💰 Other Income" data-type="inc"></div>
                 <div class="wizard-row"><span>🤑 RogersWE Cash</span><input type="checkbox" checked data-cat="🤑 RogersWE Cash" data-type="inc"></div>
-                <p style="font-size: 11px; color: var(--m-teal); margin-top: 15px; font-weight:bold; text-align:left;">EXPENSES</p>
+                <p style="font-size: 11px; color: var(--m-teal); margin-top: 15px; font-weight:bold; text-align:left; margin-bottom:5px;">EXPENSES</p>
                 <div class="wizard-row"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="🛒 Groceries" data-type="exp"></div>
                 <div class="wizard-row"><span>🏠 Mortgage</span><input type="checkbox" checked data-cat="🏠 Mortgage" data-type="exp"></div>
                 <div class="wizard-row"><span>🏢 Parking & Tolls</span><input type="checkbox" checked data-cat="🏢 Parking & Tolls" data-type="exp"></div>
@@ -96,10 +111,14 @@
     </div>
 
     <div class="budget-header bg-spending" id="main-header">
+        <div class="header-meta">
+            <span id="meta-file">File: Browser Storage</span>
+            <span id="meta-saved">Last Saved: Never</span>
+        </div>
         <div id="header-content">
             <div class="header-main">Monthly Spending</div>
-            <div id="spending-summary" style="font-weight: bold; font-size: 1.1rem;">$0 spent</div>
-            <div class="spending-bar-bg"><div id="spending-bar" class="spending-bar-fill"></div></div>
+            <div style="font-weight: bold; font-size: 1.1rem;">$0 spent</div>
+            <div class="spending-bar-bg"><div class="spending-bar-fill"></div></div>
         </div>
     </div>
 
@@ -117,28 +136,16 @@
     </div>
 
     <div id="view-budget">
-        <div class="card">
-            <div class="chart-container">
-                <div id="pie" class="pie-chart"></div>
-                <div class="pie-center"></div>
-                <div id="pie-icons"></div>
-            </div>
-        </div>
+        <div class="card"><div class="chart-container"><div id="pie" class="pie-chart"></div><div class="pie-center"></div><div id="pie-icons"></div></div></div>
         <div class="card">
             <div style="font-size: 11px; color: var(--m-green); font-weight: bold; margin-bottom: 8px;">INCOME SOURCES</div>
             <div id="income-list"></div>
-            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;">
-                <span>Total Budget Income</span>
-                <span id="total-planned-inc" class="pos">$0</span>
-            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;"><span>Total Budget Income</span><span id="total-planned-inc" class="pos">$0</span></div>
         </div>
         <div class="card">
             <div style="font-size: 11px; color: var(--m-red); font-weight: bold; margin-bottom: 8px;">EXPENSE CATEGORIES</div>
             <div id="expense-list"></div>
-            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;">
-                <span>Total Budget Expenses</span>
-                <span id="total-planned-exp" class="neg">$0</span>
-            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;"><span>Total Budget Expenses</span><span id="total-planned-exp" class="neg">$0</span></div>
         </div>
         <div class="card">
             <b>Add Transaction</b>
@@ -150,38 +157,19 @@
         <div id="txn-list"></div>
     </div>
 
-    <div id="view-invest" style="display:none;">
-        <div class="card" id="invest-main-list"></div>
-        <button class="btn-track" onclick="addInvestItem()">+ New Asset Account</button>
-    </div>
+    <div id="view-invest" style="display:none;"><div class="card" id="invest-main-list"></div><button class="btn-track" onclick="addInvestItem()">+ New Asset Account</button></div>
 
     <div id="view-liab" style="display:none;">
         <div class="card" id="liab-main-list"></div>
         <button class="btn-track" style="background: var(--m-orange); color: var(--m-blue);" onclick="addLiabItem()">+ New Liability</button>
-        
         <div class="card" style="margin-top: 20px; border: 1px solid var(--m-orange);">
             <b style="color: var(--m-orange);">Loan & Mortgage Calculator</b>
-            <div style="margin-top:10px;">
-                <input type="text" inputmode="decimal" id="calc-bal" placeholder="Loan Amount ($)" oninput="calcInterest()">
-                <div style="display:flex; gap:10px;">
-                    <input type="text" inputmode="decimal" id="calc-rate" placeholder="APR %" style="flex:1" oninput="calcInterest()">
-                    <input type="text" inputmode="decimal" id="calc-term" placeholder="Term (Years)" style="flex:1" oninput="calcInterest()">
-                </div>
-            </div>
-            <div class="calc-grid">
-                <div class="calc-item"><div class="calc-label">Daily</div><div id="res-day" class="calc-val">$0.00</div></div>
-                <div class="calc-item"><div class="calc-label">Monthly</div><div id="res-mo" class="calc-val">$0.00</div></div>
-                <div class="calc-item"><div class="calc-label">Yearly</div><div id="res-yr" class="calc-val">$0.00</div></div>
-            </div>
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #444;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span style="font-size:12px; opacity:0.8;">Est. Monthly Payment:</span>
-                    <span id="res-pmt" style="font-weight:bold; color:var(--m-teal);">$0.00</span>
-                </div>
-                <div style="display:flex; justify-content:space-between;">
-                    <span style="font-size:12px; opacity:0.8;">Total Interest over Term:</span>
-                    <span id="res-total-int" style="font-weight:bold; color:var(--m-red);">$0.00</span>
-                </div>
+            <input type="text" inputmode="decimal" id="calc-bal" placeholder="Loan Amount ($)" oninput="calcInterest()">
+            <div style="display:flex; gap:10px;"><input type="text" inputmode="decimal" id="calc-rate" placeholder="APR %" style="flex:1" oninput="calcInterest()"><input type="text" inputmode="decimal" id="calc-term" placeholder="Term (Years)" style="flex:1" oninput="calcInterest()"></div>
+            <div class="calc-grid"><div class="calc-item"><div class="calc-label">Daily</div><div id="res-day" class="calc-val">$0.00</div></div><div class="calc-item"><div class="calc-label">Monthly</div><div id="res-mo" class="calc-val">$0.00</div></div><div class="calc-item"><div class="calc-label">Yearly</div><div id="res-yr" class="calc-val">$0.00</div></div></div>
+            <div style="margin-top:15px; padding-top:15px; border-top:1px dashed #444;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span style="font-size:12px; opacity:0.8;">Est. Monthly Payment:</span><span id="res-pmt" style="font-weight:bold; color:var(--m-teal);">$0.00</span></div>
+                <div style="display:flex; justify-content:space-between;"><span style="font-size:12px; opacity:0.8;">Total Interest over Term:</span><span id="res-total-int" style="font-weight:bold; color:var(--m-red);">$0.00</span></div>
             </div>
         </div>
     </div>
@@ -189,7 +177,7 @@
     <div class="card">
         <b>Data Management</b>
         <div style="display:flex; gap:10px; margin-top:10px;">
-            <button class="btn-mgmt" onclick="exportToFile()">💾 Backup</button>
+            <button id="save-btn" class="btn-mgmt" onclick="exportToFile()">💾 Save</button>
             <label for="sync-upload-main" class="btn-mgmt">🔄 Import</label>
             <input type="file" id="sync-upload-main" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
@@ -202,13 +190,16 @@
         let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [];
         let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
         let liabs = JSON.parse(localStorage.getItem('m_liabs')) || [];
+        let lastSaved = localStorage.getItem('m_last_saved') || 'Never';
+        let isDirty = false;
         let activeTab = 'budget';
         const colors = ['#17e9e1', '#2ecc71', '#ff5252', '#f1c40f', '#9b59b6', '#e67e22', '#3498db', '#95a5a6'];
 
-        window.onload = function() {
+        window.onload = () => {
             const today = new Date();
             document.getElementById('month-filter').value = String(today.getMonth() + 1).padStart(2, '0');
             document.getElementById('txn-date').valueAsDate = today;
+            document.getElementById('meta-saved').innerText = `Last Saved: ${lastSaved}`;
             updateUI();
         };
 
@@ -218,35 +209,43 @@
             localStorage.setItem('m_p_exp', JSON.stringify(planExp));
             localStorage.setItem('m_assets', JSON.stringify(assets));
             localStorage.setItem('m_liabs', JSON.stringify(liabs));
+            isDirty = true;
+            document.getElementById('save-btn').classList.add('pulse');
             updateUI();
+        }
+
+        function exportToFile() {
+            const data = { txns, planInc, planExp, assets, liabs };
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `monarch_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            
+            lastSaved = new Date().toLocaleTimeString();
+            localStorage.setItem('m_last_saved', lastSaved);
+            document.getElementById('meta-saved').innerText = `Last Saved: ${lastSaved}`;
+            document.getElementById('meta-file').innerText = `File: ${a.download}`;
+            
+            isDirty = false;
+            document.getElementById('save-btn').classList.remove('pulse');
         }
 
         function calcInterest() {
             const P = parseFloat(document.getElementById('calc-bal').value) || 0;
             const annualRate = parseFloat(document.getElementById('calc-rate').value) || 0;
             const years = parseFloat(document.getElementById('calc-term').value) || 0;
-
-            if (P <= 0 || annualRate <= 0) {
-                document.getElementById('res-day').innerText = "$0.00";
-                document.getElementById('res-mo').innerText = "$0.00";
-                document.getElementById('res-yr').innerText = "$0.00";
-                document.getElementById('res-pmt').innerText = "$0.00";
-                document.getElementById('res-total-int').innerText = "$0.00";
-                return;
-            }
-
-            const yearlyInt = P * (annualRate / 100);
-            document.getElementById('res-day').innerText = `$${(yearlyInt / 365).toFixed(2)}`;
-            document.getElementById('res-mo').innerText = `$${(yearlyInt / 12).toFixed(2)}`;
-            document.getElementById('res-yr').innerText = `$${yearlyInt.toFixed(2)}`;
-
+            if (P <= 0 || annualRate <= 0) return;
+            const yInt = P * (annualRate / 100);
+            document.getElementById('res-day').innerText = `$${(yInt / 365).toFixed(2)}`;
+            document.getElementById('res-mo').innerText = `$${(yInt / 12).toFixed(2)}`;
+            document.getElementById('res-yr').innerText = `$${yInt.toFixed(2)}`;
             if (years > 0) {
                 const r = (annualRate / 100) / 12;
                 const n = years * 12;
                 const pmt = P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-                const totalInterest = (pmt * n) - P;
                 document.getElementById('res-pmt').innerText = `$${pmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                document.getElementById('res-total-int').innerText = `$${totalInterest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                document.getElementById('res-total-int').innerText = `$${((pmt * n) - P).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             }
         }
 
@@ -261,46 +260,30 @@
 
             let actExp = 0, budIncT = 0, budExpT = 0, totAssets = 0, totLiabs = 0;
             const filteredTxns = txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth);
-            
-            let expenseGroups = {};
-            filteredTxns.forEach(t => {
-                if(t.amt < 0) {
-                    actExp += Math.abs(t.amt);
-                    expenseGroups[t.cat] = (expenseGroups[t.cat] || 0) + Math.abs(t.amt);
-                }
-            });
+            let groups = {};
+            filteredTxns.forEach(t => { if(t.amt < 0) { actExp += Math.abs(t.amt); groups[t.cat] = (groups[t.cat] || 0) + Math.abs(t.amt); } });
 
-            let currPerc = 0; let gParts = []; let i = 0;
-            for (let catName in expenseGroups) {
-                let p = (expenseGroups[catName] / actExp) * 100;
+            let currP = 0; let gParts = []; let i = 0;
+            for (let cN in groups) {
+                let p = (groups[cN] / actExp) * 100;
                 let col = colors[i % colors.length];
-                gParts.push(`${col} ${currPerc}% ${currPerc + p}%`);
-                const ang = (currPerc + (p / 2)) * 3.6 - 90;
-                const rad = ang * (Math.PI / 180);
-                iconWrap.innerHTML += `<div class="category-icon" style="left:${50 + 35 * Math.cos(rad)}%; top:${50 + 35 * Math.sin(rad)}%;">${catName.split(' ')[0]}</div>`;
-                currPerc += p; i++;
+                gParts.push(`${col} ${currP}% ${currP + p}%`);
+                const rad = ((currP + (p / 2)) * 3.6 - 90) * (Math.PI / 180);
+                iconWrap.innerHTML += `<div class="category-icon" style="left:${50+35*Math.cos(rad)}%; top:${50+35*Math.sin(rad)}%;">${cN.split(' ')[0]}</div>`;
+                currP += p; i++;
             }
             pie.style.background = actExp > 0 ? `conic-gradient(${gParts.join(', ')})` : '#333';
 
-            planInc.forEach((p, idx) => { budIncT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                incL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`;
-            });
+            planInc.forEach((p, idx) => { budIncT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; incL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`; });
+            planExp.forEach((p, idx) => { budExpT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; expL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`; });
             document.getElementById('total-planned-inc').innerText = `$${budIncT.toLocaleString()}`;
-
-            planExp.forEach((p, idx) => { budExpT += p.amt; catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
-                expL.innerHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${p.amt}</span></div>`;
-            });
             document.getElementById('total-planned-exp').innerText = `$${budExpT.toLocaleString()}`;
 
             const header = document.getElementById('main-header');
             if(activeTab === 'budget') {
                 header.className = "budget-header bg-spending";
                 const pSpent = budExpT > 0 ? Math.round((actExp / budExpT) * 100) : 0;
-                document.getElementById('header-content').innerHTML = `
-                    <div class="header-main">Monthly Spending</div>
-                    <div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}</div>
-                    <div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>
-                    <div style="font-size: 14px; opacity: 0.9;">${pSpent}% used</div>`;
+                document.getElementById('header-content').innerHTML = `<div class="header-main">Monthly Spending</div><div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}</div><div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>`;
             } else if(activeTab === 'invest') {
                 header.className = "budget-header bg-invest";
                 assets.forEach(a => totAssets += a.amt); liabs.forEach(l => totLiabs += l.amt);
@@ -310,7 +293,6 @@
                 liabs.forEach(l => totLiabs += l.amt);
                 document.getElementById('header-content').innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totLiabs.toLocaleString()}</div>`;
             }
-
             assets.forEach((a, idx) => invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
             liabs.forEach((l, idx) => liabL.innerHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" style="width:100px; color:var(--m-red)" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
             filteredTxns.forEach(t => {
@@ -319,52 +301,16 @@
             });
         }
 
-        function switchTab(t) { 
-            activeTab = t; 
-            ['budget', 'invest', 'liab'].forEach(tab => {
-                document.getElementById(`tab-${tab}`).className = (t === tab) ? 'tab active' : 'tab';
-                document.getElementById(`view-${tab}`).style.display = (t === tab) ? 'block' : 'none';
-            });
-            updateUI(); 
-        }
-
-        function addTransaction() {
-            const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, aV = parseFloat(document.getElementById('amt').value);
-            if(!d || isNaN(aV)) return;
-            const isInc = planInc.some(p => p.name === c);
-            txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(aV) : -Math.abs(aV) });
-            document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
-            saveInternal();
-        }
-
-        function finishWizard() {
-            planInc = []; planExp = [];
-            document.querySelectorAll('#wizard-list input:checked').forEach(c => {
-                const n = c.getAttribute('data-cat');
-                if(c.getAttribute('data-type') === 'inc') planInc.push({name:n, amt: 0});
-                else planExp.push({name:n, amt: 0});
-            });
-            txns = []; assets = []; liabs = []; saveInternal(); closeModal();
-        }
-
+        function switchTab(t) { activeTab = t; ['budget', 'invest', 'liab'].forEach(tab => { document.getElementById(`tab-${tab}`).className = (t === tab) ? 'tab active' : 'tab'; document.getElementById(`view-${tab}`).style.display = (t === tab) ? 'block' : 'none'; }); updateUI(); }
+        function addTransaction() { const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, aV = parseFloat(document.getElementById('amt').value); if(!d || isNaN(aV)) return; const isInc = planInc.some(p => p.name === c); txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(aV) : -Math.abs(aV) }); document.getElementById('desc').value = ''; document.getElementById('amt').value = ''; saveInternal(); }
         function addInvestItem() { const n = prompt("Asset Name:"); if(n) { assets.push({name: n, amt: 0}); saveInternal(); } }
         function addLiabItem() { const n = prompt("Liability Name:"); if(n) { liabs.push({name: n, amt: 0}); saveInternal(); } }
         function deleteTransaction(idx) { if(confirm("Delete?")) { txns.splice(idx,1); saveInternal(); } }
         function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
         function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
-        function exportToFile() { const data = { txns, planInc, planExp, assets, liabs }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `monarch_backup.json`; a.click(); }
         function clearAllData() { if(confirm("Reset everything?")) { localStorage.clear(); location.reload(); } }
-        function syncFromFile(e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                const d = JSON.parse(ev.target.result);
-                txns = d.txns || []; planInc = d.planInc || []; planExp = d.planExp || []; assets = d.assets || []; liabs = d.liabs || [];
-                saveInternal(); closeModal();
-            };
-            reader.readAsText(file);
-        }
+        function syncFromFile(e) { const reader = new FileReader(); reader.onload = (ev) => { const d = JSON.parse(ev.target.result); txns = d.txns || []; planInc = d.planInc || []; planExp = d.planExp || []; assets = d.assets || []; liabs = d.liabs || []; saveInternal(); closeModal(); }; reader.readAsText(e.target.files[0]); }
+        function finishWizard() { planInc = []; planExp = []; document.querySelectorAll('#wizard-list input:checked').forEach(c => { const n = c.getAttribute('data-cat'); if(c.getAttribute('data-type') === 'inc') planInc.push({name:n, amt: 0}); else planExp.push({name:n, amt: 0}); }); txns = []; assets = []; liabs = []; saveInternal(); closeModal(); }
     </script>
 </body>
 </html>
-
