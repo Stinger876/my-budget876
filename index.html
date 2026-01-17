@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v20.8</title>
+    <title>Monarch-Lite v20.9</title>
     <style>
         :root { 
             --m-blue: #0a192f; 
@@ -31,20 +31,21 @@
         .header-meta { font-size: 10px; opacity: 0.7; margin-bottom: 8px; display: flex; justify-content: space-between; font-family: monospace; position: absolute; top: 10px; left: 20px; right: 20px; }
         .header-main { font-size: 1.4rem; font-weight: 800; margin-top: 15px; }
 
-        /* Navigation */
+        /* Navigation Tabs */
         .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
         .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; border: none; opacity: 0.6; }
         .tab.active { background: var(--m-teal) !important; color: var(--m-blue) !important; opacity: 1; }
 
+        /* Cards & Rows */
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .budget-row { display: grid; grid-template-columns: 30px 1fr 80px 70px; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
         
         .wizard-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
-        .wizard-row span { text-align: left; flex: 1; }
+        .wizard-row span { text-align: left; flex: 1; font-size: 14px; }
         .wizard-row input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; }
 
-        /* Controls */
+        /* Buttons & Inputs */
         input, select { width: 100%; padding: 10px; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
         .btn-mgmt { flex: 1; background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; display: flex; align-items: center; justify-content: center; }
@@ -52,6 +53,7 @@
         .btn-add-cat { background: none; border: 1px dashed #555; color: #888; width: 100%; padding: 10px; border-radius: 8px; margin-top: 10px; cursor: pointer; font-size: 12px; }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
 
+        /* Pulse Save */
         @keyframes pulse-save-alt {
             0% { background: #333; color: white; box-shadow: 0 0 0 0 rgba(23, 233, 225, 0); }
             50% { background: var(--m-teal); color: var(--m-blue); box-shadow: 0 0 15px rgba(23, 233, 225, 0.5); }
@@ -63,7 +65,8 @@
         .spending-bar-fill { height: 100%; width: 0%; transition: width 0.5s; }
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
-        
+
+        /* Calc */
         .calc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
         .calc-item { background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #444; text-align: center; }
         .calc-label { font-size: 10px; text-transform: uppercase; opacity: 0.7; }
@@ -82,6 +85,7 @@
             </div>
             <input type="file" id="sync-upload-modal" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
+        
         <div class="modal-card" id="wizard-view" style="display:none;">
             <h3 style="margin-top:0;">Setup Categories</h3>
             <div id="wizard-list">
@@ -205,6 +209,7 @@
             localStorage.setItem('m_p_exp', JSON.stringify(planExp));
             localStorage.setItem('m_assets', JSON.stringify(assets));
             localStorage.setItem('m_liabs', JSON.stringify(liabs));
+            localStorage.setItem('m_cur_file', curFile);
             document.getElementById('save-btn').classList.add('pulse');
             updateUI();
         }
@@ -251,6 +256,21 @@
             });
         }
 
+        /* ACTIONS */
+        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
+        function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
+        function finishWizard() { 
+            planInc = []; planExp = []; 
+            document.querySelectorAll('#wizard-list input:checked').forEach(c => { 
+                const n = c.getAttribute('data-cat'), type = c.getAttribute('data-type');
+                if(type === 'inc') planInc.push({name:n, amt: 0}); else planExp.push({name:n, amt: 0});
+            }); 
+            curFile = "Fresh Session";
+            saveInternal(); 
+            updateMetaHeader();
+            closeModal(); 
+        }
+
         function exportToFile() {
             const fileName = `monarch_backup_${new Date().toISOString().split('T')[0]}.json`;
             const data = { txns, planInc, planExp, assets, liabs };
@@ -259,7 +279,6 @@
             a.href = URL.createObjectURL(blob);
             a.download = fileName;
             a.click();
-            
             curFile = fileName;
             localStorage.setItem('m_cur_file', curFile);
             localStorage.setItem('m_last_saved', new Date().toLocaleTimeString());
@@ -275,7 +294,6 @@
                 const d = JSON.parse(ev.target.result);
                 txns = d.txns || []; planInc = d.planInc || []; planExp = d.planExp || []; assets = d.assets || []; liabs = d.liabs || [];
                 curFile = file.name;
-                localStorage.setItem('m_cur_file', curFile);
                 saveInternal();
                 updateMetaHeader();
                 closeModal();
@@ -289,5 +307,21 @@
         function removeCat(type, idx) { if(confirm("Delete category?")) { if(type==='inc') planInc.splice(idx,1); else planExp.splice(idx,1); saveInternal(); } }
         function addItem(key) { const n = prompt("Name:"); if(n) { if(key==='assets') assets.push({name:n, amt:0}); else liabs.push({name:n, amt:0}); saveInternal(); } }
         function deleteTxn(idx) { txns.splice(idx,1); saveInternal(); }
-        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-        function showWizard() { document.getElementById
+        function clearAllData() { if(confirm("Reset everything?")) { localStorage.clear(); location.reload(); } }
+        function calcInterest() {
+            const P = parseFloat(document.getElementById('calc-bal').value) || 0, rate = parseFloat(document.getElementById('calc-rate').value) || 0, years = parseFloat(document.getElementById('calc-term').value) || 0;
+            if (P <= 0 || rate <= 0) return;
+            const yInt = P * (rate / 100);
+            document.getElementById('res-day').innerText = `$${(yInt / 365).toFixed(2)}`;
+            document.getElementById('res-mo').innerText = `$${(yInt / 12).toFixed(2)}`;
+            document.getElementById('res-yr').innerText = `$${yInt.toFixed(2)}`;
+            if (years > 0) {
+                const r = (rate / 100) / 12, n = years * 12;
+                const pmt = P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+                document.getElementById('res-pmt').innerText = `$${pmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                document.getElementById('res-total-int').innerText = `$${((pmt * n) - P).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            }
+        }
+    </script>
+</body>
+</html>
