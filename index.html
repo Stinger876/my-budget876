@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v18.0</title>
+    <title>Monarch-Lite v18.5</title>
     <style>
         :root { --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #121212; --m-card: #1e1e1e; --m-red: #ff5252; --m-green: #2ecc71; --m-orange: #ff9f43; --m-text: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
@@ -21,13 +21,15 @@
         .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
         .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
         .budget-row { display: grid; grid-template-columns: 1fr 80px 70px; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
+        .total-row { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; font-weight: 800; margin-top: 5px; display: flex; justify-content: space-between; font-size: 14px; border: 1px solid #333; }
+        
         .budget-label { font-size: 16px; font-weight: bold; margin: 15px 0 8px 0; display: flex; justify-content: space-between; align-items: center; color: var(--m-teal); }
         
         .chart-container { display: flex; flex-direction: column; align-items: center; padding: 10px 0; border-top: 1px solid #2a2a2a; margin-top: 10px;}
-        .pie-chart { width: 150px; height: 150px; border-radius: 50%; border: 3px solid #333; margin: 15px 0; }
-        .legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; font-size: 11px; }
-        .legend-item { display: flex; align-items: center; gap: 5px; background: #2a2a2a; padding: 4px 8px; border-radius: 6px; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .pie-chart { width: 160px; height: 160px; border-radius: 50%; border: 4px solid #333; margin: 15px 0; position: relative; }
+        .legend { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; font-size: 12px; }
+        .legend-item { display: flex; align-items: center; gap: 6px; background: #2a2a2a; padding: 6px 10px; border-radius: 8px; border: 1px solid #444; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
 
         input, select { width: 100%; padding: 10px; margin: 2px 0; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         .plan-input { text-align: right; border-color: #444; height: 32px; padding: 4px 8px; }
@@ -35,13 +37,11 @@
         
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; display: block; }
         .btn-mgmt { background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; min-height: 45px; box-sizing: border-box; }
-        
         .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 16px; border-radius: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+        
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
         .del-btn { color: var(--m-red); background: none; border: none; font-size: 20px; cursor: pointer; }
-        .unsaved-glow { background: var(--m-teal) !important; color: var(--m-blue) !important; border-color: white !important; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -49,7 +49,7 @@
     <div id="startup-modal">
         <div class="modal-card" id="initial-choice">
             <h2 style="color:var(--m-teal); margin-top:0;">Welcome</h2>
-            <button id="continue-btn" class="btn-track" onclick="closeModal()">Continue Session</button>
+            <button class="btn-track" onclick="closeModal()">Continue Session</button>
             <label for="sync-upload-modal" class="btn-mgmt" style="width:100%; margin-top:10px;">Import from File</label>
             <button class="btn-mgmt" onclick="showWizard()" style="width:100%; color:var(--m-red); margin-top:10px;">Start Fresh</button>
             <input type="file" id="sync-upload-modal" accept=".json" style="display:none" onchange="syncFromFile(event)">
@@ -61,7 +61,7 @@
                 <div class="cf-row"><span>💵 Paychecks</span><input type="checkbox" checked data-cat="💵 Paychecks" data-type="inc"></div>
                 <div class="cf-row"><span>💸 Interest</span><input type="checkbox" checked data-cat="💸 Interest" data-type="inc"></div>
                 <div class="cf-row"><span>💰 Other Income</span><input type="checkbox" checked data-cat="💰 Other Income" data-type="inc"></div>
-                <div class="cf-row"><span>🚫 RogersWE Cash</span><input type="checkbox" checked data-cat="🚫 RogersWE Cash" data-type="inc"></div>
+                <div class="cf-row"><span>🤑 RogersWE Cash</span><input type="checkbox" checked data-cat="🤑 RogersWE Cash" data-type="inc"></div>
                 <p style="font-size: 12px; color: var(--m-teal); margin-top: 10px;">Expenses</p>
                 <div class="cf-row"><span>🏢 Parking & Tolls</span><input type="checkbox" checked data-cat="🏢 Parking & Tolls" data-type="exp"></div>
                 <div class="cf-row"><span>🏠 Mortgage</span><input type="checkbox" checked data-cat="🏠 Mortgage" data-type="exp"></div>
@@ -107,10 +107,19 @@
                 <div id="legend" class="legend"></div>
             </div>
         </div>
+        
         <div class="budget-label">Income <button onclick="addCustom('inc')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
-        <div class="card" id="income-list"></div>
+        <div class="card">
+            <div id="income-list"></div>
+            <div class="total-row"><span>Total Planned Income</span><span id="total-planned-inc" class="pos">$0</span></div>
+        </div>
+
         <div class="budget-label">Expenses <button onclick="addCustom('exp')" style="background:none; border:none; color:var(--m-teal);">+ Add</button></div>
-        <div class="card" id="expense-list"></div>
+        <div class="card">
+            <div id="expense-list"></div>
+            <div class="total-row"><span>Total Planned Expenses</span><span id="total-planned-exp" class="neg">$0</span></div>
+        </div>
+
         <div class="card">
             <b>Transactions</b>
             <input type="text" id="desc" placeholder="Merchant">
@@ -131,27 +140,16 @@
         <div class="budget-label" style="color:var(--m-orange)">Credit Cards & Loans</div>
         <div class="card" id="liab-main-list"></div>
         <button class="btn-track" style="background: var(--m-orange); color: var(--m-blue);" onclick="addLiabItem()">+ New Liability</button>
-        
-        <div class="budget-label" style="color:var(--m-orange)">Debt Paydown Calculator</div>
-        <div class="card">
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div><label style="font-size:10px">Monthly Pay</label><input type="number" id="calc-pay" placeholder="$500"></div>
-                <div><label style="font-size:10px">Interest %</label><input type="number" id="calc-int" placeholder="19.9"></div>
-            </div>
-            <button class="btn-mgmt" style="width:100%; margin-top:10px;" onclick="calculateDebt()">Estimate Freedom Date</button>
-            <div id="debt-result" style="margin-top:15px; font-weight:bold; text-align:center; color:var(--m-orange)"></div>
-        </div>
     </div>
 
     <div class="card">
         <b>Data Management</b>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-            <button id="save-btn" class="btn-mgmt" onclick="exportToFile()">💾 Save to File</button>
+            <button class="btn-mgmt" onclick="exportToFile()">💾 Save to File</button>
             <label for="sync-upload-main" class="btn-mgmt">🔄 Import Data</label>
             <input type="file" id="sync-upload-main" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
     </div>
-
     <button class="btn-danger" onclick="clearAllData()">🗑️ Reset App</button>
 
     <script>
@@ -160,7 +158,6 @@
         let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [];
         let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
         let liabs = JSON.parse(localStorage.getItem('m_liabs')) || [];
-        let hasUnsavedChanges = false;
         let activeTab = 'budget';
         const colors = ['#17e9e1', '#2ecc71', '#ff5252', '#f1c40f', '#9b59b6', '#e67e22', '#3498db', '#95a5a6'];
 
@@ -187,6 +184,7 @@
         };
 
         function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
+        
         function saveInternal() {
             localStorage.setItem('m_txns', JSON.stringify(txns));
             localStorage.setItem('m_p_inc', JSON.stringify(planInc));
@@ -217,7 +215,7 @@
                 }
             });
 
-            // Pie Chart
+            // Pie Chart with Icons in Legend
             let currentPercentage = 0; let gradientParts = []; let i = 0;
             for (let catName in expenseGroups) {
                 let perc = (expenseGroups[catName] / actExp) * 100;
@@ -228,13 +226,14 @@
             }
             pie.style.background = actExp > 0 ? `conic-gradient(${gradientParts.join(', ')})` : '#333';
 
-            // Lists
+            // Planned Lists & Totals
             planInc.forEach((p, idx) => {
                 budIncT += p.amt;
                 const rec = filteredTxns.filter(t => t.amt > 0 && t.cat === p.name).reduce((s, t) => s + t.amt, 0);
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
                 incL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('inc', ${idx})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span class="pos">$${(p.amt-rec).toLocaleString()}</span></div>`;
             });
+            document.getElementById('total-planned-inc').innerText = `$${budIncT.toLocaleString()}`;
 
             planExp.forEach((p, idx) => {
                 budExpT += p.amt;
@@ -242,7 +241,9 @@
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`;
                 expL.innerHTML += `<div class="budget-row"><span><button class="del-btn" style="font-size:12px;" onclick="deleteCategory('exp', ${idx})">🗑️</button> ${p.name}</span><input type="number" class="plan-input" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${(p.amt-spnt).toLocaleString()}</span></div>`;
             });
+            document.getElementById('total-planned-exp').innerText = `$${budExpT.toLocaleString()}`;
 
+            // Transactions & Balances
             filteredTxns.forEach(t => {
                 const mIdx = txns.findIndex(m => m.id === t.id);
                 txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;"><div style="font-size:13px; flex:1;" onclick="editTransaction(${mIdx})"><b>${t.cat}</b>: ${t.desc} ✏️</div><div style="display:flex; align-items:center; gap:10px;"><div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTransaction(${mIdx})">✕</button></div></div>`;
@@ -294,32 +295,23 @@
             const a = (planInc.some(p => p.name === c)) ? Math.abs(aV) : -Math.abs(aV);
             txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: a });
             document.getElementById('desc').value = ''; document.getElementById('amt').value = '';
-            hasUnsavedChanges = true; saveInternal();
-        }
-
-        function calculateDebt() {
-            const pay = parseFloat(document.getElementById('calc-pay').value);
-            const rate = parseFloat(document.getElementById('calc-int').value) / 100 / 12;
-            const balance = liabs.length > 0 ? Math.max(...liabs.map(l => l.amt)) : 0;
-            if(!pay || balance <= 0) { alert("Enter a payment and ensure a debt exists."); return; }
-            const months = -Math.log(1 - (rate * balance) / pay) / Math.log(1 + rate);
-            document.getElementById('debt-result').innerText = isNaN(months) ? "Payment too low!" : `Debt Free in ${Math.ceil(months)} months`;
+            saveInternal();
         }
 
         function editTransaction(idx) {
             const nD = prompt("Description:", txns[idx].desc);
             const nA = prompt("Amount:", Math.abs(txns[idx].amt));
-            if(nD && nA) { txns[idx].desc = nD; txns[idx].amt = parseFloat(nA) * (txns[idx].amt >= 0 ? 1 : -1); hasUnsavedChanges=true; saveInternal(); }
+            if(nD && nA) { txns[idx].desc = nD; txns[idx].amt = parseFloat(nA) * (txns[idx].amt >= 0 ? 1 : -1); saveInternal(); }
         }
 
-        function addInvestItem() { const n = prompt("Account Name:"); if(n) { assets.push({name: n, amt: 0}); hasUnsavedChanges=true; saveInternal(); } }
-        function addLiabItem() { const n = prompt("Liability Name:"); if(n) { liabs.push({name: n, amt: 0}); hasUnsavedChanges=true; saveInternal(); } }
-        function addCustom(type) { const n = prompt("Category Name (with emoji):"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); hasUnsavedChanges=true; saveInternal(); } }
-        function deleteTransaction(idx) { if(confirm("Delete?")) { txns.splice(idx,1); hasUnsavedChanges=true; saveInternal(); } }
-        function deleteCategory(t, idx) { if(confirm("Delete?")) { if(t==='inc') planInc.splice(idx,1); else planExp.splice(idx,1); hasUnsavedChanges=true; saveInternal(); } }
+        function addInvestItem() { const n = prompt("Account Name:"); if(n) { assets.push({name: n, amt: 0}); saveInternal(); } }
+        function addLiabItem() { const n = prompt("Liability Name:"); if(n) { liabs.push({name: n, amt: 0}); saveInternal(); } }
+        function addCustom(type) { const n = prompt("Category Name (with emoji):"); if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveInternal(); } }
+        function deleteTransaction(idx) { if(confirm("Delete?")) { txns.splice(idx,1); saveInternal(); } }
+        function deleteCategory(t, idx) { if(confirm("Delete?")) { if(t==='inc') planInc.splice(idx,1); else planExp.splice(idx,1); saveInternal(); } }
         function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
         function finishWizard() { planInc = []; planExp = []; assets = []; liabs = []; txns = []; document.querySelectorAll('#wizard-list input:checked').forEach(c => { const n = c.getAttribute('data-cat'); if(c.getAttribute('data-type') === 'inc') planInc.push({name:n, amt: 0}); else planExp.push({name:n, amt: 0}); }); saveInternal(); closeModal(); }
-        function exportToFile() { const data = { txns, planInc, planExp, assets, liabs }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `budget_backup.json`; a.click(); hasUnsavedChanges = false; localStorage.setItem('m_last_save_time', new Date().toLocaleTimeString()); updateUI(); }
+        function exportToFile() { const data = { txns, planInc, planExp, assets, liabs }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `budget_backup.json`; a.click(); localStorage.setItem('m_last_save_time', new Date().toLocaleTimeString()); updateUI(); }
         function clearAllData() { if(confirm("Clear Everything?")) { localStorage.clear(); location.reload(); } }
     </script>
 </body>
