@@ -223,14 +223,13 @@
             const selectedMonth = document.getElementById('month-filter').value;
             incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; liabL.innerHTML = ''; catS.innerHTML = '';
 
+            // This is the core fix: Ensure ALL math uses only current month data
             const monthTxns = txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth);
 
             let actExp = 0, budIncT = 0, budExpT = 0, totA = 0, totL = 0;
             
-            // Calculate actual total spent (sum of negative amounts)
             monthTxns.forEach(t => { if(t.amt < 0) actExp += Math.abs(t.amt); });
             
-            // Calculate base budget totals outside the loop
             budIncT = planInc.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
             budExpT = planExp.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
 
@@ -249,7 +248,7 @@
                 headerBox.innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totL.toLocaleString()}</div>`;
             }
 
-            // INCOME rows
+            // Category rows populated with ONLY current month calculations
             planInc.forEach((p, idx) => { 
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
                 const catTotal = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + t.amt, 0);
@@ -258,7 +257,6 @@
             });
             document.getElementById('total-planned-inc').innerText = `$${budIncT.toLocaleString()}`;
 
-            // EXPENSE rows
             planExp.forEach((p, idx) => { 
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
                 const catSpent = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + Math.abs(t.amt), 0);
@@ -324,7 +322,6 @@
         function switchTab(t) { activeTab = t; ['budget', 'invest', 'liab'].forEach(tab => { document.getElementById(`tab-${tab}`).className = (t === tab) ? 'tab active' : 'tab'; document.getElementById(`view-${tab}`).style.display = (t === tab) ? 'block' : 'none'; }); updateUI(); }
         function addTransaction() { const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, aV = parseFloat(document.getElementById('amt').value); if(!d || isNaN(aV)) return; const isInc = planInc.some(p => p.name === c); txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(aV) : -Math.abs(aV) }); document.getElementById('desc').value = ''; document.getElementById('amt').value = ''; saveInternal(); }
         
-        // Updated Category Management
         function addCustomCat(type) {
             const action = prompt("Type 'add' to create a new category or 'remove' to delete one:").toLowerCase();
             if (action === 'add') {
