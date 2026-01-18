@@ -133,11 +133,11 @@
         <option value="10">October</option><option value="11">November</option><option value="12">December</option>
     </select>
 
-    <div class="tab-bar">
+    <nav class="tab-bar">
         <button class="tab active" id="tab-budget" onclick="switchTab('budget')">Budget</button>
         <button class="tab" id="tab-invest" onclick="switchTab('invest')">Investments</button>
         <button class="tab" id="tab-liab" onclick="switchTab('liab')">Liabilities</button>
-    </div>
+    </nav>
 
     <div id="view-budget">
         <details class="budget-details" open id="details-inc">
@@ -256,7 +256,9 @@
                   headerBox = document.getElementById('header-content');
             
             const selectedMonth = document.getElementById('month-filter').value;
-            incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; liabL.innerHTML = ''; catS.innerHTML = '';
+            
+            // Clean slate for dynamic content
+            let incHTML = '', expHTML = '', txnHTML = '', invHTML = '', liabHTML = '', catSHTML = '';
 
             const monthTxns = txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth);
             document.getElementById('txn-count').innerText = `${monthTxns.length} items`;
@@ -294,12 +296,12 @@
 
             let totalIncRem = 0;
             planInc.forEach((p, idx) => { 
-                catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
+                catSHTML += `<option value="${p.name}">${p.name}</option>`; 
                 const catTotal = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + t.amt, 0);
                 const remaining = p.amt - catTotal;
                 totalIncRem += remaining;
                 const statusClass = remaining < 0 ? 'pos' : '';
-                incL.innerHTML += `<div class="budget-row">
+                incHTML += `<div class="budget-row">
                     <span style="font-weight:500;">${p.name}</span>
                     <input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();">
                     <span class="${statusClass}" style="text-align:right; font-weight:bold;">$${Math.abs(remaining).toLocaleString()}</span>
@@ -309,12 +311,12 @@
 
             let totalExpRem = 0;
             planExp.forEach((p, idx) => { 
-                catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
+                catSHTML += `<option value="${p.name}">${p.name}</option>`; 
                 const catSpent = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + Math.abs(t.amt), 0);
                 const remaining = p.amt - catSpent;
                 totalExpRem += remaining;
                 const statusClass = remaining < 0 ? 'neg' : '';
-                expL.innerHTML += `<div class="budget-row">
+                expHTML += `<div class="budget-row">
                     <span style="font-weight:500;">${p.name}</span>
                     <input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();">
                     <span class="${statusClass}" style="text-align:right; font-weight:bold;">$${Math.abs(remaining).toLocaleString()}</span>
@@ -322,13 +324,27 @@
             });
             document.getElementById('sum-exp-text').innerHTML = `EXPENSES: $${budExpT.toLocaleString()} <span style="float:right; opacity:0.7; font-weight:normal;">Rem: $${totalExpRem.toLocaleString()}</span>`;
 
-            assets.forEach((a, idx) => invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
-            liabs.forEach((l, idx) => liabL.innerHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" style="width:100px;" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
+            assets.forEach((a, idx) => invHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
+            liabs.forEach((l, idx) => liabHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" style="width:100px;" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
             
             monthTxns.forEach((t) => {
                 const globalIdx = txns.findIndex(x => x.id === t.id);
-                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;"><div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div><div style="display:flex; align-items:center; gap:10px;"><div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="editTxn(${globalIdx})">✎</button></div></div>`;
+                txnHTML += `<article class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
+                    <div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div>
+                        <button class="del-btn" onclick="editTxn(${globalIdx})">✎</button>
+                    </div>
+                </article>`;
             });
+
+            // Single DOM write per section
+            incL.innerHTML = incHTML;
+            expL.innerHTML = expHTML;
+            txnL.innerHTML = txnHTML;
+            invL.innerHTML = invHTML;
+            liabL.innerHTML = liabHTML;
+            catS.innerHTML = catSHTML;
         }
 
         /* ACTIONS */
@@ -384,7 +400,9 @@
             const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, aV = parseFloat(document.getElementById('amt').value); 
             if(!d || isNaN(aV)) return; 
             const isInc = planInc.some(p => p.name === c); 
-            txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(aV) : -Math.abs(aV) }); 
+            // Improvement: Robust UUID
+            const newId = (typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : Date.now();
+            txns.unshift({ id: newId, desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(aV) : -Math.abs(aV) }); 
             document.getElementById('desc').value = ''; 
             document.getElementById('amt').value = ''; 
             saveInternal(); 
@@ -450,20 +468,28 @@
             const monthlyRate = (annualRate / 100) / 12;
             const totalMonths = years * 12;
             
-            // Standard Amortization Formula
-            const monthlyPmt = years > 0 ? P * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1) : 0;
+            // Improvement: Robust math checks for payment formula
+            let monthlyPmt = 0;
+            if (years > 0) {
+                const ratePower = Math.pow(1 + monthlyRate, totalMonths);
+                // Safety check for Infinity or very high rates
+                if (isFinite(ratePower) && ratePower > 1) {
+                   monthlyPmt = P * (monthlyRate * ratePower) / (ratePower - 1);
+                } else {
+                   monthlyPmt = (P / totalMonths) + (P * monthlyRate);
+                }
+            }
 
             const yearlyInt = P * (annualRate / 100);
             document.getElementById('res-day').innerText = `$${(yearlyInt / 365).toFixed(2)}`;
             document.getElementById('res-mo').innerText = `$${(yearlyInt / 12).toFixed(2)}`;
             document.getElementById('res-yr').innerText = `$${yearlyInt.toFixed(2)}`;
             
-            if (years > 0) {
+            if (years > 0 && monthlyPmt > 0) {
                 document.getElementById('res-pmt').innerText = `$${monthlyPmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                 document.getElementById('res-bi').innerText = `$${(monthlyPmt * 12 / 26).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                 document.getElementById('res-total-int').innerText = `$${((monthlyPmt * totalMonths) - P).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-                // Populate Amortization Table
                 let currentBal = P;
                 let html = "";
                 for (let i = 1; i <= totalMonths; i++) {
@@ -471,13 +497,13 @@
                     const principalPortion = monthlyPmt - interestPortion;
                     currentBal -= principalPortion;
 
-                    // Row generation
                     html += `<tr>
                         <td>${i}</td>
                         <td>$${principalPortion.toFixed(2)}</td>
                         <td>$${interestPortion.toFixed(2)}</td>
-                        <td style="color:var(--m-teal)">$${Math.abs(currentBal).toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                        <td style="color:var(--m-teal)">$${Math.max(0, currentBal).toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
                     </tr>`;
+                    if (currentBal <= 0) break;
                 }
                 tableBody.innerHTML = html;
             } else {
@@ -489,5 +515,3 @@
     </script>
 </body>
 </html>
-
-
