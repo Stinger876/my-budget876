@@ -261,9 +261,13 @@
             const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), 
                   txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), 
                   liabL = document.getElementById('liab-main-list'), catS = document.getElementById('cat-select'),
-                  headerBox = document.getElementById('header-content');
+                  headerBox = document.getElementById('header-content'),
+                  monthFilter = document.getElementById('month-filter');
             
-            const selectedMonth = document.getElementById('month-filter').value;
+            // Toggle visibility of the month filter based on the active tab
+            monthFilter.style.display = (activeTab === 'budget') ? 'block' : 'none';
+
+            const selectedMonth = monthFilter.value;
             let incHTML = '', expHTML = '', txnHTML = '', invHTML = '', liabHTML = '', catSHTML = '';
 
             const monthTxns = txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth);
@@ -452,7 +456,6 @@
                 return;
             }
 
-            // Standard Monthly Payment Formula
             const monthlyRate = (annualRate / 100) / 12;
             const totalMonths = years * 12;
             let monthlyPmt = 0;
@@ -462,10 +465,8 @@
                 monthlyPmt = isFinite(ratePower) && ratePower > 1 ? P * (monthlyRate * ratePower) / (ratePower - 1) : (P / totalMonths) + (P * monthlyRate);
             }
 
-            // UI Label updates
             document.getElementById('amort-period-label').innerText = isAccel ? "Period (2w)" : "Month";
 
-            // Static interest displays
             const yearlyInt = P * (annualRate / 100);
             document.getElementById('res-day').innerText = `$${(yearlyInt / 365).toFixed(2)}`;
             document.getElementById('res-mo').innerText = `$${(yearlyInt / 12).toFixed(2)}`;
@@ -474,22 +475,18 @@
             if (years > 0 && monthlyPmt > 0) {
                 document.getElementById('res-pmt').innerText = `$${monthlyPmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                 
-                // Toggle Logic for Bi-Weekly
                 const biWeeklyPmt = isAccel ? (monthlyPmt / 2) : (monthlyPmt * 12 / 26);
                 document.getElementById('res-bi').innerText = `$${biWeeklyPmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                 
-                // Amortization Table Logic
                 let currentBal = P;
                 let html = "";
                 
-                // Define payment frequency for the table
                 const periodsPerYear = isAccel ? 26 : 12;
                 const periodicRate = (annualRate / 100) / periodsPerYear;
                 const periodicPmt = isAccel ? biWeeklyPmt : monthlyPmt;
                 let totalInterestPaid = 0;
                 let periodCounter = 1;
 
-                // Loop until balance is zero or safe break (max 100 years of periods)
                 while (currentBal > 0.01 && periodCounter <= (years * periodsPerYear * 2)) {
                     const interestPortion = currentBal * periodicRate;
                     let principalPortion = periodicPmt - interestPortion;
@@ -503,7 +500,7 @@
                         <td>${periodCounter}</td>
                         <td>$${principalPortion.toFixed(2)}</td>
                         <td>$${interestPortion.toFixed(2)}</td>
-                        <td style="color:var(--m-teal)">$${Math.max(0, currentBal).toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                        <td style="color:var(--m-teal)">$${Math.max(0, currentBal).toLocaleString(undefined, {maximumDigits: 0})}</td>
                     </tr>`;
                     
                     periodCounter++;
@@ -516,3 +513,4 @@
     </script>
 </body>
 </html>
+
