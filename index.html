@@ -51,7 +51,7 @@
         .btn-mgmt { flex: 1; background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; display: flex; align-items: center; justify-content: center; }
         .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 16px; border-radius: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         .btn-add-cat { background: none; border: 1px dashed #555; color: #888; width: 100%; padding: 10px; border-radius: 8px; margin-top: 10px; cursor: pointer; font-size: 12px; }
-        .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
+        .del-btn { color: var(--m-teal); background: none; border: none; font-size: 18px; cursor: pointer; opacity: 0.8; }
 
         /* Pulse Save */
         @keyframes pulse-save-alt {
@@ -71,6 +71,10 @@
         .calc-item { background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #444; text-align: center; }
         .calc-label { font-size: 10px; text-transform: uppercase; opacity: 0.7; }
         .calc-val { font-weight: bold; color: var(--m-orange); font-size: 13px; }
+        
+        details summary { cursor: pointer; padding: 10px; background: #2a2a2a; border-radius: 8px; font-weight: bold; margin-bottom: 5px; list-style: none; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
+        details summary::-webkit-details-marker { display: none; }
+        details[open] summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-color: var(--m-teal); }
     </style>
 </head>
 <body>
@@ -147,9 +151,12 @@
             <input type="text" id="desc" placeholder="Merchant">
             <select id="cat-select" style="margin: 5px 0;"></select>
             <div style="display:flex; gap:10px;"><input type="date" id="txn-date" style="flex:1"><input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1"></div>
-            <button class="btn-track" onclick="addTransaction()">Track Expense</button>
+            <button class="btn-track" onclick="addTransaction()">Track Transaction</button>
         </div>
-        <div id="txn-list"></div>
+        <details>
+            <summary>History / Transactions <span id="txn-count" style="font-size:12px; opacity:0.6;">0 items</span></summary>
+            <div id="txn-list" style="background: rgba(0,0,0,0.2); padding: 10px; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></div>
+        </details>
     </div>
 
     <div id="view-invest" style="display:none;"><div class="card" id="invest-main-list"></div><button class="btn-track" onclick="addItem('assets')">+ New Asset Account</button></div>
@@ -165,6 +172,7 @@
             </div>
             <div class="calc-grid"><div class="calc-item"><div class="calc-label">Daily</div><div id="res-day" class="calc-val">$0.00</div></div><div class="calc-item"><div class="calc-label">Monthly</div><div id="res-mo" class="calc-val">$0.00</div></div><div class="calc-item"><div class="calc-label">Yearly</div><div id="res-yr" class="calc-val">$0.00</div></div></div>
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #444;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span style="font-size:12px; opacity:0.8;">Est. Bi-weekly Payment:</span><span id="res-bi" style="font-weight:bold; color:var(--m-teal);">$0.00</span></div>
                 <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span style="font-size:12px; opacity:0.8;">Est. Monthly Payment:</span><span id="res-pmt" style="font-weight:bold; color:var(--m-teal);">$0.00</span></div>
                 <div style="display:flex; justify-content:space-between;"><span style="font-size:12px; opacity:0.8;">Total Interest over Term:</span><span id="res-total-int" style="font-weight:bold; color:var(--m-red);">$0.00</span></div>
             </div>
@@ -223,21 +231,30 @@
             const selectedMonth = document.getElementById('month-filter').value;
             incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; liabL.innerHTML = ''; catS.innerHTML = '';
 
-            // This is the core fix: Ensure ALL math uses only current month data
             const monthTxns = txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth);
+            document.getElementById('txn-count').innerText = `${monthTxns.length} items`;
 
-            let actExp = 0, budIncT = 0, budExpT = 0, totA = 0, totL = 0;
+            let actExp = 0, actInc = 0, budIncT = 0, budExpT = 0, totA = 0, totL = 0;
             
-            monthTxns.forEach(t => { if(t.amt < 0) actExp += Math.abs(t.amt); });
+            monthTxns.forEach(t => { 
+                if(t.amt < 0) actExp += Math.abs(t.amt); 
+                else actInc += t.amt;
+            });
             
             budIncT = planInc.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
             budExpT = planExp.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
+
+            const cashFlow = actInc - actExp;
 
             const headerMain = document.getElementById('main-header');
             if(activeTab === 'budget') {
                 headerMain.className = "budget-header bg-spending";
                 const pSpent = budExpT > 0 ? Math.round((actExp / budExpT) * 100) : 0;
-                headerBox.innerHTML = `<div class="header-main">Monthly Spending</div><div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}</div><div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>`;
+                headerBox.innerHTML = `
+                    <div class="header-main">Monthly Spending</div>
+                    <div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}</div>
+                    <div style="font-size: 12px; margin-top:5px; opacity:0.9;">Cash Flow: <span class="${cashFlow >= 0 ? 'pos' : 'neg'}">$${cashFlow.toLocaleString()}</span></div>
+                    <div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>`;
             } else if(activeTab === 'invest') {
                 headerMain.className = "budget-header bg-invest";
                 assets.forEach(a => totA += a.amt); liabs.forEach(l => totL += l.amt);
@@ -248,7 +265,6 @@
                 headerBox.innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totL.toLocaleString()}</div>`;
             }
 
-            // Category rows populated with ONLY current month calculations
             planInc.forEach((p, idx) => { 
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
                 const catTotal = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + t.amt, 0);
@@ -270,7 +286,7 @@
             
             monthTxns.forEach((t) => {
                 const globalIdx = txns.findIndex(x => x.id === t.id);
-                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;"><div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div><div style="display:flex; align-items:center; gap:10px;"><div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTxn(${globalIdx})">✕</button></div></div>`;
+                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;"><div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div><div style="display:flex; align-items:center; gap:10px;"><div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="editTxn(${globalIdx})">✎</button></div></div>`;
             });
         }
 
@@ -320,7 +336,31 @@
         }
 
         function switchTab(t) { activeTab = t; ['budget', 'invest', 'liab'].forEach(tab => { document.getElementById(`tab-${tab}`).className = (t === tab) ? 'tab active' : 'tab'; document.getElementById(`view-${tab}`).style.display = (t === tab) ? 'block' : 'none'; }); updateUI(); }
-        function addTransaction() { const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, aV = parseFloat(document.getElementById('amt').value); if(!d || isNaN(aV)) return; const isInc = planInc.some(p => p.name === c); txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(aV) : -Math.abs(aV) }); document.getElementById('desc').value = ''; document.getElementById('amt').value = ''; saveInternal(); }
+        
+        function addTransaction() { 
+            const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, aV = parseFloat(document.getElementById('amt').value); 
+            if(!d || isNaN(aV)) return; 
+            const isInc = planInc.some(p => p.name === c); 
+            txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(aV) : -Math.abs(aV) }); 
+            document.getElementById('desc').value = ''; 
+            document.getElementById('amt').value = ''; 
+            saveInternal(); 
+        }
+
+        function editTxn(idx) {
+            const t = txns[idx];
+            const action = prompt(`Edit "${t.desc}"?\nType 'delete' to remove, or enter a new amount to change value:`, Math.abs(t.amt));
+            if (action === null) return;
+            if (action.toLowerCase() === 'delete') {
+                if(confirm("Delete this transaction?")) txns.splice(idx, 1);
+            } else {
+                const newAmt = parseFloat(action);
+                if (!isNaN(newAmt)) {
+                    txns[idx].amt = t.amt < 0 ? -Math.abs(newAmt) : Math.abs(newAmt);
+                }
+            }
+            saveInternal();
+        }
         
         function addCustomCat(type) {
             const action = prompt("Type 'add' to create a new category or 'remove' to delete one:").toLowerCase();
@@ -343,22 +383,41 @@
         }
 
         function addItem(key) { const n = prompt("Name:"); if(n) { if(key==='assets') assets.push({name:n, amt:0}); else liabs.push({name:n, amt:0}); saveInternal(); } }
-        function deleteTxn(idx) { txns.splice(idx,1); saveInternal(); }
         function clearAllData() { if(confirm("Reset everything?")) { localStorage.clear(); location.reload(); } }
+        
         function calcInterest() {
-            const P = parseFloat(document.getElementById('calc-bal').value) || 0, rate = parseFloat(document.getElementById('calc-rate').value) || 0, years = parseFloat(document.getElementById('calc-term').value) || 0;
-            if (P <= 0 || rate <= 0) return;
+            const P = parseFloat(document.getElementById('calc-bal').value) || 0, 
+                  rate = parseFloat(document.getElementById('calc-rate').value) || 0, 
+                  years = parseFloat(document.getElementById('calc-term').value) || 0;
+            
+            if (P <= 0 || rate <= 0) {
+                document.getElementById('res-day').innerText = "$0.00";
+                document.getElementById('res-mo').innerText = "$0.00";
+                document.getElementById('res-yr').innerText = "$0.00";
+                document.getElementById('res-pmt').innerText = "$0.00";
+                document.getElementById('res-bi').innerText = "$0.00";
+                document.getElementById('res-total-int').innerText = "$0.00";
+                return;
+            }
+
             const yInt = P * (rate / 100);
             document.getElementById('res-day').innerText = `$${(yInt / 365).toFixed(2)}`;
             document.getElementById('res-mo').innerText = `$${(yInt / 12).toFixed(2)}`;
             document.getElementById('res-yr').innerText = `$${yInt.toFixed(2)}`;
+            
             if (years > 0) {
                 const r = (rate / 100) / 12, n = years * 12;
                 const pmt = P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
                 document.getElementById('res-pmt').innerText = `$${pmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                document.getElementById('res-bi').innerText = `$${(pmt * 12 / 26).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                 document.getElementById('res-total-int').innerText = `$${((pmt * n) - P).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            } else {
+                document.getElementById('res-pmt').innerText = "$0.00";
+                document.getElementById('res-bi').innerText = "$0.00";
+                document.getElementById('res-total-int').innerText = "$0.00";
             }
         }
     </script>
 </body>
 </html>
+
