@@ -1,364 +1,327 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v20.9</title>
-    <style>
-        :root { 
-            --m-blue: #0a192f; 
-            --m-teal: #17e9e1; 
-            --m-bg: #121212; 
-            --m-card: #1e1e1e; 
-            --m-red: #ff5252; 
-            --m-green: #2ecc71; 
-            --m-header-green: #1b4d3e; 
-            --m-orange: #ff9f43; 
-            --m-text: #ffffff; 
-        }
-        body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
-        
-        /* Modals */
-        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px 0; }
-        .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; text-align: center; }
-        
-        /* Headers */
-        .budget-header { color: white; padding: 20px; border-radius: 16px; margin-bottom: 12px; text-align: center; position: relative; min-height: 100px; display: flex; flex-direction: column; justify-content: center; }
-        .bg-spending { background: var(--m-header-green); border: 1px solid var(--m-green); }
-        .bg-invest { background: var(--m-blue); border: 1px solid var(--m-teal); }
-        .bg-liab { background: #3d2b1f; border: 1px solid var(--m-orange); }
-        
-        .header-meta { font-size: 10px; opacity: 0.7; margin-bottom: 8px; display: flex; justify-content: space-between; font-family: monospace; position: absolute; top: 10px; left: 20px; right: 20px; }
-        .header-main { font-size: 1.4rem; font-weight: 800; margin-top: 15px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Monarch-Lite v20.10</title>
 
-        /* Navigation Tabs */
-        .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; border: none; opacity: 0.6; }
-        .tab.active { background: var(--m-teal) !important; color: var(--m-blue) !important; opacity: 1; }
+<style>
+:root {
+    --m-blue:#0a192f;
+    --m-teal:#17e9e1;
+    --m-bg:#121212;
+    --m-card:#1e1e1e;
+    --m-red:#ff5252;
+    --m-green:#2ecc71;
+    --m-header-green:#1b4d3e;
+    --m-orange:#ff9f43;
+    --m-text:#ffffff;
+}
+body {
+    font-family:Inter, sans-serif;
+    background:var(--m-bg);
+    color:var(--m-text);
+    margin:0;
+    padding:10px;
+    padding-bottom:80px;
+}
+.budget-header {
+    padding:20px;
+    border-radius:16px;
+    margin-bottom:12px;
+    text-align:center;
+    position:relative;
+    min-height:100px;
+}
+.bg-spending { background:var(--m-header-green); border:1px solid var(--m-green); }
+.bg-invest { background:var(--m-blue); border:1px solid var(--m-teal); }
+.bg-liab { background:#3d2b1f; border:1px solid var(--m-orange); }
 
-        /* Cards & Rows */
-        .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
-        .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
-        .budget-row { display: grid; grid-template-columns: 10px 1fr 80px 70px; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
-        
-        .wizard-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
-        .wizard-row span { text-align: left; flex: 1; font-size: 14px; }
-        .wizard-row input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; }
+.header-meta {
+    font-size:10px;
+    opacity:.7;
+    display:flex;
+    justify-content:space-between;
+    position:absolute;
+    top:10px; left:20px; right:20px;
+    font-family:monospace;
+}
+.header-main { font-size:1.4rem; font-weight:800; margin-top:20px; }
 
-        /* Buttons & Inputs */
-        input, select { width: 100%; padding: 10px; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
-        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
-        .btn-mgmt { flex: 1; background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; display: flex; align-items: center; justify-content: center; }
-        .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 16px; border-radius: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
-        .btn-add-cat { background: none; border: 1px dashed #555; color: #888; width: 100%; padding: 10px; border-radius: 8px; margin-top: 10px; cursor: pointer; font-size: 12px; }
-        .del-btn { color: var(--m-red); background: none; border: none; font-size: 18px; cursor: pointer; }
+.tab-bar { display:flex; gap:5px; margin-bottom:15px; }
+.tab {
+    flex:1; padding:12px; border-radius:10px;
+    background:#222; color:white; font-weight:bold;
+    border:none; opacity:.6;
+}
+.tab.active { background:var(--m-teal); color:var(--m-blue); opacity:1; }
 
-        /* Pulse Save */
-        @keyframes pulse-save-alt {
-            0% { background: #333; color: white; box-shadow: 0 0 0 0 rgba(23, 233, 225, 0); }
-            50% { background: var(--m-teal); color: var(--m-blue); box-shadow: 0 0 15px rgba(23, 233, 225, 0.5); }
-            100% { background: #333; color: white; box-shadow: 0 0 0 0 rgba(23, 233, 225, 0); }
-        }
-        .pulse { animation: pulse-save-alt 2s infinite ease-in-out; border-color: var(--m-teal) !important; }
+.card {
+    background:var(--m-card);
+    padding:15px;
+    border-radius:16px;
+    margin-bottom:15px;
+}
 
-        .spending-bar-bg { background: rgba(255,255,255,0.1); height: 12px; border-radius: 10px; margin: 10px 0; overflow: hidden; position: relative; width: 100%; }
-        .spending-bar-fill { height: 100%; width: 0%; transition: width 0.5s; }
-        .pos { color: var(--m-green); }
-        .neg { color: var(--m-red); }
+.cf-row, .budget-row {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 0;
+    border-bottom:1px solid #2a2a2a;
+    font-size:14px;
+}
+.budget-row input { width:80px; }
 
-        /* Calc */
-        .calc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .calc-item { background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #444; text-align: center; }
-        .calc-label { font-size: 10px; text-transform: uppercase; opacity: 0.7; }
-        .calc-val { font-weight: bold; color: var(--m-orange); font-size: 13px; }
-    </style>
+input, select {
+    width:100%;
+    padding:10px;
+    background:#2a2a2a;
+    border:1px solid #333;
+    color:white;
+    border-radius:8px;
+}
+
+.btn-track {
+    width:100%;
+    padding:16px;
+    margin-top:10px;
+    background:var(--m-teal);
+    color:var(--m-blue);
+    border:none;
+    border-radius:12px;
+    font-weight:800;
+}
+
+.btn-mgmt {
+    flex:1;
+    background:#333;
+    border:1px solid #555;
+    padding:12px;
+    border-radius:12px;
+    color:white;
+    font-weight:bold;
+}
+
+.btn-danger {
+    width:100%;
+    background:#3d1010;
+    color:var(--m-red);
+    border:1px solid var(--m-red);
+    padding:16px;
+    border-radius:12px;
+    font-weight:800;
+}
+
+@keyframes pulse {
+    0%{box-shadow:0 0 0 rgba(23,233,225,0)}
+    50%{box-shadow:0 0 15px rgba(23,233,225,.6)}
+    100%{box-shadow:0 0 0 rgba(23,233,225,0)}
+}
+.pulse { animation:pulse 2s infinite; }
+
+.pos{color:var(--m-green)}
+.neg{color:var(--m-red)}
+</style>
 </head>
+
 <body>
 
-    <div id="startup-modal">
-        <div class="modal-card" id="initial-choice">
-            <h2 style="color:var(--m-teal); margin-top:0;">Welcome</h2>
-            <button class="btn-track" onclick="closeModal()">Continue Session</button>
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <label for="sync-upload-modal" class="btn-mgmt">Import File</label>
-                <button class="btn-mgmt" onclick="showWizard()" style="color:var(--m-red);">Start Fresh</button>
-            </div>
-            <input type="file" id="sync-upload-modal" accept=".json" style="display:none" onchange="syncFromFile(event)">
-        </div>
-        
-        <div class="modal-card" id="wizard-view" style="display:none;">
-            <h3 style="margin-top:0;">Setup Categories</h3>
-            <div id="wizard-list">
-                <p style="font-size: 11px; color: var(--m-green); font-weight:bold; text-align:left; margin-bottom:5px;">INCOME</p>
-                <div class="wizard-row"><span>💵 Paychecks</span><input type="checkbox" checked data-cat="💵 Paychecks" data-type="inc"></div>
-                <div class="wizard-row"><span>💸 Interest</span><input type="checkbox" checked data-cat="💸 Interest" data-type="inc"></div>
-                <div class="wizard-row"><span>💰 Other Income</span><input type="checkbox" checked data-cat="💰 Other Income" data-type="inc"></div>
-                <div class="wizard-row"><span>🤑 RogersWE Cash</span><input type="checkbox" checked data-cat="🤑 RogersWE Cash" data-type="inc"></div>
-                <p style="font-size: 11px; color: var(--m-teal); margin-top: 15px; font-weight:bold; text-align:left; margin-bottom:5px;">EXPENSES</p>
-                <div class="wizard-row"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="🛒 Groceries" data-type="exp"></div>
-                <div class="wizard-row"><span>🏠 Mortgage</span><input type="checkbox" checked data-cat="🏠 Mortgage" data-type="exp"></div>
-                <div class="wizard-row"><span>🏢 Parking & Tolls</span><input type="checkbox" checked data-cat="🏢 Parking & Tolls" data-type="exp"></div>
-                <div class="wizard-row"><span>💧 Water</span><input type="checkbox" checked data-cat="💧 Water" data-type="exp"></div>
-                <div class="wizard-row"><span>⚡ Gas & Electric</span><input type="checkbox" checked data-cat="⚡ Gas & Electric" data-type="exp"></div>
-                <div class="wizard-row"><span>🌐 Internet & Cable</span><input type="checkbox" checked data-cat="🌐 Internet & Cable" data-type="exp"></div>
-                <div class="wizard-row"><span>📱 Phone</span><input type="checkbox" checked data-cat="📱 Phone" data-type="exp"></div>
-                <div class="wizard-row"><span>👶 Child Care</span><input type="checkbox" checked data-cat="👶 Child Care" data-type="exp"></div>
-            </div>
-            <button class="btn-track" onclick="finishWizard()">Finish Setup</button>
-        </div>
+<div class="budget-header bg-spending" id="main-header">
+    <div class="header-meta">
+        <span id="meta-file"></span>
+        <span id="meta-saved"></span>
     </div>
+    <div id="header-content"></div>
+</div>
 
-    <div class="budget-header bg-spending" id="main-header">
-        <div class="header-meta">
-            <span id="meta-file">File: Browser Storage</span>
-            <span id="meta-saved">Last Saved: Never</span>
-        </div>
-        <div id="header-content"></div>
-    </div>
+<select id="month-filter" onchange="updateUI()">
+    <option value="01">January</option><option value="02">February</option>
+    <option value="03">March</option><option value="04">April</option>
+    <option value="05">May</option><option value="06">June</option>
+    <option value="07">July</option><option value="08">August</option>
+    <option value="09">September</option><option value="10">October</option>
+    <option value="11">November</option><option value="12">December</option>
+</select>
 
-    <select id="month-filter" onchange="updateUI()" style="margin-bottom:10px;">
-        <option value="01">January</option><option value="02">February</option><option value="03">March</option>
-        <option value="04">April</option><option value="05">May</option><option value="06">June</option>
-        <option value="07">July</option><option value="08">August</option><option value="09">September</option>
-        <option value="10">October</option><option value="11">November</option><option value="12">December</option>
-    </select>
+<div class="tab-bar">
+    <button class="tab active" onclick="switchTab('budget')">Budget</button>
+    <button class="tab" onclick="switchTab('invest')">Investments</button>
+    <button class="tab" onclick="switchTab('liab')">Liabilities</button>
+</div>
 
-    <div class="tab-bar">
-        <button class="tab active" id="tab-budget" onclick="switchTab('budget')">Budget</button>
-        <button class="tab" id="tab-invest" onclick="switchTab('invest')">Investments</button>
-        <button class="tab" id="tab-liab" onclick="switchTab('liab')">Liabilities</button>
-    </div>
-
-    <div id="view-budget">
-        <div class="card">
-            <div style="font-size: 11px; color: var(--m-green); font-weight: bold; margin-bottom: 8px;">INCOME SOURCES</div>
-            <div id="income-list"></div>
-            <button class="btn-add-cat" onclick="addCustomCat('inc')">+ Add/Remove Income Category</button>
-            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;"><span>Total Budget Income</span><span id="total-planned-inc" class="pos">$0</span></div>
-        </div>
-        <div class="card">
-            <div style="font-size: 11px; color: var(--m-red); font-weight: bold; margin-bottom: 8px;">EXPENSE CATEGORIES</div>
-            <div id="expense-list"></div>
-            <button class="btn-add-cat" onclick="addCustomCat('exp')">+ Add/Remove Expense Category</button>
-            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;"><span>Total Budget Expenses</span><span id="total-planned-exp" class="neg">$0</span></div>
-        </div>
-        <div class="card">
-            <b>Add Transaction</b>
-            <input type="text" id="desc" placeholder="Merchant">
-            <select id="cat-select" style="margin: 5px 0;"></select>
-            <div style="display:flex; gap:10px;"><input type="date" id="txn-date" style="flex:1"><input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1"></div>
-            <button class="btn-track" onclick="addTransaction()">Track Expense</button>
-        </div>
-        <div id="txn-list"></div>
-    </div>
-
-    <div id="view-invest" style="display:none;"><div class="card" id="invest-main-list"></div><button class="btn-track" onclick="addItem('assets')">+ New Asset Account</button></div>
-
-    <div id="view-liab" style="display:none;">
-        <div class="card" id="liab-main-list"></div>
-        <button class="btn-track" style="background:var(--m-orange); color:var(--m-blue);" onclick="addItem('liabs')">+ New Liability</button>
-        <div class="card" style="margin-top: 20px; border: 1px solid var(--m-orange);">
-            <b style="color: var(--m-orange);">Loan & Mortgage Calculator</b>
-            <div style="margin-top:10px;">
-                <input type="text" inputmode="decimal" id="calc-bal" placeholder="Loan Amount ($)" oninput="calcInterest()">
-                <div style="display:flex; gap:10px; margin-top:5px;"><input type="text" inputmode="decimal" id="calc-rate" placeholder="APR %" style="flex:1" oninput="calcInterest()"><input type="text" inputmode="decimal" id="calc-term" placeholder="Term (Years)" style="flex:1" oninput="calcInterest()"></div>
-            </div>
-            <div class="calc-grid"><div class="calc-item"><div class="calc-label">Daily</div><div id="res-day" class="calc-val">$0.00</div></div><div class="calc-item"><div class="calc-label">Monthly</div><div id="res-mo" class="calc-val">$0.00</div></div><div class="calc-item"><div class="calc-label">Yearly</div><div id="res-yr" class="calc-val">$0.00</div></div></div>
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #444;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span style="font-size:12px; opacity:0.8;">Est. Monthly Payment:</span><span id="res-pmt" style="font-weight:bold; color:var(--m-teal);">$0.00</span></div>
-                <div style="display:flex; justify-content:space-between;"><span style="font-size:12px; opacity:0.8;">Total Interest over Term:</span><span id="res-total-int" style="font-weight:bold; color:var(--m-red);">$0.00</span></div>
-            </div>
-        </div>
+<div id="view-budget">
+    <div class="card">
+        <b>Income</b>
+        <div id="income-list"></div>
     </div>
 
     <div class="card">
-        <b>Data Management</b>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button id="save-btn" class="btn-mgmt" onclick="exportToFile()">💾 Save</button>
-            <label for="sync-upload-main" class="btn-mgmt">🔄 Import</label>
-            <input type="file" id="sync-upload-main" accept=".json" style="display:none" onchange="syncFromFile(event)">
-        </div>
+        <b>Expenses</b>
+        <div id="expense-list"></div>
     </div>
-    <button class="btn-danger" onclick="clearAllData()">🗑️ Reset All Data</button>
 
-    <script>
-        let txns = JSON.parse(localStorage.getItem('m_txns')) || [];
-        let planInc = JSON.parse(localStorage.getItem('m_p_inc')) || [];
-        let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [];
-        let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
-        let liabs = JSON.parse(localStorage.getItem('m_liabs')) || [];
-        let curFile = localStorage.getItem('m_cur_file') || 'Browser Storage';
-        let activeTab = 'budget';
+    <div class="card">
+        <b>Add Transaction</b>
+        <input id="desc" placeholder="Description">
+        <select id="cat-select"></select>
+        <div style="display:flex; gap:10px;">
+            <input type="date" id="txn-date">
+            <input id="amt" type="number" placeholder="Amount">
+        </div>
+        <button class="btn-track" onclick="addTransaction()">Track</button>
+    </div>
 
-        window.onload = () => {
-            const today = new Date();
-            document.getElementById('month-filter').value = String(today.getMonth() + 1).padStart(2, '0');
-            document.getElementById('txn-date').valueAsDate = today;
-            updateMetaHeader();
-            updateUI();
-        };
+    <div id="txn-list"></div>
+</div>
 
-        function updateMetaHeader() {
-            document.getElementById('meta-saved').innerText = `Last Saved: ${localStorage.getItem('m_last_saved') || 'Never'}`;
-            document.getElementById('meta-file').innerText = `File: ${curFile}`;
-        }
+<div id="view-invest" style="display:none">
+    <div class="card" id="invest-main-list"></div>
+</div>
 
-        function saveInternal() {
-            localStorage.setItem('m_txns', JSON.stringify(txns));
-            localStorage.setItem('m_p_inc', JSON.stringify(planInc));
-            localStorage.setItem('m_p_exp', JSON.stringify(planExp));
-            localStorage.setItem('m_assets', JSON.stringify(assets));
-            localStorage.setItem('m_liabs', JSON.stringify(liabs));
-            localStorage.setItem('m_cur_file', curFile);
-            document.getElementById('save-btn').classList.add('pulse');
-            updateUI();
-        }
+<div id="view-liab" style="display:none">
+    <div class="card" id="liab-main-list"></div>
+</div>
 
-        function updateUI() {
-            const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), 
-                  txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), 
-                  liabL = document.getElementById('liab-main-list'), catS = document.getElementById('cat-select'),
-                  headerBox = document.getElementById('header-content');
-            
-            const selectedMonth = document.getElementById('month-filter').value;
-            incL.innerHTML = ''; expL.innerHTML = ''; txnL.innerHTML = ''; invL.innerHTML = ''; liabL.innerHTML = ''; catS.innerHTML = '';
+<div class="card">
+    <button id="save-btn" class="btn-mgmt" onclick="exportToFile()">💾 Save</button>
+</div>
 
-            // This is the core fix: Ensure ALL math uses only current month data
-            const monthTxns = txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth);
+<button class="btn-danger" onclick="clearAllData()">Reset All</button>
 
-            let actExp = 0, budIncT = 0, budExpT = 0, totA = 0, totL = 0;
-            
-            monthTxns.forEach(t => { if(t.amt < 0) actExp += Math.abs(t.amt); });
-            
-            budIncT = planInc.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
-            budExpT = planExp.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
+<script>
+let txns = JSON.parse(localStorage.getItem('m_txns')) || [];
+let planInc = JSON.parse(localStorage.getItem('m_p_inc')) || [];
+let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [];
+let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
+let liabs = JSON.parse(localStorage.getItem('m_liabs')) || [];
+let curFile = localStorage.getItem('m_cur_file') || 'Browser Storage';
+let activeTab='budget';
 
-            const headerMain = document.getElementById('main-header');
-            if(activeTab === 'budget') {
-                headerMain.className = "budget-header bg-spending";
-                const pSpent = budExpT > 0 ? Math.round((actExp / budExpT) * 100) : 0;
-                headerBox.innerHTML = `<div class="header-main">Monthly Spending</div><div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}</div><div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>`;
-            } else if(activeTab === 'invest') {
-                headerMain.className = "budget-header bg-invest";
-                assets.forEach(a => totA += a.amt); liabs.forEach(l => totL += l.amt);
-                headerBox.innerHTML = `<div class="header-main">Net Worth</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-teal)">$${(totA - totL).toLocaleString()}</div>`;
-            } else {
-                headerMain.className = "budget-header bg-liab";
-                liabs.forEach(l => totL += l.amt);
-                headerBox.innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totL.toLocaleString()}</div>`;
-            }
+window.onload=()=>{
+    const d=new Date();
+    month-filter.value=String(d.getMonth()+1).padStart(2,'0');
+    txn-date.valueAsDate=d;
+    updateUI();
+};
 
-            // Category rows populated with ONLY current month calculations
-            planInc.forEach((p, idx) => { 
-                catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
-                const catTotal = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + t.amt, 0);
-                const remaining = p.amt - catTotal;
-                incL.innerHTML += `<div class="budget-row"><span></span><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${remaining.toLocaleString()}</span></div>`; 
-            });
-            document.getElementById('total-planned-inc').innerText = `$${budIncT.toLocaleString()}`;
+function pulseSaveOnce(){
+    save-btn.classList.add('pulse');
+    setTimeout(()=>save-btn.classList.remove('pulse'),3000);
+}
 
-            planExp.forEach((p, idx) => { 
-                catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
-                const catSpent = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + Math.abs(t.amt), 0);
-                const remaining = p.amt - catSpent;
-                expL.innerHTML += `<div class="budget-row"><span></span><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${remaining.toLocaleString()}</span></div>`; 
-            });
-            document.getElementById('total-planned-exp').innerText = `$${budExpT.toLocaleString()}`;
+function saveInternal(update=true){
+    localStorage.setItem('m_txns',JSON.stringify(txns));
+    localStorage.setItem('m_p_inc',JSON.stringify(planInc));
+    localStorage.setItem('m_p_exp',JSON.stringify(planExp));
+    localStorage.setItem('m_assets',JSON.stringify(assets));
+    localStorage.setItem('m_liabs',JSON.stringify(liabs));
+    localStorage.setItem('m_cur_file',curFile);
+    pulseSaveOnce();
+    if(update) updateUI();
+}
 
-            assets.forEach((a, idx) => invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
-            liabs.forEach((l, idx) => liabL.innerHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" style="width:100px;" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
-            
-            monthTxns.forEach((t) => {
-                const globalIdx = txns.findIndex(x => x.id === t.id);
-                txnL.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;"><div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div><div style="display:flex; align-items:center; gap:10px;"><div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div><button class="del-btn" onclick="deleteTxn(${globalIdx})">✕</button></div></div>`;
-            });
-        }
+function updateUI(){
+    income-list.innerHTML='';
+    expense-list.innerHTML='';
+    txn-list.innerHTML='';
+    cat-select.innerHTML='';
+    invest-main-list.innerHTML='';
+    liab-main-list.innerHTML='';
 
-        /* ACTIONS */
-        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-        function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
-        function finishWizard() { 
-            planInc = []; planExp = []; 
-            document.querySelectorAll('#wizard-list input:checked').forEach(c => { 
-                const n = c.getAttribute('data-cat'), type = c.getAttribute('data-type');
-                if(type === 'inc') planInc.push({name:n, amt: 0}); else planExp.push({name:n, amt: 0});
-            }); 
-            curFile = "Fresh Session";
-            saveInternal(); 
-            updateMetaHeader();
-            closeModal(); 
-        }
+    meta-file.innerText=`File: ${curFile}`;
+    meta-saved.innerText=`Saved: ${new Date().toLocaleTimeString()}`;
 
-        function exportToFile() {
-            const fileName = `monarch_backup_${new Date().toISOString().split('T')[0]}.json`;
-            const data = { txns, planInc, planExp, assets, liabs };
-            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = fileName;
-            a.click();
-            curFile = fileName;
-            localStorage.setItem('m_cur_file', curFile);
-            localStorage.setItem('m_last_saved', new Date().toLocaleTimeString());
-            document.getElementById('save-btn').classList.remove('pulse');
-            updateMetaHeader();
-        }
+    const month=month-filter.value;
+    const year=new Date().getFullYear();
 
-        function syncFromFile(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const d = JSON.parse(ev.target.result);
-                txns = d.txns || []; planInc = d.planInc || []; planExp = d.planExp || []; assets = d.assets || []; liabs = d.liabs || [];
-                curFile = file.name;
-                saveInternal();
-                updateMetaHeader();
-                closeModal();
-            };
-            reader.readAsText(file);
-        }
+    const monthTxns=txns.filter(t=>{
+        if(!t.date) return false;
+        const [y,m]=t.date.split('-');
+        return m===month && Number(y)===year;
+    });
 
-        function switchTab(t) { activeTab = t; ['budget', 'invest', 'liab'].forEach(tab => { document.getElementById(`tab-${tab}`).className = (t === tab) ? 'tab active' : 'tab'; document.getElementById(`view-${tab}`).style.display = (t === tab) ? 'block' : 'none'; }); updateUI(); }
-        function addTransaction() { const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, aV = parseFloat(document.getElementById('amt').value); if(!d || isNaN(aV)) return; const isInc = planInc.some(p => p.name === c); txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(aV) : -Math.abs(aV) }); document.getElementById('desc').value = ''; document.getElementById('amt').value = ''; saveInternal(); }
-        
-        function addCustomCat(type) {
-            const action = prompt("Type 'add' to create a new category or 'remove' to delete one:").toLowerCase();
-            if (action === 'add') {
-                const n = prompt("Category Name:");
-                if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveInternal(); }
-            } else if (action === 'remove') {
-                const list = type === 'inc' ? planInc : planExp;
-                const n = prompt("Enter the exact name of the category to remove:");
-                const index = list.findIndex(cat => cat.name === n);
-                if (index !== -1) {
-                    if (confirm(`Delete "${n}"?`)) {
-                        list.splice(index, 1);
-                        saveInternal();
-                    }
-                } else {
-                    alert("Category not found.");
-                }
-            }
-        }
+    let spent=0;
+    monthTxns.forEach(t=>{ if(t.amt<0) spent+=Math.abs(t.amt) });
 
-        function addItem(key) { const n = prompt("Name:"); if(n) { if(key==='assets') assets.push({name:n, amt:0}); else liabs.push({name:n, amt:0}); saveInternal(); } }
-        function deleteTxn(idx) { txns.splice(idx,1); saveInternal(); }
-        function clearAllData() { if(confirm("Reset everything?")) { localStorage.clear(); location.reload(); } }
-        function calcInterest() {
-            const P = parseFloat(document.getElementById('calc-bal').value) || 0, rate = parseFloat(document.getElementById('calc-rate').value) || 0, years = parseFloat(document.getElementById('calc-term').value) || 0;
-            if (P <= 0 || rate <= 0) return;
-            const yInt = P * (rate / 100);
-            document.getElementById('res-day').innerText = `$${(yInt / 365).toFixed(2)}`;
-            document.getElementById('res-mo').innerText = `$${(yInt / 12).toFixed(2)}`;
-            document.getElementById('res-yr').innerText = `$${yInt.toFixed(2)}`;
-            if (years > 0) {
-                const r = (rate / 100) / 12, n = years * 12;
-                const pmt = P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-                document.getElementById('res-pmt').innerText = `$${pmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                document.getElementById('res-total-int').innerText = `$${((pmt * n) - P).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            }
-        }
-    </script>
+    header-content.innerHTML=`<div class="header-main">$${spent.toLocaleString()} spent</div>`;
+
+    planInc.forEach((p,i)=>{
+        const total=monthTxns.filter(t=>t.cat===p.name).reduce((s,t)=>s+t.amt,0);
+        const diff=total-p.amt;
+        income-list.innerHTML+=`
+        <div class="budget-row">
+            <span>${p.name}</span>
+            <input value="${p.amt}" onchange="planInc[${i}].amt=+this.value||0;saveInternal(false)">
+            <span class="${diff>=0?'pos':'neg'}">${diff>=0?'+':''}$${Math.abs(diff).toLocaleString()}</span>
+        </div>`;
+        cat-select.innerHTML+=`<option>${p.name}</option>`;
+    });
+
+    planExp.forEach((p,i)=>{
+        const total=monthTxns.filter(t=>t.cat===p.name).reduce((s,t)=>s+Math.abs(t.amt),0);
+        expense-list.innerHTML+=`
+        <div class="budget-row">
+            <span>${p.name}</span>
+            <input value="${p.amt}" onchange="planExp[${i}].amt=+this.value||0;saveInternal(false)">
+            <span>$${(p.amt-total).toLocaleString()}</span>
+        </div>`;
+        cat-select.innerHTML+=`<option>${p.name}</option>`;
+    });
+
+    monthTxns.forEach(t=>{
+        const idx=txns.findIndex(x=>x.id===t.id);
+        txn-list.innerHTML+=`
+        <div class="card" style="display:flex;justify-content:space-between;">
+            <span>${t.cat} – ${t.desc}</span>
+            <span class="${t.amt<0?'neg':'pos'}">$${Math.abs(t.amt).toFixed(2)}
+            <button onclick="deleteTxn(${idx})">✕</button></span>
+        </div>`;
+    });
+}
+
+function addTransaction(){
+    if(!desc.value || !amt.value) return;
+    const isInc=planInc.some(p=>p.name===cat-select.value);
+    txns.unshift({
+        id: crypto.randomUUID(),
+        desc:desc.value,
+        cat:cat-select.value,
+        date:txn-date.value,
+        amt:isInc?Math.abs(+amt.value):-Math.abs(+amt.value)
+    });
+    desc.value=''; amt.value='';
+    saveInternal();
+}
+
+function deleteTxn(i){
+    if(i<0||i>=txns.length) return;
+    txns.splice(i,1);
+    saveInternal();
+}
+
+function switchTab(t){
+    activeTab=t;
+    view-budget.style.display=t==='budget'?'block':'none';
+    view-invest.style.display=t==='invest'?'block':'none';
+    view-liab.style.display=t==='liab'?'block':'none';
+}
+
+function exportToFile(){
+    const blob=new Blob([JSON.stringify({txns,planInc,planExp,assets,liabs})]);
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`monarch_backup_${Date.now()}.json`;
+    a.click();
+}
+
+function clearAllData(){
+    if(confirm("Reset everything?")){
+        localStorage.clear();
+        location.reload();
+    }
+}
+</script>
+
 </body>
 </html>
