@@ -77,10 +77,12 @@
         details.budget-details { margin-bottom: 15px; }
         details.budget-details .content { background: var(--m-card); padding: 0 15px 15px 15px; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; border: 1px solid #333; border-top: none; }
 
-        /* Amortization Specific Table Style */
         .amort-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
         .amort-table th { text-align: left; color: var(--m-teal); border-bottom: 1px solid #444; padding: 5px; }
         .amort-table td { padding: 5px; border-bottom: 1px solid #2a2a2a; }
+
+        .toggle-container { display: flex; align-items: center; gap: 10px; font-size: 11px; opacity: 0.8; margin-top: 5px; }
+        .toggle-container input { width: auto; }
     </style>
 </head>
 <body>
@@ -188,8 +190,14 @@
             </div>
             <div class="calc-grid"><div class="calc-item"><div class="calc-label">Daily</div><div id="res-day" class="calc-val">$0.00</div></div><div class="calc-item"><div class="calc-label">Monthly</div><div id="res-mo" class="calc-val">$0.00</div></div><div class="calc-item"><div class="calc-label">Yearly</div><div id="res-yr" class="calc-val">$0.00</div></div></div>
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #444;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span style="font-size:12px; opacity:0.8;">Est. Bi-weekly Payment:</span><span id="res-bi" style="font-weight:bold; color:var(--m-teal);">$0.00</span></div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span style="font-size:12px; opacity:0.8;">Est. Monthly Payment:</span><span id="res-pmt" style="font-weight:bold; color:var(--m-teal);">$0.00</span></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="font-size:12px; opacity:0.8;">Est. Bi-weekly Payment:</span>
+                    <span id="res-bi" style="font-weight:bold; color:var(--m-teal);">$0.00</span>
+                </div>
+                <div class="toggle-container">
+                    <input type="checkbox" id="accel-toggle" onchange="calcInterest()"> <label for="accel-toggle">Use Accelerated Bi-weekly (Monthly/2)</label>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:10px; margin-bottom:5px;"><span style="font-size:12px; opacity:0.8;">Est. Monthly Payment:</span><span id="res-pmt" style="font-weight:bold; color:var(--m-teal);">$0.00</span></div>
                 <div style="display:flex; justify-content:space-between;"><span style="font-size:12px; opacity:0.8;">Total Interest over Term:</span><span id="res-total-int" style="font-weight:bold; color:var(--m-red);">$0.00</span></div>
             </div>
             <details style="margin-top: 15px;">
@@ -256,8 +264,6 @@
                   headerBox = document.getElementById('header-content');
             
             const selectedMonth = document.getElementById('month-filter').value;
-            
-            // Clean slate for dynamic content
             let incHTML = '', expHTML = '', txnHTML = '', invHTML = '', liabHTML = '', catSHTML = '';
 
             const monthTxns = txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth);
@@ -274,24 +280,24 @@
             budExpT = planExp.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
 
             const cashFlow = actInc - actExp;
-
             const headerMain = document.getElementById('main-header');
+
             if(activeTab === 'budget') {
                 headerMain.className = "budget-header bg-spending";
                 const pSpent = budExpT > 0 ? Math.round((actExp / budExpT) * 100) : 0;
                 headerBox.innerHTML = `
                     <div class="header-main">Monthly Spending</div>
-                    <div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}</div>
-                    <div style="font-size: 12px; margin-top:5px; opacity:0.9;">Cash Flow: <span class="${cashFlow >= 0 ? 'pos' : 'neg'}">$${cashFlow.toLocaleString()}</span></div>
+                    <div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString(undefined, {minimumFractionDigits: 2})} spent of $${budExpT.toLocaleString()}</div>
+                    <div style="font-size: 12px; margin-top:5px; opacity:0.9;">Cash Flow: <span class="${cashFlow >= 0 ? 'pos' : 'neg'}">$${cashFlow.toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
                     <div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>`;
             } else if(activeTab === 'invest') {
                 headerMain.className = "budget-header bg-invest";
                 assets.forEach(a => totA += a.amt); liabs.forEach(l => totL += l.amt);
-                headerBox.innerHTML = `<div class="header-main">Net Worth</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-teal)">$${(totA - totL).toLocaleString()}</div>`;
+                headerBox.innerHTML = `<div class="header-main">Net Worth</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-teal)">$${(totA - totL).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>`;
             } else {
                 headerMain.className = "budget-header bg-liab";
                 liabs.forEach(l => totL += l.amt);
-                headerBox.innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totL.toLocaleString()}</div>`;
+                headerBox.innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totL.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>`;
             }
 
             let totalIncRem = 0;
@@ -303,11 +309,11 @@
                 const statusClass = remaining < 0 ? 'pos' : '';
                 incHTML += `<div class="budget-row">
                     <span style="font-weight:500;">${p.name}</span>
-                    <input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();">
-                    <span class="${statusClass}" style="text-align:right; font-weight:bold;">$${Math.abs(remaining).toLocaleString()}</span>
+                    <input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value)||0;saveInternal();">
+                    <span class="${statusClass}" style="text-align:right; font-weight:bold;">$${Math.abs(remaining).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>`; 
             });
-            document.getElementById('sum-inc-text').innerHTML = `INCOME: $${budIncT.toLocaleString()} <span style="float:right; opacity:0.7; font-weight:normal;">Rem: $${Math.abs(totalIncRem).toLocaleString()}</span>`;
+            document.getElementById('sum-inc-text').innerHTML = `INCOME: $${budIncT.toLocaleString()} <span style="float:right; opacity:0.7; font-weight:normal;">Rem: $${Math.abs(totalIncRem).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>`;
 
             let totalExpRem = 0;
             planExp.forEach((p, idx) => { 
@@ -318,27 +324,25 @@
                 const statusClass = remaining < 0 ? 'neg' : '';
                 expHTML += `<div class="budget-row">
                     <span style="font-weight:500;">${p.name}</span>
-                    <input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();">
-                    <span class="${statusClass}" style="text-align:right; font-weight:bold;">$${Math.abs(remaining).toLocaleString()}</span>
+                    <input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value)||0;saveInternal();">
+                    <span class="${statusClass}" style="text-align:right; font-weight:bold;">$${Math.abs(remaining).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>`; 
             });
-            document.getElementById('sum-exp-text').innerHTML = `EXPENSES: $${budExpT.toLocaleString()} <span style="float:right; opacity:0.7; font-weight:normal;">Rem: $${totalExpRem.toLocaleString()}</span>`;
+            document.getElementById('sum-exp-text').innerHTML = `EXPENSES: $${budExpT.toLocaleString()} <span style="float:right; opacity:0.7; font-weight:normal;">Rem: $${totalExpRem.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>`;
 
-            assets.forEach((a, idx) => invHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
-            liabs.forEach((l, idx) => liabHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" style="width:100px;" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
+            assets.forEach((a, idx) => invHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value)||0;saveInternal();"></div>`);
+            liabs.forEach((l, idx) => liabHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" style="width:100px;" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value)||0;saveInternal();"></div>`);
             
             monthTxns.forEach((t) => {
-                const globalIdx = txns.findIndex(x => x.id === t.id);
                 txnHTML += `<article class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
                     <div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div>
                     <div style="display:flex; align-items:center; gap:10px;">
                         <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div>
-                        <button class="del-btn" onclick="editTxn(${globalIdx})">✎</button>
+                        <button class="del-btn" onclick="editTxn('${t.id}')">✎</button>
                     </div>
                 </article>`;
             });
 
-            // Single DOM write per section
             incL.innerHTML = incHTML;
             expL.innerHTML = expHTML;
             txnL.innerHTML = txnHTML;
@@ -347,21 +351,17 @@
             catS.innerHTML = catSHTML;
         }
 
-        /* ACTIONS */
         function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
         function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
         
         function finishWizard() { 
-            planInc = []; planExp = []; 
-            txns = []; 
+            planInc = []; planExp = []; txns = []; 
             document.querySelectorAll('#wizard-list input:checked').forEach(c => { 
                 const n = c.getAttribute('data-cat'), type = c.getAttribute('data-type');
                 if(type === 'inc') planInc.push({name:n, amt: 0}); else planExp.push({name:n, amt: 0});
             }); 
             curFile = "Fresh Session";
-            saveInternal(); 
-            updateMetaHeader();
-            closeModal(); 
+            saveInternal(); closeModal(); 
         }
 
         function exportToFile() {
@@ -387,9 +387,7 @@
                 const d = JSON.parse(e.target.result);
                 txns = d.txns || []; planInc = d.planInc || []; planExp = d.planExp || []; assets = d.assets || []; liabs = d.liabs || [];
                 curFile = file.name;
-                saveInternal();
-                updateMetaHeader();
-                closeModal();
+                saveInternal(); updateMetaHeader(); closeModal();
             };
             reader.readAsText(file);
         }
@@ -400,25 +398,23 @@
             const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, aV = parseFloat(document.getElementById('amt').value); 
             if(!d || isNaN(aV)) return; 
             const isInc = planInc.some(p => p.name === c); 
-            // Improvement: Robust UUID
-            const newId = (typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : Date.now();
+            const newId = (typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : Date.now().toString();
             txns.unshift({ id: newId, desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(aV) : -Math.abs(aV) }); 
-            document.getElementById('desc').value = ''; 
-            document.getElementById('amt').value = ''; 
+            document.getElementById('desc').value = ''; document.getElementById('amt').value = ''; 
             saveInternal(); 
         }
 
-        function editTxn(idx) {
+        function editTxn(id) {
+            const idx = txns.findIndex(t => t.id === id);
+            if (idx === -1) return;
             const t = txns[idx];
-            const action = prompt(`Edit "${t.desc}"?\nType 'delete' to remove, or enter a new amount to change value:`, Math.abs(t.amt));
+            const action = prompt(`Edit "${t.desc}"?\nType 'delete' to remove, or enter a new amount:`, Math.abs(t.amt));
             if (action === null) return;
             if (action.toLowerCase() === 'delete') {
                 if(confirm("Delete this transaction?")) txns.splice(idx, 1);
             } else {
                 const newAmt = parseFloat(action);
-                if (!isNaN(newAmt)) {
-                    txns[idx].amt = t.amt < 0 ? -Math.abs(newAmt) : Math.abs(newAmt);
-                }
+                if (!isNaN(newAmt)) txns[idx].amt = t.amt < 0 ? -Math.abs(newAmt) : Math.abs(newAmt);
             }
             saveInternal();
         }
@@ -432,14 +428,7 @@
                 const list = type === 'inc' ? planInc : planExp;
                 const n = prompt("Enter the exact name of the category to remove:");
                 const index = list.findIndex(cat => cat.name === n);
-                if (index !== -1) {
-                    if (confirm(`Delete "${n}"?`)) {
-                        list.splice(index, 1);
-                        saveInternal();
-                    }
-                } else {
-                    alert("Category not found.");
-                }
+                if (index !== -1 && confirm(`Delete "${n}"?`)) { list.splice(index, 1); saveInternal(); }
             }
         }
 
@@ -449,35 +438,27 @@
         function calcInterest() {
             const P = parseFloat(document.getElementById('calc-bal').value) || 0, 
                   annualRate = parseFloat(document.getElementById('calc-rate').value) || 0, 
-                  years = parseFloat(document.getElementById('calc-term').value) || 0;
+                  years = parseFloat(document.getElementById('calc-term').value) || 0,
+                  isAccel = document.getElementById('accel-toggle').checked;
             
             const tableBody = document.getElementById('amortization-body');
             tableBody.innerHTML = "";
 
             if (P <= 0 || annualRate <= 0) {
-                const zero = "$0.00";
-                document.getElementById('res-day').innerText = zero;
-                document.getElementById('res-mo').innerText = zero;
-                document.getElementById('res-yr').innerText = zero;
-                document.getElementById('res-pmt').innerText = zero;
-                document.getElementById('res-bi').innerText = zero;
-                document.getElementById('res-total-int').innerText = zero;
+                const z = "$0.00";
+                document.getElementById('res-day').innerText = z; document.getElementById('res-mo').innerText = z;
+                document.getElementById('res-yr').innerText = z; document.getElementById('res-pmt').innerText = z;
+                document.getElementById('res-bi').innerText = z; document.getElementById('res-total-int').innerText = z;
                 return;
             }
 
             const monthlyRate = (annualRate / 100) / 12;
             const totalMonths = years * 12;
-            
-            // Improvement: Robust math checks for payment formula
             let monthlyPmt = 0;
+
             if (years > 0) {
                 const ratePower = Math.pow(1 + monthlyRate, totalMonths);
-                // Safety check for Infinity or very high rates
-                if (isFinite(ratePower) && ratePower > 1) {
-                   monthlyPmt = P * (monthlyRate * ratePower) / (ratePower - 1);
-                } else {
-                   monthlyPmt = (P / totalMonths) + (P * monthlyRate);
-                }
+                monthlyPmt = isFinite(ratePower) && ratePower > 1 ? P * (monthlyRate * ratePower) / (ratePower - 1) : (P / totalMonths) + (P * monthlyRate);
             }
 
             const yearlyInt = P * (annualRate / 100);
@@ -487,7 +468,11 @@
             
             if (years > 0 && monthlyPmt > 0) {
                 document.getElementById('res-pmt').innerText = `$${monthlyPmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                document.getElementById('res-bi').innerText = `$${(monthlyPmt * 12 / 26).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                
+                // Toggle Logic for Bi-Weekly
+                const biWeeklyPmt = isAccel ? (monthlyPmt / 2) : (monthlyPmt * 12 / 26);
+                document.getElementById('res-bi').innerText = `$${biWeeklyPmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                
                 document.getElementById('res-total-int').innerText = `$${((monthlyPmt * totalMonths) - P).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
                 let currentBal = P;
@@ -496,20 +481,10 @@
                     const interestPortion = currentBal * monthlyRate;
                     const principalPortion = monthlyPmt - interestPortion;
                     currentBal -= principalPortion;
-
-                    html += `<tr>
-                        <td>${i}</td>
-                        <td>$${principalPortion.toFixed(2)}</td>
-                        <td>$${interestPortion.toFixed(2)}</td>
-                        <td style="color:var(--m-teal)">$${Math.max(0, currentBal).toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
-                    </tr>`;
+                    html += `<tr><td>${i}</td><td>$${principalPortion.toFixed(2)}</td><td>$${interestPortion.toFixed(2)}</td><td style="color:var(--m-teal)">$${Math.max(0, currentBal).toLocaleString(undefined, {maximumFractionDigits: 0})}</td></tr>`;
                     if (currentBal <= 0) break;
                 }
                 tableBody.innerHTML = html;
-            } else {
-                document.getElementById('res-pmt').innerText = "$0.00";
-                document.getElementById('res-bi').innerText = "$0.00";
-                document.getElementById('res-total-int').innerText = "$0.00";
             }
         }
     </script>
