@@ -303,8 +303,10 @@
         /* ACTIONS */
         function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
         function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
+        
         function finishWizard() { 
             planInc = []; planExp = []; 
+            txns = []; 
             document.querySelectorAll('#wizard-list input:checked').forEach(c => { 
                 const n = c.getAttribute('data-cat'), type = c.getAttribute('data-type');
                 if(type === 'inc') planInc.push({name:n, amt: 0}); else planExp.push({name:n, amt: 0});
@@ -430,3 +432,4 @@
     </script>
 </body>
 </html>
+
