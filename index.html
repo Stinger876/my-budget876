@@ -75,6 +75,8 @@
         details summary { cursor: pointer; padding: 10px; background: #2a2a2a; border-radius: 8px; font-weight: bold; margin-bottom: 5px; list-style: none; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
         details summary::-webkit-details-marker { display: none; }
         details[open] summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-color: var(--m-teal); }
+        details.budget-details { margin-bottom: 15px; }
+        details.budget-details .content { background: var(--m-card); padding: 15px; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; border: 1px solid #333; border-top: none; }
     </style>
 </head>
 <body>
@@ -134,18 +136,24 @@
     </div>
 
     <div id="view-budget">
-        <div class="card">
-            <div style="font-size: 11px; color: var(--m-green); font-weight: bold; margin-bottom: 8px;">INCOME SOURCES</div>
-            <div id="income-list"></div>
-            <button class="btn-add-cat" onclick="addCustomCat('inc')">+ Add/Remove Income Category</button>
-            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;"><span>Total Budget Income</span><span id="total-planned-inc" class="pos">$0</span></div>
-        </div>
-        <div class="card">
-            <div style="font-size: 11px; color: var(--m-red); font-weight: bold; margin-bottom: 8px;">EXPENSE CATEGORIES</div>
-            <div id="expense-list"></div>
-            <button class="btn-add-cat" onclick="addCustomCat('exp')">+ Add/Remove Expense Category</button>
-            <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;"><span>Total Budget Expenses</span><span id="total-planned-exp" class="neg">$0</span></div>
-        </div>
+        <details class="budget-details" open>
+            <summary><div style="font-size: 11px; color: var(--m-green); font-weight: bold;">INCOME SOURCES</div></summary>
+            <div class="content">
+                <div id="income-list"></div>
+                <button class="btn-add-cat" onclick="addCustomCat('inc')">+ Add/Remove Income Category</button>
+                <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;"><span>Total Budget Income</span><span id="total-planned-inc" class="pos">$0</span></div>
+            </div>
+        </details>
+
+        <details class="budget-details" open>
+            <summary><div style="font-size: 11px; color: var(--m-red); font-weight: bold;">EXPENSE CATEGORIES</div></summary>
+            <div class="content">
+                <div id="expense-list"></div>
+                <button class="btn-add-cat" onclick="addCustomCat('exp')">+ Add/Remove Expense Category</button>
+                <div style="display:flex; justify-content:space-between; font-weight:800; margin-top:10px;"><span>Total Budget Expenses</span><span id="total-planned-exp" class="neg">$0</span></div>
+            </div>
+        </details>
+
         <div class="card">
             <b>Add Transaction</b>
             <input type="text" id="desc" placeholder="Merchant">
@@ -269,7 +277,8 @@
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
                 const catTotal = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + t.amt, 0);
                 const remaining = p.amt - catTotal;
-                incL.innerHTML += `<div class="budget-row"><span></span><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${remaining.toLocaleString()}</span></div>`; 
+                const statusClass = remaining < 0 ? 'pos' : '';
+                incL.innerHTML += `<div class="budget-row"><span></span><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"> <span class="${statusClass}">$${Math.abs(remaining).toLocaleString()}</span></div>`; 
             });
             document.getElementById('total-planned-inc').innerText = `$${budIncT.toLocaleString()}`;
 
@@ -277,7 +286,8 @@
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
                 const catSpent = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + Math.abs(t.amt), 0);
                 const remaining = p.amt - catSpent;
-                expL.innerHTML += `<div class="budget-row"><span></span><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span>$${remaining.toLocaleString()}</span></div>`; 
+                const statusClass = remaining < 0 ? 'neg' : '';
+                expL.innerHTML += `<div class="budget-row"><span></span><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><span class="${statusClass}">$${Math.abs(remaining).toLocaleString()}</span></div>`; 
             });
             document.getElementById('total-planned-exp').innerText = `$${budExpT.toLocaleString()}`;
 
@@ -420,4 +430,3 @@
     </script>
 </body>
 </html>
-
