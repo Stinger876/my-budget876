@@ -76,6 +76,11 @@
         details[open] summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-color: var(--m-teal); }
         details.budget-details { margin-bottom: 15px; }
         details.budget-details .content { background: var(--m-card); padding: 0 15px 15px 15px; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; border: 1px solid #333; border-top: none; }
+
+        /* Amortization Specific Table Style */
+        .amort-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+        .amort-table th { text-align: left; color: var(--m-teal); border-bottom: 1px solid #444; padding: 5px; }
+        .amort-table td { padding: 5px; border-bottom: 1px solid #2a2a2a; }
     </style>
 </head>
 <body>
@@ -187,6 +192,17 @@
                 <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span style="font-size:12px; opacity:0.8;">Est. Monthly Payment:</span><span id="res-pmt" style="font-weight:bold; color:var(--m-teal);">$0.00</span></div>
                 <div style="display:flex; justify-content:space-between;"><span style="font-size:12px; opacity:0.8;">Total Interest over Term:</span><span id="res-total-int" style="font-weight:bold; color:var(--m-red);">$0.00</span></div>
             </div>
+            <details style="margin-top: 15px;">
+                <summary style="font-size: 12px; opacity: 0.8;">Amortization Table</summary>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <table class="amort-table">
+                        <thead>
+                            <tr><th>Month</th><th>Principal</th><th>Interest</th><th>Balance</th></tr>
+                        </thead>
+                        <tbody id="amortization-body"></tbody>
+                    </table>
+                </div>
+            </details>
         </div>
     </div>
 
@@ -414,30 +430,56 @@
         
         function calcInterest() {
             const P = parseFloat(document.getElementById('calc-bal').value) || 0, 
-                  rate = parseFloat(document.getElementById('calc-rate').value) || 0, 
+                  annualRate = parseFloat(document.getElementById('calc-rate').value) || 0, 
                   years = parseFloat(document.getElementById('calc-term').value) || 0;
             
-            if (P <= 0 || rate <= 0) {
-                document.getElementById('res-day').innerText = "$0.00";
-                document.getElementById('res-mo').innerText = "$0.00";
-                document.getElementById('res-yr').innerText = "$0.00";
-                document.getElementById('res-pmt').innerText = "$0.00";
-                document.getElementById('res-bi').innerText = "$0.00";
-                document.getElementById('res-total-int').innerText = "$0.00";
+            const tableBody = document.getElementById('amortization-body');
+            tableBody.innerHTML = "";
+
+            if (P <= 0 || annualRate <= 0) {
+                const zero = "$0.00";
+                document.getElementById('res-day').innerText = zero;
+                document.getElementById('res-mo').innerText = zero;
+                document.getElementById('res-yr').innerText = zero;
+                document.getElementById('res-pmt').innerText = zero;
+                document.getElementById('res-bi').innerText = zero;
+                document.getElementById('res-total-int').innerText = zero;
                 return;
             }
 
-            const yInt = P * (rate / 100);
-            document.getElementById('res-day').innerText = `$${(yInt / 365).toFixed(2)}`;
-            document.getElementById('res-mo').innerText = `$${(yInt / 12).toFixed(2)}`;
-            document.getElementById('res-yr').innerText = `$${yInt.toFixed(2)}`;
+            const monthlyRate = (annualRate / 100) / 12;
+            const totalMonths = years * 12;
+            
+            // Standard Amortization Formula
+            const monthlyPmt = years > 0 ? P * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1) : 0;
+
+            const yearlyInt = P * (annualRate / 100);
+            document.getElementById('res-day').innerText = `$${(yearlyInt / 365).toFixed(2)}`;
+            document.getElementById('res-mo').innerText = `$${(yearlyInt / 12).toFixed(2)}`;
+            document.getElementById('res-yr').innerText = `$${yearlyInt.toFixed(2)}`;
             
             if (years > 0) {
-                const r = (rate / 100) / 12, n = years * 12;
-                const pmt = P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-                document.getElementById('res-pmt').innerText = `$${pmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                document.getElementById('res-bi').innerText = `$${(pmt * 12 / 26).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                document.getElementById('res-total-int').innerText = `$${((pmt * n) - P).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                document.getElementById('res-pmt').innerText = `$${monthlyPmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                document.getElementById('res-bi').innerText = `$${(monthlyPmt * 12 / 26).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                document.getElementById('res-total-int').innerText = `$${((monthlyPmt * totalMonths) - P).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+                // Populate Amortization Table
+                let currentBal = P;
+                let html = "";
+                for (let i = 1; i <= totalMonths; i++) {
+                    const interestPortion = currentBal * monthlyRate;
+                    const principalPortion = monthlyPmt - interestPortion;
+                    currentBal -= principalPortion;
+
+                    // Row generation
+                    html += `<tr>
+                        <td>${i}</td>
+                        <td>$${principalPortion.toFixed(2)}</td>
+                        <td>$${interestPortion.toFixed(2)}</td>
+                        <td style="color:var(--m-teal)">$${Math.abs(currentBal).toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                    </tr>`;
+                }
+                tableBody.innerHTML = html;
             } else {
                 document.getElementById('res-pmt').innerText = "$0.00";
                 document.getElementById('res-bi').innerText = "$0.00";
@@ -447,4 +489,5 @@
     </script>
 </body>
 </html>
+
 
