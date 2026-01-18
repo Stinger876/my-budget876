@@ -30,11 +30,6 @@
         
         .header-meta { font-size: 10px; opacity: 0.7; margin-bottom: 8px; display: flex; justify-content: space-between; font-family: monospace; position: absolute; top: 10px; left: 20px; right: 20px; }
         .header-main { font-size: 1.4rem; font-weight: 800; margin-top: 15px; }
-        
-        /* New Header Layout Styles */
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; text-align: left; }
-        .stat-label { font-size: 12px; opacity: 0.8; font-weight: bold; }
-        .stat-val { font-size: 14px; font-weight: 800; }
 
         /* Navigation Tabs */
         .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
@@ -260,8 +255,6 @@
             budIncT = planInc.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
             budExpT = planExp.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
 
-            const remIncT = budIncT - actInc;
-            const remExpT = budExpT - actExp;
             const cashFlow = actInc - actExp;
 
             const headerMain = document.getElementById('main-header');
@@ -269,28 +262,10 @@
                 headerMain.className = "budget-header bg-spending";
                 const pSpent = budExpT > 0 ? Math.round((actExp / budExpT) * 100) : 0;
                 headerBox.innerHTML = `
-                    <div style="text-align:left;">
-                        <div style="font-size:12px; opacity:0.8; font-weight:bold;">Left to budget</div>
-                        <div style="font-size:1.8rem; font-weight:900;">$${cashFlow.toLocaleString()}</div>
-                    </div>
-                    <div class="stat-grid">
-                        <div class="stat-label">Income</div>
-                        <div class="stat-label" style="text-align:center;">Budget</div>
-                        <div class="stat-label" style="text-align:right;">Remaining</div>
-                        
-                        <div class="stat-val">Income</div>
-                        <div class="stat-val" style="text-align:center;">$${budIncT.toLocaleString()}</div>
-                        <div class="stat-val ${remIncT < 0 ? 'pos' : ''}" style="text-align:right;">$${Math.abs(remIncT).toLocaleString()}</div>
-
-                        <div class="stat-label" style="margin-top:5px;">Expenses</div>
-                        <div class="stat-label" style="text-align:center; margin-top:5px;">Budget</div>
-                        <div class="stat-label" style="text-align:right; margin-top:5px;">Remaining</div>
-
-                        <div class="stat-val">Fixed</div>
-                        <div class="stat-val" style="text-align:center;">$${budExpT.toLocaleString()}</div>
-                        <div class="stat-val ${remExpT < 0 ? 'neg' : ''}" style="text-align:right;">$${Math.abs(remExpT).toLocaleString()}</div>
-                    </div>
-                `;
+                    <div class="header-main">Monthly Spending</div>
+                    <div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString()} spent of $${budExpT.toLocaleString()}</div>
+                    <div style="font-size: 12px; margin-top:5px; opacity:0.9;">Cash Flow: <span class="${cashFlow >= 0 ? 'pos' : 'neg'}">$${cashFlow.toLocaleString()}</span></div>
+                    <div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>`;
             } else if(activeTab === 'invest') {
                 headerMain.className = "budget-header bg-invest";
                 assets.forEach(a => totA += a.amt); liabs.forEach(l => totL += l.amt);
