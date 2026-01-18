@@ -201,11 +201,11 @@
                 <div style="display:flex; justify-content:space-between;"><span style="font-size:12px; opacity:0.8;">Total Interest over Term:</span><span id="res-total-int" style="font-weight:bold; color:var(--m-red);">$0.00</span></div>
             </div>
             <details style="margin-top: 15px;">
-                <summary style="font-size: 12px; opacity: 0.8;">Amortization Table</summary>
+                <summary style="font-size: 12px; opacity: 0.8;" id="amort-summary">Amortization Table</summary>
                 <div style="max-height: 250px; overflow-y: auto;">
                     <table class="amort-table">
                         <thead>
-                            <tr><th>Month</th><th>Principal</th><th>Interest</th><th>Balance</th></tr>
+                            <tr><th id="amort-period-label">Month</th><th>Principal</th><th>Interest</th><th>Balance</th></tr>
                         </thead>
                         <tbody id="amortization-body"></tbody>
                     </table>
@@ -452,6 +452,7 @@
                 return;
             }
 
+            // Standard Monthly Payment Formula
             const monthlyRate = (annualRate / 100) / 12;
             const totalMonths = years * 12;
             let monthlyPmt = 0;
@@ -461,6 +462,10 @@
                 monthlyPmt = isFinite(ratePower) && ratePower > 1 ? P * (monthlyRate * ratePower) / (ratePower - 1) : (P / totalMonths) + (P * monthlyRate);
             }
 
+            // UI Label updates
+            document.getElementById('amort-period-label').innerText = isAccel ? "Period (2w)" : "Month";
+
+            // Static interest displays
             const yearlyInt = P * (annualRate / 100);
             document.getElementById('res-day').innerText = `$${(yearlyInt / 365).toFixed(2)}`;
             document.getElementById('res-mo').innerText = `$${(yearlyInt / 12).toFixed(2)}`;
@@ -473,17 +478,38 @@
                 const biWeeklyPmt = isAccel ? (monthlyPmt / 2) : (monthlyPmt * 12 / 26);
                 document.getElementById('res-bi').innerText = `$${biWeeklyPmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                 
-                document.getElementById('res-total-int').innerText = `$${((monthlyPmt * totalMonths) - P).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
+                // Amortization Table Logic
                 let currentBal = P;
                 let html = "";
-                for (let i = 1; i <= totalMonths; i++) {
-                    const interestPortion = currentBal * monthlyRate;
-                    const principalPortion = monthlyPmt - interestPortion;
+                
+                // Define payment frequency for the table
+                const periodsPerYear = isAccel ? 26 : 12;
+                const periodicRate = (annualRate / 100) / periodsPerYear;
+                const periodicPmt = isAccel ? biWeeklyPmt : monthlyPmt;
+                let totalInterestPaid = 0;
+                let periodCounter = 1;
+
+                // Loop until balance is zero or safe break (max 100 years of periods)
+                while (currentBal > 0.01 && periodCounter <= (years * periodsPerYear * 2)) {
+                    const interestPortion = currentBal * periodicRate;
+                    let principalPortion = periodicPmt - interestPortion;
+                    
+                    if (principalPortion > currentBal) principalPortion = currentBal;
+                    
+                    totalInterestPaid += interestPortion;
                     currentBal -= principalPortion;
-                    html += `<tr><td>${i}</td><td>$${principalPortion.toFixed(2)}</td><td>$${interestPortion.toFixed(2)}</td><td style="color:var(--m-teal)">$${Math.max(0, currentBal).toLocaleString(undefined, {maximumFractionDigits: 0})}</td></tr>`;
-                    if (currentBal <= 0) break;
+
+                    html += `<tr>
+                        <td>${periodCounter}</td>
+                        <td>$${principalPortion.toFixed(2)}</td>
+                        <td>$${interestPortion.toFixed(2)}</td>
+                        <td style="color:var(--m-teal)">$${Math.max(0, currentBal).toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                    </tr>`;
+                    
+                    periodCounter++;
                 }
+                
+                document.getElementById('res-total-int').innerText = `$${totalInterestPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                 tableBody.innerHTML = html;
             }
         }
