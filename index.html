@@ -135,8 +135,8 @@
     </div>
 
     <div id="view-budget">
-        <details class="budget-details" open>
-            <summary><div style="font-size: 11px; color: var(--m-green); font-weight: bold;">INCOME</div></summary>
+        <details class="budget-details" open id="details-inc">
+            <summary><div id="sum-inc-text" style="font-size: 11px; color: var(--m-green); font-weight: bold; width:100%;">INCOME</div></summary>
             <div class="content">
                 <div style="display: grid; grid-template-columns: 1fr 80px 80px; gap: 12px; padding: 10px 0 5px 0; border-bottom: 1px solid #333;">
                     <div class="row-label">Category</div><div class="row-label">Budget</div><div class="row-label">Remaining</div>
@@ -146,8 +146,8 @@
             </div>
         </details>
 
-        <details class="budget-details" open>
-            <summary><div style="font-size: 11px; color: var(--m-red); font-weight: bold;">EXPENSES</div></summary>
+        <details class="budget-details" open id="details-exp">
+            <summary><div id="sum-exp-text" style="font-size: 11px; color: var(--m-red); font-weight: bold; width:100%;">EXPENSES</div></summary>
             <div class="content">
                 <div style="display: grid; grid-template-columns: 1fr 80px 80px; gap: 12px; padding: 10px 0 5px 0; border-bottom: 1px solid #333;">
                     <div class="row-label">Category</div><div class="row-label">Budget</div><div class="row-label">Remaining</div>
@@ -276,10 +276,12 @@
                 headerBox.innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totL.toLocaleString()}</div>`;
             }
 
+            let totalIncRem = 0;
             planInc.forEach((p, idx) => { 
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
                 const catTotal = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + t.amt, 0);
                 const remaining = p.amt - catTotal;
+                totalIncRem += remaining;
                 const statusClass = remaining < 0 ? 'pos' : '';
                 incL.innerHTML += `<div class="budget-row">
                     <span style="font-weight:500;">${p.name}</span>
@@ -287,11 +289,14 @@
                     <span class="${statusClass}" style="text-align:right; font-weight:bold;">$${Math.abs(remaining).toLocaleString()}</span>
                 </div>`; 
             });
+            document.getElementById('sum-inc-text').innerHTML = `INCOME: $${budIncT.toLocaleString()} <span style="float:right; opacity:0.7; font-weight:normal;">Rem: $${Math.abs(totalIncRem).toLocaleString()}</span>`;
 
+            let totalExpRem = 0;
             planExp.forEach((p, idx) => { 
                 catS.innerHTML += `<option value="${p.name}">${p.name}</option>`; 
                 const catSpent = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + Math.abs(t.amt), 0);
                 const remaining = p.amt - catSpent;
+                totalExpRem += remaining;
                 const statusClass = remaining < 0 ? 'neg' : '';
                 expL.innerHTML += `<div class="budget-row">
                     <span style="font-weight:500;">${p.name}</span>
@@ -299,6 +304,7 @@
                     <span class="${statusClass}" style="text-align:right; font-weight:bold;">$${Math.abs(remaining).toLocaleString()}</span>
                 </div>`; 
             });
+            document.getElementById('sum-exp-text').innerHTML = `EXPENSES: $${budExpT.toLocaleString()} <span style="float:right; opacity:0.7; font-weight:normal;">Rem: $${totalExpRem.toLocaleString()}</span>`;
 
             assets.forEach((a, idx) => invL.innerHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
             liabs.forEach((l, idx) => liabL.innerHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" style="width:100px;" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value);saveInternal();"></div>`);
@@ -441,3 +447,4 @@
     </script>
 </body>
 </html>
+
