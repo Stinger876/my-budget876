@@ -3,304 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite Pro</title>
+    <title>Monarch-Lite Fixed</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
-            --m-blue: #0a192f; 
-            --m-teal: #17e9e1; 
-            --m-bg: #0f0f0f; 
-            --m-card: #1c1c1e; 
-            --m-red: #ff5252; 
-            --m-green: #2ecc71; 
-            --m-text: #ffffff; 
-            --m-border: #2c2c2e;
+            --m-blue: #0a192f; --m-teal: #17e9e1; --m-bg: #0f0f0f; 
+            --m-card: #1c1c1e; --m-red: #ff5252; --m-green: #2ecc71; 
+            --m-text: #ffffff; --m-border: #2c2c2e;
         }
+        body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 15px; color: var(--m-text); padding-bottom: 40px; }
         
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--m-bg); 
-            margin: 0; 
-            padding: 15px; 
-            color: var(--m-text); 
-            padding-bottom: 100px;
-            line-height: 1.5;
-        }
-
-        /* --- UI Enhancements --- */
-        .budget-header { 
-            padding: 30px 20px; 
-            border-radius: 24px; 
-            margin-bottom: 20px; 
-            text-align: center; 
-            position: relative;
-            background: linear-gradient(145deg, #1b4d3e, #0a192f);
-            border: 1px solid var(--m-border);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .header-main { 
-            font-size: 2.2rem; 
-            font-weight: 800; 
-            letter-spacing: -1px;
-            background: linear-gradient(to right, var(--m-teal), #ffffff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 10px 0;
-        }
-
-        .card { 
-            background: var(--m-card); 
-            padding: 20px; 
-            border-radius: 20px; 
-            margin-bottom: 15px; 
-            border: 1px solid var(--m-border);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-
-        /* --- Form Inputs --- */
-        input, select { 
-            width: 100%; 
-            padding: 12px; 
-            margin: 8px 0;
-            border: 1px solid var(--m-border); 
-            background: #2c2c2e; 
-            color: white; 
-            border-radius: 12px; 
-            font-size: 14px; 
-            box-sizing: border-box; 
-            transition: border-color 0.3s;
-        }
-        input:focus { border-color: var(--m-teal); outline: none; }
-
-        .btn-track { 
-            width: 100%; 
-            padding: 16px; 
-            background: var(--m-teal); 
-            color: var(--m-blue); 
-            border-radius: 14px; 
-            border: none; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .btn-track:active { transform: scale(0.98); }
-
-        /* --- Tabs --- */
-        .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; background: #1c1c1e; padding: 5px; border-radius: 15px; }
-        .tab { flex: 1; padding: 10px; text-align: center; background: transparent; border-radius: 10px; font-weight: 600; cursor: pointer; color: #888; border: none; }
+        .budget-header { padding: 25px 20px; border-radius: 20px; margin-bottom: 20px; text-align: center; background: linear-gradient(145deg, #1b4d3e, #0a192f); border: 1px solid var(--m-border); }
+        .header-main { font-size: 2.2rem; font-weight: 800; background: linear-gradient(to right, var(--m-teal), #ffffff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 5px 0; }
+        
+        .card { background: var(--m-card); padding: 18px; border-radius: 18px; margin-bottom: 15px; border: 1px solid var(--m-border); }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid var(--m-border); background: #2c2c2e; color: white; border-radius: 10px; box-sizing: border-box; }
+        
+        .btn-track { width: 100%; padding: 15px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; cursor: pointer; }
+        
+        .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; background: #1c1c1e; padding: 4px; border-radius: 12px; }
+        .tab { flex: 1; padding: 10px; text-align: center; background: transparent; border-radius: 8px; font-weight: 600; cursor: pointer; color: #666; border: none; }
         .tab.active { background: #2c2c2e; color: var(--m-teal); }
 
-        /* --- Visuals --- */
-        .chart-container { width: 100%; height: 200px; margin: 20px 0; }
-        
-        .spending-bar-bg { background: rgba(255,255,255,0.05); height: 8px; border-radius: 10px; margin-top: 15px; overflow: hidden; }
-        .spending-bar-fill { height: 100%; width: 0%; transition: width 0.8s ease-out; }
-
-        .txn-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--m-border); }
-        .pos { color: var(--m-green); }
-        .neg { color: var(--m-red); }
-
-        /* Startup Modal */
-        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .chart-container { position: relative; height: 180px; width: 100%; }
+        .row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--m-border); font-size: 14px; }
+        .pos { color: var(--m-green); } .neg { color: var(--m-red); }
     </style>
 </head>
 <body>
 
-    <div id="startup-modal">
-        <div class="card" style="width: 90%; max-width: 400px; text-align: center;">
-            <h2 style="color:var(--m-teal)">Monarch-Lite Pro</h2>
-            <button class="btn-track" onclick="closeModal()">Enter Dashboard</button>
-            <p style="font-size: 12px; color: #666; margin-top: 15px;">Your data is stored locally on this device.</p>
-        </div>
-    </div>
-
-    <div class="budget-header" id="main-header">
-        <div id="header-label" style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7;">Monthly Spending</div>
+    <div class="budget-header">
+        <div style="font-size: 11px; text-transform: uppercase; opacity: 0.6;">Total Monthly Spending</div>
         <div class="header-main" id="header-amt">$0.00</div>
-        <div id="header-subtext" style="font-size: 14px; opacity: 0.8;">Cash Flow: $0.00</div>
-        <div class="spending-bar-bg"><div id="header-bar" class="spending-bar-fill"></div></div>
+        <div id="header-subtext" style="font-size: 13px;">Cash Flow: $0.00</div>
     </div>
 
     <nav class="tab-bar">
         <button class="tab active" onclick="switchTab('budget', this)">Budget</button>
-        <button class="tab" onclick="switchTab('invest', this)">Net Worth</button>
-        <button class="tab" onclick="switchTab('liab', this)">Debts</button>
+        <button class="tab" onclick="switchTab('history', this)">History</button>
     </nav>
 
     <div id="view-budget">
         <div class="card">
-            <b style="font-size: 14px; color: var(--m-teal);">Spending Trend</b>
-            <div class="chart-container">
-                <canvas id="spendingChart"></canvas>
-            </div>
+            <div class="chart-container"><canvas id="spendingChart"></canvas></div>
         </div>
 
         <div class="card">
-            <b style="display:block; margin-bottom:10px;">Quick Track</b>
-            <input type="text" id="desc" placeholder="Merchant (e.g. Starbucks)" oninput="smartPredict(this.value)">
-            <select id="cat-select"></select>
-            <div style="display:flex; gap:10px;">
-                <input type="text" inputmode="decimal" id="amt" placeholder="0.00" style="font-weight:bold; color:var(--m-teal);">
-                <input type="date" id="txn-date">
-            </div>
-            <button class="btn-track" onclick="addTransaction()">Add Transaction</button>
-        </div>
-
-        <div id="budget-lists">
-            <div class="card">
-                <b style="color:var(--m-green); font-size:12px;">INCOME</b>
-                <div id="income-list"></div>
-            </div>
-            <div class="card">
-                <b style="color:var(--m-red); font-size:12px;">EXPENSES</b>
-                <div id="expense-list"></div>
-            </div>
+            <b style="font-size: 14px;">Quick Add</b>
+            <input type="text" id="desc" placeholder="Merchant name...">
+            <select id="cat-select">
+                <option value="🛒 Groceries">🛒 Groceries</option>
+                <option value="🏠 Rent">🏠 Rent</option>
+                <option value="☕ Coffee">☕ Coffee</option>
+                <option value="💰 Income">💰 Income</option>
+            </select>
+            <input type="number" id="amt" placeholder="0.00">
+            <button class="btn-track" onclick="addTransaction()">Track Transaction</button>
         </div>
     </div>
 
-    <div id="view-invest" style="display:none;" class="card"><h2>Investments</h2><div id="invest-list"></div></div>
-    <div id="view-liab" style="display:none;" class="card"><h2>Liabilities</h2><div id="liab-list"></div></div>
+    <div id="view-history" style="display:none;">
+        <div class="card" id="history-list">
+            </div>
+    </div>
 
     <script>
-        // --- Data & State ---
+        // 1. DATA INITIALIZATION
         let txns = JSON.parse(localStorage.getItem('m_txns')) || [];
-        let planInc = JSON.parse(localStorage.getItem('m_p_inc')) || [{name: "💵 Paychecks", amt: 5000}];
-        let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [{name: "🛒 Groceries", amt: 600}, {name: "🏠 Rent", amt: 2000}];
-        let activeTab = 'budget';
         let myChart = null;
 
-        // --- Auto-Categorization Logic ---
-        const smartMap = {
-            "starbucks": "🛒 Groceries",
-            "amazon": "🛒 Shopping",
-            "uber": "🚗 Transport",
-            "rent": "🏠 Rent",
-            "shell": "🚗 Transport",
-            "walmart": "🛒 Groceries"
-        };
-
-        function smartPredict(val) {
-            const lowVal = val.toLowerCase();
-            const catSelect = document.getElementById('cat-select');
-            for (let key in smartMap) {
-                if (lowVal.includes(key)) {
-                    catSelect.value = smartMap[key];
-                    break;
-                }
-            }
-        }
-
-        // --- Core Functions ---
-        window.onload = () => {
-            document.getElementById('txn-date').valueAsDate = new Date();
-            initChart();
-            updateUI();
-        };
-
-        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-
-        function switchTab(tab, el) {
-            activeTab = tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('view-budget').style.display = tab === 'budget' ? 'block' : 'none';
-            document.getElementById('view-invest').style.display = tab === 'invest' ? 'block' : 'none';
-            document.getElementById('view-liab').style.display = tab === 'liab' ? 'block' : 'none';
-            updateUI();
-        }
-
-        function addTransaction() {
-            const d = document.getElementById('desc').value;
-            const c = document.getElementById('cat-select').value;
-            const a = parseFloat(document.getElementById('amt').value);
-            if(!d || isNaN(a)) return;
-
-            const isInc = planInc.some(p => p.name === c);
-            txns.unshift({
-                id: Date.now(),
-                desc: d,
-                cat: c,
-                amt: isInc ? Math.abs(a) : -Math.abs(a),
-                date: document.getElementById('txn-date').value
-            });
-
-            localStorage.setItem('m_txns', JSON.stringify(txns));
-            document.getElementById('desc').value = '';
-            document.getElementById('amt').value = '';
-            updateUI();
-        }
-
-        function updateUI() {
-            const totalSpent = txns.filter(t => t.amt < 0).reduce((s, t) => s + Math.abs(t.amt), 0);
-            const totalEarned = txns.filter(t => t.amt > 0).reduce((s, t) => s + t.amt, 0);
-            const budgetLimit = planExp.reduce((s, p) => s + p.amt, 0);
-
-            // Update Header
-            document.getElementById('header-amt').innerText = `$${totalSpent.toLocaleString(undefined, {minimumFractionDigits:2})}`;
-            document.getElementById('header-subtext').innerHTML = `Cash Flow: <span class="${totalEarned - totalSpent >= 0 ? 'pos' : 'neg'}">$${(totalEarned - totalSpent).toFixed(2)}</span>`;
-            
-            const perc = Math.min((totalSpent / budgetLimit) * 100, 100);
-            const bar = document.getElementById('header-bar');
-            bar.style.width = perc + '%';
-            bar.style.background = (totalSpent > budgetLimit) ? 'var(--m-red)' : 'var(--m-green)';
-
-            // Update Lists
-            renderLists();
-            updateChart(totalSpent, totalEarned);
-        }
-
-        function renderLists() {
-            const catSelect = document.getElementById('cat-select');
-            let catHTML = '';
-            [...planInc, ...planExp].forEach(p => catHTML += `<option value="${p.name}">${p.name}</option>`);
-            catSelect.innerHTML = catHTML;
-
-            const expList = document.getElementById('expense-list');
-            expList.innerHTML = planExp.map(p => {
-                const actual = txns.filter(t => t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
-                return `<div class="txn-row">
-                    <span>${p.name}</span>
-                    <span style="font-size:12px; opacity:0.6;">$${actual} / $${p.amt}</span>
-                </div>`;
-            }).join('');
-        }
-
-        // --- Chart.js Integration ---
+        // 2. CHART INITIALIZATION (Runs once)
         function initChart() {
             const ctx = document.getElementById('spendingChart').getContext('2d');
             myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'],
                     datasets: [{
-                        label: 'Spending',
                         data: [0, 0, 0, 0],
                         borderColor: '#17e9e1',
+                        borderWidth: 3,
                         tension: 0.4,
+                        pointRadius: 0,
                         fill: true,
-                        backgroundColor: 'rgba(23, 233, 225, 0.1)'
+                        backgroundColor: 'rgba(23, 233, 225, 0.05)'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { 
-                        y: { display: false },
-                        x: { grid: { display: false }, ticks: { color: '#555' } }
-                    }
+                    scales: { x: { grid: { display: false } }, y: { display: false } }
                 }
             });
         }
 
-        function updateChart(total) {
-            // Simulated weekly breakdown for visual impact
-            myChart.data.datasets[0].data = [total * 0.2, total * 0.5, total * 0.8, total];
-            myChart.update();
+        // 3. TAB SWITCHING
+        function switchTab(tab, el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            
+            document.getElementById('view-budget').style.display = tab === 'budget' ? 'block' : 'none';
+            document.getElementById('view-history').style.display = tab === 'history' ? 'block' : 'none';
+            updateUI();
         }
+
+        // 4. ADD TRANSACTION
+        function addTransaction() {
+            const desc = document.getElementById('desc').value;
+            const cat = document.getElementById('cat-select').value;
+            const amt = parseFloat(document.getElementById('amt').value);
+
+            if (!desc || isNaN(amt)) return alert("Please fill in all fields");
+
+            const newTxn = {
+                id: Date.now(),
+                desc,
+                cat,
+                amt: cat === '💰 Income' ? Math.abs(amt) : -Math.abs(amt),
+                date: new Date().toLocaleDateString()
+            };
+
+            txns.unshift(newTxn);
+            localStorage.setItem('m_txns', JSON.stringify(txns));
+            
+            // Clear inputs
+            document.getElementById('desc').value = '';
+            document.getElementById('amt').value = '';
+            updateUI();
+        }
+
+        // 5. UPDATE UI & RECALC
+        function updateUI() {
+            const totalSpent = txns.filter(t => t.amt < 0).reduce((sum, t) => sum + Math.abs(t.amt), 0);
+            const totalEarned = txns.filter(t => t.amt > 0).reduce((sum, t) => sum + t.amt, 0);
+
+            // Update Header
+            document.getElementById('header-amt').innerText = `$${totalSpent.toLocaleString()}`;
+            document.getElementById('header-subtext').innerHTML = 
+                `Cash Flow: <span class="${totalEarned - totalSpent >= 0 ? 'pos' : 'neg'}">$${(totalEarned - totalSpent).toLocaleString()}</span>`;
+
+            // Update History List
+            const histList = document.getElementById('history-list');
+            histList.innerHTML = txns.length > 0 ? '' : '<p style="text-align:center; opacity:0.5;">No transactions yet.</p>';
+            txns.forEach(t => {
+                histList.innerHTML += `
+                    <div class="row">
+                        <div><b>${t.desc}</b><br><small>${t.cat}</small></div>
+                        <div class="${t.amt >= 0 ? 'pos' : 'neg'}">$${Math.abs(t.amt).toFixed(2)}</div>
+                    </div>`;
+            });
+
+            // Update Chart (Simulating weekly progress)
+            if (myChart) {
+                myChart.data.datasets[0].data = [totalSpent * 0.2, totalSpent * 0.45, totalSpent * 0.7, totalSpent];
+                myChart.update();
+            }
+        }
+
+        // START APP
+        window.onload = () => {
+            initChart();
+            updateUI();
+        };
     </script>
 </body>
 </html>
