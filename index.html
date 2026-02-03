@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v21.1 Pro</title>
+    <title>Monarch-Lite v21.2</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -15,7 +15,7 @@
         body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 15px; color: var(--m-text); padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
         
         /* Headers */
-        .budget-header { color: white; padding: 35px 20px; border-radius: 24px; margin-bottom: 15px; text-align: center; position: relative; border: 1px solid var(--m-border); transition: background 0.3s; }
+        .budget-header { color: white; padding: 35px 20px; border-radius: 24px; margin-bottom: 15px; text-align: center; position: relative; border: 1px solid var(--m-border); }
         .bg-spending { background: linear-gradient(135deg, var(--m-header-green) 0%, #0a192f 100%); }
         .bg-invest { background: linear-gradient(135deg, var(--m-blue) 0%, #1c1c1e 100%); border-color: var(--m-teal); }
         .bg-liab { background: linear-gradient(135deg, #3d2b1f 0%, #0b0e14 100%); border-color: var(--m-orange); }
@@ -23,50 +23,44 @@
         .header-meta { font-size: 10px; opacity: 0.5; display: flex; justify-content: space-between; position: absolute; top: 15px; left: 20px; right: 20px; font-family: monospace; }
         .header-main { font-size: 2.2rem; font-weight: 800; margin-top: 15px; letter-spacing: -1px; }
 
-        /* Navigation Tabs */
+        /* Save Button Pulse */
+        @keyframes pulse-save {
+            0% { box-shadow: 0 0 0 0 rgba(23, 233, 225, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(23, 233, 225, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(23, 233, 225, 0); }
+        }
+        .pulse { animation: pulse-save 2s infinite; border-color: var(--m-teal) !important; color: var(--m-teal) !important; }
+
         .tab-bar { display: flex; gap: 6px; margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 14px; }
-        .tab { flex: 1; padding: 12px; text-align: center; background: transparent; border-radius: 10px; font-weight: 600; cursor: pointer; color: #777; border: none; transition: 0.2s; }
+        .tab { flex: 1; padding: 12px; text-align: center; background: transparent; border-radius: 10px; font-weight: 600; cursor: pointer; color: #777; border: none; }
         .tab.active { background: var(--m-teal); color: var(--m-blue) !important; }
 
-        /* Cards & Rows */
         .card { background: var(--m-card); padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid var(--m-border); }
-        .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--m-border); }
         .budget-row { display: grid; grid-template-columns: 1fr 80px 80px; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--m-border); font-size: 14px; }
         .row-label { font-size: 10px; color: #666; text-transform: uppercase; font-weight: 700; }
 
-        /* Inputs & Buttons */
         input, select { width: 100%; padding: 12px; background: #2c2c2e; border: 1px solid var(--m-border); color: white; border-radius: 10px; font-size: 14px; box-sizing: border-box; margin-bottom: 8px; }
         .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; }
-        .btn-mgmt { flex: 1; background: #2c2c2e; color: white; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; border: 1px solid #444; text-align: center; font-size: 13px; }
-        .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 15px; padding: 14px; border-radius: 12px; font-weight: 800; cursor: pointer; }
-        
-        /* Progress Bar */
-        .spending-bar-bg { background: rgba(255,255,255,0.1); height: 8px; border-radius: 10px; margin: 15px 0; overflow: hidden; }
-        .spending-bar-fill { height: 100%; width: 0%; transition: width 0.5s; }
+        .btn-mgmt { flex: 1; background: #2c2c2e; color: white; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; border: 1px solid #444; text-align: center; font-size: 12px; }
 
-        /* Calculator Grid */
-        .calc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .calc-item { background: #262628; padding: 10px; border-radius: 10px; text-align: center; border: 1px solid var(--m-border); }
-        .calc-val { font-weight: bold; color: var(--m-orange); font-size: 14px; }
-        
-        /* Utils */
+        .spending-bar-bg { background: rgba(255,255,255,0.1); height: 8px; border-radius: 10px; margin: 15px 0; overflow: hidden; }
+        .spending-bar-fill { height: 100%; transition: width 0.5s; }
+
         .pos { color: var(--m-green); } .neg { color: var(--m-red); }
         details summary { cursor: pointer; padding: 12px; background: #2c2c2e; border-radius: 10px; font-weight: bold; list-style: none; margin-bottom: 5px; border: 1px solid var(--m-border); }
-        .amort-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
-        .amort-table th { text-align: left; color: var(--m-teal); padding: 5px; border-bottom: 1px solid #444; }
-
-        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        
+        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
     </style>
 </head>
 <body>
 
     <div id="startup-modal">
-        <div class="card" style="text-align:center; width: 80%; max-width: 400px;">
+        <div class="card" style="text-align:center; width: 85%; max-width: 400px;">
             <h2 style="color:var(--m-teal); margin-top:0;">Monarch-Lite</h2>
             <button class="btn-track" onclick="closeModal()">Continue Session</button>
             <div style="display:flex; gap:10px; margin-top:10px;">
-                <label for="sync-upload-modal" class="btn-mgmt">Import</label>
-                <button class="btn-mgmt" style="color:var(--m-red)" onclick="clearAllData()">Reset</button>
+                <label for="sync-upload-modal" class="btn-mgmt">Import JSON</label>
+                <button class="btn-mgmt" style="color:var(--m-red)" onclick="clearAllData()">Reset All</button>
             </div>
             <input type="file" id="sync-upload-modal" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
@@ -80,7 +74,7 @@
         <div id="header-content"></div>
     </div>
 
-    <select id="month-filter" onchange="updateUI()" style="margin-bottom:15px; background:transparent; border:none; font-weight:bold; font-size:1rem; color:var(--m-teal);">
+    <select id="month-filter" onchange="updateUI()" style="margin-bottom:15px; background:transparent; border:none; font-weight:bold; font-size:1.1rem; color:var(--m-teal);">
         <option value="01">January</option><option value="02">February</option><option value="03">March</option>
         <option value="04">April</option><option value="05">May</option><option value="06">June</option>
         <option value="07">July</option><option value="08">August</option><option value="09">September</option>
@@ -94,19 +88,25 @@
     </nav>
 
     <div id="view-budget">
-        <details open id="details-inc">
-            <summary id="sum-inc-text">INCOME</summary>
-            <div class="card"><div id="income-list"></div></div>
+        <details open>
+            <summary id="sum-inc-text" style="color:var(--m-green)">INCOME</summary>
+            <div class="card">
+                <div style="display: grid; grid-template-columns: 1fr 80px 80px; gap: 12px; margin-bottom:10px;">
+                    <div class="row-label">Category</div><div class="row-label">Budget</div><div class="row-label">Actual</div>
+                </div>
+                <div id="income-list"></div>
+                <button class="btn-mgmt" style="width:100%; margin-top:10px; border-style:dashed;" onclick="addCustomCat('inc')">+ Add Income Category</button>
+            </div>
         </details>
 
-        <details open id="details-exp">
-            <summary id="sum-exp-text">EXPENSES</summary>
+        <details open>
+            <summary id="sum-exp-text" style="color:var(--m-red)">EXPENSES</summary>
             <div class="card">
                 <div style="display: grid; grid-template-columns: 1fr 80px 80px; gap: 12px; margin-bottom:10px;">
                     <div class="row-label">Category</div><div class="row-label">Budget</div><div class="row-label">Rem.</div>
                 </div>
                 <div id="expense-list"></div>
-                <button class="btn-mgmt" style="width:100%; margin-top:15px; border-style:dashed;" onclick="addCustomCat('exp')">+ Add Category</button>
+                <button class="btn-mgmt" style="width:100%; margin-top:10px; border-style:dashed;" onclick="addCustomCat('exp')">+ Add Expense Category</button>
             </div>
         </details>
 
@@ -119,35 +119,13 @@
         </div>
     </div>
 
-    <div id="view-invest" style="display:none;">
-        <div class="card" id="invest-main-list"></div>
-        <button class="btn-track" onclick="addItem('assets')">+ New Asset Account</button>
-    </div>
-
-    <div id="view-liab" style="display:none;">
-        <div class="card" id="liab-main-list"></div>
-        <button class="btn-track" style="background:var(--m-orange); color:var(--m-blue);" onclick="addItem('liabs')">+ New Liability</button>
-        
-        <div class="card" style="border-color:var(--m-orange);">
-            <b style="color:var(--m-orange)">Loan Calculator</b>
-            <input type="number" id="calc-bal" placeholder="Loan Amount ($)" oninput="calcInterest()" style="margin-top:10px;">
-            <div style="display:flex; gap:10px;"><input type="number" id="calc-rate" placeholder="APR %" oninput="calcInterest()"><input type="number" id="calc-term" placeholder="Years" oninput="calcInterest()"></div>
-            <div class="calc-grid">
-                <div class="calc-item"><div class="row-label">Daily</div><div id="res-day" class="calc-val">$0</div></div>
-                <div class="calc-item"><div class="row-label">Monthly</div><div id="res-mo" class="calc-val">$0</div></div>
-                <div class="calc-item"><div class="row-label">Yearly</div><div id="res-yr" class="calc-val">$0</div></div>
-            </div>
-            <details style="margin-top:15px;">
-                <summary style="font-size:12px;">Amortization Table</summary>
-                <table class="amort-table"><tbody id="amortization-body"></tbody></table>
-            </details>
-        </div>
-    </div>
+    <div id="view-invest" style="display:none;"><div class="card" id="invest-main-list"></div><button class="btn-track" onclick="addItem('assets')">+ New Asset</button></div>
+    <div id="view-liab" style="display:none;"><div class="card" id="liab-main-list"></div><button class="btn-track" style="background:var(--m-orange); color:var(--m-blue);" onclick="addItem('liabs')">+ New Liability</button></div>
 
     <div class="card">
         <b>Data Management</b>
         <div style="display:flex; gap:10px; margin-top:10px;">
-            <button class="btn-mgmt" onclick="exportToFile()">💾 Save JSON</button>
+            <button id="save-btn" class="btn-mgmt" onclick="exportToFile()">💾 Save JSON</button>
             <label for="sync-upload-main" class="btn-mgmt">🔄 Import JSON</label>
             <input type="file" id="sync-upload-main" accept=".json" style="display:none" onchange="syncFromFile(event)">
         </div>
@@ -159,23 +137,28 @@
         let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [{name: 'Rent', amt: 1500}, {name: 'Groceries', amt: 500}];
         let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
         let liabs = JSON.parse(localStorage.getItem('m_liabs')) || [];
+        let curFile = localStorage.getItem('m_cur_file') || 'Browser Storage';
         let activeTab = 'budget';
 
         window.onload = () => {
             const today = new Date();
             document.getElementById('month-filter').value = String(today.getMonth() + 1).padStart(2, '0');
             document.getElementById('txn-date').valueAsDate = today;
+            updateMeta();
             updateUI();
         };
+
+        function updateMeta() {
+            document.getElementById('meta-file').innerText = `File: ${curFile}`;
+            document.getElementById('meta-saved').innerText = `Last Saved: ${localStorage.getItem('m_last_saved') || 'Never'}`;
+        }
 
         function updateUI() {
             const selectedMonth = document.getElementById('month-filter').value;
             const monthTxns = txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth);
-            
-            // Header Logic
             const headerBox = document.getElementById('header-content');
             const headerMain = document.getElementById('main-header');
-            
+
             if(activeTab === 'budget') {
                 headerMain.className = "budget-header bg-spending";
                 const spent = monthTxns.filter(t => t.amt < 0).reduce((s,t) => s + Math.abs(t.amt), 0);
@@ -188,27 +171,35 @@
             } else if(activeTab === 'invest') {
                 headerMain.className = "budget-header bg-invest";
                 const totalA = assets.reduce((s,a) => s + a.amt, 0);
-                headerBox.innerHTML = `<div class="header-main">$${totalA.toLocaleString()}</div><div style="font-size:12px; opacity:0.7">Total Assets</div>`;
+                headerBox.innerHTML = `<div class="header-main">$${totalA.toLocaleString()}</div><div style="font-size:12px; opacity:0.7">Total Net Assets</div>`;
             } else {
                 headerMain.className = "budget-header bg-liab";
                 const totalL = liabs.reduce((s,l) => s + l.amt, 0);
-                headerBox.innerHTML = `<div class="header-main">$${totalL.toLocaleString()}</div><div style="font-size:12px; opacity:0.7">Total Liabilities</div>`;
+                headerBox.innerHTML = `<div class="header-main">$${totalL.toLocaleString()}</div><div style="font-size:12px; opacity:0.7">Total Debt</div>`;
             }
 
-            // List Rendering
-            let expHTML = '', catHTML = '', invHTML = '', liabHTML = '';
+            // Income List
+            let incHTML = '', catHTML = '';
+            planInc.forEach((p, idx) => {
+                const earned = monthTxns.filter(t => t.cat === p.name).reduce((s,t) => s + t.amt, 0);
+                incHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value);saveInternal();"><b>$${earned}</b></div>`;
+                catHTML += `<option value="${p.name}">${p.name}</option>`;
+            });
+            document.getElementById('income-list').innerHTML = incHTML;
+
+            // Expense List
+            let expHTML = '';
             planExp.forEach((p, idx) => {
                 const catSpent = monthTxns.filter(t => t.cat === p.name).reduce((s,t) => s + Math.abs(t.amt), 0);
                 expHTML += `<div class="budget-row"><span>${p.name}</span><input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value);saveInternal();"><b>$${Math.max(0, p.amt - catSpent)}</b></div>`;
                 catHTML += `<option value="${p.name}">${p.name}</option>`;
             });
-            assets.forEach((a, idx) => invHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value);saveInternal();" style="width:100px"></div>`);
-            liabs.forEach((l, idx) => liabHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value);saveInternal();" style="width:100px"></div>`);
-
             document.getElementById('expense-list').innerHTML = expHTML;
             document.getElementById('cat-select').innerHTML = catHTML;
-            document.getElementById('invest-main-list').innerHTML = invHTML || 'No assets added';
-            document.getElementById('liab-main-list').innerHTML = liabHTML || 'No debts added';
+
+            // Assets & Liabilities
+            document.getElementById('invest-main-list').innerHTML = assets.map((a, i) => `<div class="cf-row"><span>${a.name}</span><input type="number" value="${a.amt}" onchange="assets[${i}].amt=parseFloat(this.value);saveInternal();" style="width:100px"></div>`).join('') || 'None';
+            document.getElementById('liab-main-list').innerHTML = liabs.map((l, i) => `<div class="cf-row"><span>${l.name}</span><input type="number" value="${l.amt}" onchange="liabs[${i}].amt=parseFloat(this.value);saveInternal();" style="width:100px"></div>`).join('') || 'None';
         }
 
         function switchTab(t) {
@@ -223,46 +214,13 @@
         function addTransaction() {
             const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, a = parseFloat(document.getElementById('amt').value);
             if(!d || isNaN(a)) return;
-            txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: -Math.abs(a) });
+            const isInc = planInc.some(p => p.name === c);
+            txns.unshift({ id: Date.now(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(a) : -Math.abs(a) });
+            document.getElementById('save-btn').classList.add('pulse');
             saveInternal();
         }
 
         function saveInternal() {
             localStorage.setItem('m_txns', JSON.stringify(txns));
-            localStorage.setItem('m_p_exp', JSON.stringify(planExp));
-            localStorage.setItem('m_assets', JSON.stringify(assets));
-            localStorage.setItem('m_liabs', JSON.stringify(liabs));
-            updateUI();
-        }
-
-        function exportToFile() {
-            const data = { txns, planExp, assets, liabs };
-            const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `budget_backup.json`; a.click();
-        }
-
-        function syncFromFile(e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const d = JSON.parse(event.target.result);
-                txns = d.txns; planExp = d.planExp; assets = d.assets; liabs = d.liabs;
-                saveInternal(); closeModal();
-            };
-            reader.readAsText(file);
-        }
-
-        function calcInterest() {
-            const P = parseFloat(document.getElementById('calc-bal').value) || 0;
-            const R = (parseFloat(document.getElementById('calc-rate').value) || 0) / 100;
-            document.getElementById('res-day').innerText = `$${((P * R) / 365).toFixed(2)}`;
-            document.getElementById('res-mo').innerText = `$${((P * R) / 12).toFixed(2)}`;
-            document.getElementById('res-yr').innerText = `$${(P * R).toFixed(2)}`;
-        }
-
-        function addItem(key) { const n = prompt("Name:"); if(n) { if(key==='assets') assets.push({name:n, amt:0}); else liabs.push({name:n, amt:0}); saveInternal(); } }
-        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-        function clearAllData() { if(confirm("Reset all?")) { localStorage.clear(); location.reload(); } }
-    </script>
-</body>
-</html>
+            localStorage.setItem('m_p_inc', JSON.stringify(planInc));
+            localStorage.setItem('m_p_exp
