@@ -2,512 +2,396 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Lite v20.9</title>
+    <title>Monarch-Pro v21.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
             --m-blue: #0a192f; 
             --m-teal: #17e9e1; 
-            --m-bg: #121212; 
-            --m-card: #1e1e1e; 
-            --m-red: #ff5252; 
-            --m-green: #2ecc71; 
-            --m-header-green: #1b4d3e; 
-            --m-orange: #ff9f43; 
-            --m-text: #ffffff; 
+            --m-bg: #0f172a; 
+            --m-card: #1e293b; 
+            --m-red: #fb7185; 
+            --m-green: #34d399; 
+            --m-orange: #fbbf24; 
+            --m-text: #f8fafc; 
+            --m-border: #334155;
         }
-        body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
         
-        /* Modals */
-        #startup-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px 0; }
-        .modal-card { background: var(--m-card); padding: 25px; border-radius: 24px; border: 1px solid var(--m-teal); width: 90%; max-width: 500px; box-sizing: border-box; max-height: 90vh; overflow-y: auto; text-align: center; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--m-bg); 
+            margin: 0; 
+            padding: 15px; 
+            color: var(--m-text); 
+            padding-bottom: 100px;
+            line-height: 1.5;
+        }
+
+        /* Monarch-Style Layout */
+        .dashboard-grid { display: grid; gap: 20px; }
+        .card { background: var(--m-card); border-radius: 16px; padding: 20px; border: 1px solid var(--m-border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         
         /* Headers */
-        .budget-header { color: white; padding: 20px; border-radius: 16px; margin-bottom: 12px; text-align: center; position: relative; min-height: 100px; display: flex; flex-direction: column; justify-content: center; }
-        .bg-spending { background: var(--m-header-green); border: 1px solid var(--m-green); }
-        .bg-invest { background: var(--m-blue); border: 1px solid var(--m-teal); }
-        .bg-liab { background: #3d2b1f; border: 1px solid var(--m-orange); }
-        
-        .header-meta { font-size: 10px; opacity: 0.7; margin-bottom: 8px; display: flex; justify-content: space-between; font-family: monospace; position: absolute; top: 10px; left: 20px; right: 20px; }
-        .header-main { font-size: 1.4rem; font-weight: 800; margin-top: 15px; }
-
-        /* Navigation Tabs */
-        .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; border: none; opacity: 0.6; }
-        .tab.active { background: var(--m-teal) !important; color: var(--m-blue) !important; opacity: 1; }
-
-        /* Cards & Rows */
-        .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; }
-        .cf-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
-        .budget-row { display: grid; grid-template-columns: 1fr 80px 80px; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid #2a2a2a; font-size: 14px; }
-        .row-label { font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px; }
-        
-        .wizard-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #2a2a2a; }
-        .wizard-row span { text-align: left; flex: 1; font-size: 14px; }
-        .wizard-row input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; }
-
-        /* Buttons & Inputs */
-        input, select { width: 100%; padding: 8px; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
-        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
-        .btn-mgmt { flex: 1; background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; display: flex; align-items: center; justify-content: center; }
-        .btn-danger { width: 100%; background: #3d1010; color: var(--m-red); border: 1px solid var(--m-red); margin-top: 10px; padding: 16px; border-radius: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
-        .btn-add-cat { background: none; border: 1px dashed #555; color: #888; width: 100%; padding: 10px; border-radius: 8px; margin-top: 10px; cursor: pointer; font-size: 12px; }
-        .del-btn { color: var(--m-teal); background: none; border: none; font-size: 18px; cursor: pointer; opacity: 0.8; }
-
-        @keyframes pulse-save-alt {
-            0% { background: #333; color: white; box-shadow: 0 0 0 0 rgba(23, 233, 225, 0); }
-            50% { background: var(--m-teal); color: var(--m-blue); box-shadow: 0 0 15px rgba(23, 233, 225, 0.5); }
-            100% { background: #333; color: white; box-shadow: 0 0 0 0 rgba(23, 233, 225, 0); }
+        .budget-header { 
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 24px; border-radius: 20px; margin-bottom: 20px; 
+            border: 1px solid var(--m-teal); text-align: center;
         }
-        .pulse { animation: pulse-save-alt 2s infinite ease-in-out; border-color: var(--m-teal) !important; }
+        .header-main { font-size: 1.8rem; font-weight: 800; margin: 10px 0; }
+        .money { font-family: 'Roboto Mono', monospace; }
 
-        .spending-bar-bg { background: rgba(255,255,255,0.1); height: 12px; border-radius: 10px; margin: 10px 0; overflow: hidden; position: relative; width: 100%; }
-        .spending-bar-fill { height: 100%; width: 0%; transition: width 0.5s; }
+        /* Navigation */
+        .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; background: #1e293b; padding: 5px; border-radius: 12px; }
+        .tab { flex: 1; padding: 10px; border-radius: 8px; border: none; background: transparent; color: #94a3b8; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .tab.active { background: var(--m-teal); color: var(--m-blue); }
+
+        /* Progress Bars */
+        .cat-progress-wrapper { margin-top: 8px; }
+        .progress-bg { background: #334155; height: 6px; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 0.4s ease; }
+
+        /* Form Elements */
+        input, select { 
+            background: #0f172a; border: 1px solid var(--m-border); color: white; 
+            padding: 12px; border-radius: 10px; width: 100%; box-sizing: border-box; margin-bottom: 10px;
+        }
+        .btn-track { 
+            background: var(--m-teal); color: var(--m-blue); border: none; 
+            padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%;
+        }
+
+        /* Transaction List */
+        .txn-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px; border-bottom: 1px solid var(--m-border); 
+        }
+        .txn-info { display: flex; flex-direction: column; }
+        .txn-meta { font-size: 11px; color: #94a3b8; }
+
+        /* Modal */
+        #startup-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: flex; align-items: center; justify-content: center; }
+        
+        .hidden { display: none !important; }
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
-
-        .calc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .calc-item { background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #444; text-align: center; }
-        .calc-label { font-size: 10px; text-transform: uppercase; opacity: 0.7; }
-        .calc-val { font-weight: bold; color: var(--m-orange); font-size: 13px; }
         
-        details summary { cursor: pointer; padding: 10px; background: #2a2a2a; border-radius: 8px; font-weight: bold; margin-bottom: 5px; list-style: none; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
-        details summary::-webkit-details-marker { display: none; }
-        details[open] summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-color: var(--m-teal); }
-        details.budget-details { margin-bottom: 15px; }
-        details.budget-details .content { background: var(--m-card); padding: 0 15px 15px 15px; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; border: 1px solid #333; border-top: none; }
-
-        .amort-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
-        .amort-table th { text-align: left; color: var(--m-teal); border-bottom: 1px solid #444; padding: 5px; }
-        .amort-table td { padding: 5px; border-bottom: 1px solid #2a2a2a; }
-
-        .toggle-container { display: flex; align-items: center; gap: 10px; font-size: 11px; opacity: 0.8; margin-top: 5px; }
-        .toggle-container input { width: auto; }
+        canvas { max-height: 200px; margin: 10px auto; }
     </style>
 </head>
 <body>
 
     <div id="startup-modal">
-        <div class="modal-card" id="initial-choice">
-            <h2 style="color:var(--m-teal); margin-top:0;">Welcome</h2>
-            <button class="btn-track" onclick="closeModal()">Continue Session</button>
-            <div style="display:flex; gap:10px; margin-top:10px;">
-                <label for="sync-upload-modal" class="btn-mgmt">Import File</label>
-                <button class="btn-mgmt" onclick="showWizard()" style="color:var(--m-red);">Start Fresh</button>
-            </div>
-            <input type="file" id="sync-upload-modal" accept=".json" style="display:none" onchange="syncFromFile(event)">
+        <div class="card" id="initial-choice" style="width: 90%; max-width: 400px; text-align: center;">
+            <h2 style="color:var(--m-teal)">Monarch Pro</h2>
+            <button class="btn-track" onclick="closeModal()">Open Dashboard</button>
+            <button class="tab" onclick="showWizard()" style="margin-top:10px; width:100%">Setup New Budget</button>
         </div>
-        
-        <div class="modal-card" id="wizard-view" style="display:none;">
-            <h3 style="margin-top:0;">Setup Categories</h3>
-            <div id="wizard-list">
-                <p style="font-size: 11px; color: var(--m-green); font-weight:bold; text-align:left; margin-bottom:5px;">INCOME</p>
-                <div class="wizard-row"><span>💵 Paychecks</span><input type="checkbox" checked data-cat="💵 Paychecks" data-type="inc"></div>
-                <div class="wizard-row"><span>💸 Interest</span><input type="checkbox" checked data-cat="💸 Interest" data-type="inc"></div>
-                <div class="wizard-row"><span>💰 Other Income</span><input type="checkbox" checked data-cat="💰 Other Income" data-type="inc"></div>
-                <div class="wizard-row"><span>🤑 RogersWE Cash</span><input type="checkbox" checked data-cat="🤑 RogersWE Cash" data-type="inc"></div>
-                <p style="font-size: 11px; color: var(--m-teal); margin-top: 15px; font-weight:bold; text-align:left; margin-bottom:5px;">EXPENSES</p>
-                <div class="wizard-row"><span>🛒 Groceries</span><input type="checkbox" checked data-cat="🛒 Groceries" data-type="exp"></div>
-                <div class="wizard-row"><span>🏠 Mortgage</span><input type="checkbox" checked data-cat="🏠 Mortgage" data-type="exp"></div>
-                <div class="wizard-row"><span>🏢 Parking & Tolls</span><input type="checkbox" checked data-cat="🏢 Parking & Tolls" data-type="exp"></div>
-                <div class="wizard-row"><span>💧 Water</span><input type="checkbox" checked data-cat="💧 Water" data-type="exp"></div>
-                <div class="wizard-row"><span>⚡ Gas & Electric</span><input type="checkbox" checked data-cat="⚡ Gas & Electric" data-type="exp"></div>
-                <div class="wizard-row"><span>🌐 Internet & Cable</span><input type="checkbox" checked data-cat="🌐 Internet & Cable" data-type="exp"></div>
-                <div class="wizard-row"><span>📱 Phone</span><input type="checkbox" checked data-cat="📱 Phone" data-type="exp"></div>
-                <div class="wizard-row"><span>👶 Child Care</span><input type="checkbox" checked data-cat="👶 Child Care" data-type="exp"></div>
-            </div>
-            <button class="btn-track" onclick="finishWizard()">Finish Setup</button>
+
+        <div class="card hidden" id="wizard-view" style="width: 90%; max-width: 400px;">
+            <h3>Select Categories</h3>
+            <div id="wizard-list" style="max-height: 300px; overflow-y: auto; text-align: left;">
+                </div>
+            <button class="btn-track" style="margin-top:20px;" onclick="finishWizard()">Complete Setup</button>
         </div>
     </div>
 
-    <div class="budget-header bg-spending" id="main-header">
-        <div class="header-meta">
-            <span id="meta-file">File: Browser Storage</span>
-            <span id="meta-saved">Last Saved: Never</span>
-        </div>
+    <div class="budget-header" id="main-header">
         <div id="header-content"></div>
+        <canvas id="spendingChart"></canvas>
     </div>
 
-    <select id="month-filter" onchange="updateUI()" style="margin-bottom:10px;">
-        <option value="01">January</option><option value="02">February</option><option value="03">March</option>
-        <option value="04">April</option><option value="05">May</option><option value="06">June</option>
-        <option value="07">July</option><option value="08">August</option><option value="09">September</option>
-        <option value="10">October</option><option value="11">November</option><option value="12">December</option>
-    </select>
-
-    <nav class="tab-bar">
-        <button class="tab active" id="tab-budget" onclick="switchTab('budget')">Budget</button>
-        <button class="tab" id="tab-invest" onclick="switchTab('invest')">Investments</button>
-        <button class="tab" id="tab-liab" onclick="switchTab('liab')">Liabilities</button>
-    </nav>
+    <div class="tab-bar">
+        <button class="tab active" onclick="switchTab('budget', this)">Budget</button>
+        <button class="tab" onclick="switchTab('invest', this)">Net Worth</button>
+        <button class="tab" onclick="switchTab('liab', this)">Debts</button>
+    </div>
 
     <div id="view-budget">
-        <details class="budget-details" open id="details-inc">
-            <summary><div id="sum-inc-text" style="font-size: 11px; color: var(--m-green); font-weight: bold; width:100%;">INCOME</div></summary>
-            <div class="content">
-                <div style="display: grid; grid-template-columns: 1fr 80px 80px; gap: 12px; padding: 10px 0 5px 0; border-bottom: 1px solid #333;">
-                    <div class="row-label">Category</div><div class="row-label">Budget</div><div class="row-label">Remaining</div>
-                </div>
-                <div id="income-list"></div>
-                <button class="btn-add-cat" onclick="addCustomCat('inc')">+ Add/Remove Income Category</button>
+        <div class="card" style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin:0">Add Transaction</h3>
+                <select id="month-filter" onchange="updateUI()" style="width: auto; margin:0; padding: 5px;">
+                    <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option>
+                    <option value="04">Apr</option><option value="05">May</option><option value="06">Jun</option>
+                    <option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option>
+                    <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+                </select>
             </div>
-        </details>
-
-        <details class="budget-details" open id="details-exp">
-            <summary><div id="sum-exp-text" style="font-size: 11px; color: var(--m-red); font-weight: bold; width:100%;">EXPENSES</div></summary>
-            <div class="content">
-                <div style="display: grid; grid-template-columns: 1fr 80px 80px; gap: 12px; padding: 10px 0 5px 0; border-bottom: 1px solid #333;">
-                    <div class="row-label">Category</div><div class="row-label">Budget</div><div class="row-label">Remaining</div>
-                </div>
-                <div id="expense-list"></div>
-                <button class="btn-add-cat" onclick="addCustomCat('exp')">+ Add/Remove Expense Category</button>
+            <input type="text" id="desc" placeholder="Merchant (e.g., Walmart, Netflix)" onblur="autoSuggestCategory()">
+            <div style="display:flex; gap:10px;">
+                <select id="cat-select"></select>
+                <input type="text" inputmode="decimal" id="amt" placeholder="0.00" style="flex: 0.5;">
             </div>
-        </details>
-
-        <div class="card">
-            <b>Add Transaction</b>
-            <input type="text" id="desc" placeholder="Merchant">
-            <select id="cat-select" style="margin: 5px 0;"></select>
-            <div style="display:flex; gap:10px;"><input type="date" id="txn-date" style="flex:1"><input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1"></div>
+            <input type="date" id="txn-date">
             <button class="btn-track" onclick="addTransaction()">Track Transaction</button>
         </div>
-        <details>
-            <summary>History / Transactions <span id="txn-count" style="font-size:12px; opacity:0.6;">0 items</span></summary>
-            <div id="txn-list" style="background: rgba(0,0,0,0.2); padding: 10px; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;"></div>
+
+        <div id="budget-sections">
+            </div>
+
+        <details class="card" style="margin-top: 20px;">
+            <summary style="cursor:pointer; font-weight:600;">Transaction History</summary>
+            <div id="txn-list" style="margin-top:15px;"></div>
         </details>
     </div>
 
-    <div id="view-invest" style="display:none;"><div class="card" id="invest-main-list"></div><button class="btn-track" onclick="addItem('assets')">+ New Asset Account</button></div>
-
-    <div id="view-liab" style="display:none;">
-        <div class="card" id="liab-main-list"></div>
-        <button class="btn-track" style="background:var(--m-orange); color:var(--m-blue);" onclick="addItem('liabs')">+ New Liability</button>
-        <div class="card" style="margin-top: 20px; border: 1px solid var(--m-orange);">
-            <b style="color: var(--m-orange);">Loan & Mortgage Calculator</b>
-            <div style="margin-top:10px;">
-                <input type="text" inputmode="decimal" id="calc-bal" placeholder="Loan Amount ($)" oninput="calcInterest()">
-                <div style="display:flex; gap:10px; margin-top:5px;"><input type="text" inputmode="decimal" id="calc-rate" placeholder="APR %" style="flex:1" oninput="calcInterest()"><input type="text" inputmode="decimal" id="calc-term" placeholder="Term (Years)" style="flex:1" oninput="calcInterest()"></div>
-            </div>
-            <div class="calc-grid"><div class="calc-item"><div class="calc-label">Daily</div><div id="res-day" class="calc-val">$0.00</div></div><div class="calc-item"><div class="calc-label">Monthly</div><div id="res-mo" class="calc-val">$0.00</div></div><div class="calc-item"><div class="calc-label">Yearly</div><div id="res-yr" class="calc-val">$0.00</div></div></div>
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed #444;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                    <span style="font-size:12px; opacity:0.8;">Est. Bi-weekly Payment:</span>
-                    <span id="res-bi" style="font-weight:bold; color:var(--m-teal);">$0.00</span>
-                </div>
-                <div class="toggle-container">
-                    <input type="checkbox" id="accel-toggle" onchange="calcInterest()"> <label for="accel-toggle">Use Accelerated Bi-weekly (Monthly/2)</label>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-top:10px; margin-bottom:5px;"><span style="font-size:12px; opacity:0.8;">Est. Monthly Payment:</span><span id="res-pmt" style="font-weight:bold; color:var(--m-teal);">$0.00</span></div>
-                <div style="display:flex; justify-content:space-between;"><span style="font-size:12px; opacity:0.8;">Total Interest over Term:</span><span id="res-total-int" style="font-weight:bold; color:var(--m-red);">$0.00</span></div>
-            </div>
-            <details style="margin-top: 15px;">
-                <summary style="font-size: 12px; opacity: 0.8;" id="amort-summary">Amortization Table</summary>
-                <div style="max-height: 250px; overflow-y: auto;">
-                    <table class="amort-table">
-                        <thead>
-                            <tr><th id="amort-period-label">Month</th><th>Principal</th><th>Interest</th><th>Balance</th></tr>
-                        </thead>
-                        <tbody id="amortization-body"></tbody>
-                    </table>
-                </div>
-            </details>
-        </div>
+    <div id="view-invest" class="hidden">
+        <div class="card" id="asset-list"></div>
+        <button class="btn-track" style="margin-top:10px" onclick="addItem('assets')">+ Add Asset Account</button>
     </div>
 
-    <div class="card">
-        <b>Data Management</b>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button id="save-btn" class="btn-mgmt" onclick="exportToFile()">💾 Save</button>
-            <label for="sync-upload-main" class="btn-mgmt">🔄 Import</label>
-            <input type="file" id="sync-upload-main" accept=".json" style="display:none" onchange="syncFromFile(event)">
+    <div id="view-liab" class="hidden">
+        <div class="card" id="liab-list"></div>
+        <button class="btn-track" style="margin-top:10px; background: var(--m-orange);" onclick="addItem('liabs')">+ Add Liability</button>
+    </div>
+
+    <div class="card" style="margin-top: 30px; opacity: 0.8;">
+        <h4 style="margin-top:0">System</h4>
+        <div style="display:flex; gap:10px;">
+            <button class="tab" style="background:#334155" onclick="exportToFile()">Backup JSON</button>
+            <button class="tab" style="background:#450a0a; color: var(--m-red)" onclick="clearAllData()">Reset</button>
         </div>
     </div>
-    <button class="btn-danger" onclick="clearAllData()">🗑️ Reset All Data</button>
 
     <script>
-        let txns = JSON.parse(localStorage.getItem('m_txns')) || [];
-        let planInc = JSON.parse(localStorage.getItem('m_p_inc')) || [];
-        let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [];
-        let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
-        let liabs = JSON.parse(localStorage.getItem('m_liabs')) || [];
-        let curFile = localStorage.getItem('m_cur_file') || 'Browser Storage';
-        let activeTab = 'budget';
+        // --- State Management ---
+        let state = {
+            txns: JSON.parse(localStorage.getItem('m_txns')) || [],
+            planInc: JSON.parse(localStorage.getItem('m_p_inc')) || [],
+            planExp: JSON.parse(localStorage.getItem('m_p_exp')) || [],
+            assets: JSON.parse(localStorage.getItem('m_assets')) || [],
+            liabs: JSON.parse(localStorage.getItem('m_liabs')) || [],
+            activeTab: 'budget'
+        };
+
+        const categoryRules = {
+            "walmart": "🛒 Groceries", "amazon": "🛒 Groceries",
+            "netflix": "🎬 Entertainment", "spotify": "🎬 Entertainment",
+            "shell": "🚗 Gas", "chevron": "🚗 Gas", "uber": "🚗 Gas"
+        };
+
+        let spendingChart = null;
 
         window.onload = () => {
             const today = new Date();
             document.getElementById('month-filter').value = String(today.getMonth() + 1).padStart(2, '0');
             document.getElementById('txn-date').valueAsDate = today;
-            updateMetaHeader();
+            initWizardList();
             updateUI();
         };
 
-        function updateMetaHeader() {
-            document.getElementById('meta-saved').innerText = `Last Saved: ${localStorage.getItem('m_last_saved') || 'Never'}`;
-            document.getElementById('meta-file').innerText = `File: ${curFile}`;
-        }
-
-        function saveInternal() {
-            localStorage.setItem('m_txns', JSON.stringify(txns));
-            localStorage.setItem('m_p_inc', JSON.stringify(planInc));
-            localStorage.setItem('m_p_exp', JSON.stringify(planExp));
-            localStorage.setItem('m_assets', JSON.stringify(assets));
-            localStorage.setItem('m_liabs', JSON.stringify(liabs));
-            localStorage.setItem('m_cur_file', curFile);
-            document.getElementById('save-btn').classList.add('pulse');
+        function save() {
+            Object.keys(state).forEach(key => {
+                if(key !== 'activeTab') localStorage.setItem(`m_${key}`, JSON.stringify(state[key]));
+            });
             updateUI();
         }
 
-        function updateUI() {
-            const incL = document.getElementById('income-list'), expL = document.getElementById('expense-list'), 
-                  txnL = document.getElementById('txn-list'), invL = document.getElementById('invest-main-list'), 
-                  liabL = document.getElementById('liab-main-list'), catS = document.getElementById('cat-select'),
-                  headerBox = document.getElementById('header-content'),
-                  monthFilter = document.getElementById('month-filter');
-            
-            // Toggle visibility of the month filter based on the active tab
-            monthFilter.style.display = (activeTab === 'budget') ? 'block' : 'none';
-
-            const selectedMonth = monthFilter.value;
-            let incHTML = '', expHTML = '', txnHTML = '', invHTML = '', liabHTML = '', catSHTML = '';
-
-            const monthTxns = txns.filter(t => t.date && t.date.split('-')[1] === selectedMonth);
-            document.getElementById('txn-count').innerText = `${monthTxns.length} items`;
-
-            let actExp = 0, actInc = 0, budIncT = 0, budExpT = 0, totA = 0, totL = 0;
-            
-            monthTxns.forEach(t => { 
-                if(t.amt < 0) actExp += Math.abs(t.amt); 
-                else actInc += t.amt;
-            });
-            
-            budIncT = planInc.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
-            budExpT = planExp.reduce((sum, p) => sum + (parseFloat(p.amt) || 0), 0);
-
-            const cashFlow = actInc - actExp;
-            const headerMain = document.getElementById('main-header');
-
-            if(activeTab === 'budget') {
-                headerMain.className = "budget-header bg-spending";
-                const pSpent = budExpT > 0 ? Math.round((actExp / budExpT) * 100) : 0;
-                headerBox.innerHTML = `
-                    <div class="header-main">Monthly Spending</div>
-                    <div style="font-weight: bold; font-size: 1.1rem;">$${actExp.toLocaleString(undefined, {minimumFractionDigits: 2})} spent of $${budExpT.toLocaleString()}</div>
-                    <div style="font-size: 12px; margin-top:5px; opacity:0.9;">Cash Flow: <span class="${cashFlow >= 0 ? 'pos' : 'neg'}">$${cashFlow.toLocaleString(undefined, {minimumFractionDigits: 2})}</span></div>
-                    <div class="spending-bar-bg"><div class="spending-bar-fill" style="width:${Math.min(pSpent, 100)}%; background:${pSpent > 100 ? 'var(--m-red)' : 'var(--m-green)'}"></div></div>`;
-            } else if(activeTab === 'invest') {
-                headerMain.className = "budget-header bg-invest";
-                assets.forEach(a => totA += a.amt); liabs.forEach(l => totL += l.amt);
-                headerBox.innerHTML = `<div class="header-main">Net Worth</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-teal)">$${(totA - totL).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>`;
-            } else {
-                headerMain.className = "budget-header bg-liab";
-                liabs.forEach(l => totL += l.amt);
-                headerBox.innerHTML = `<div class="header-main">Total Liabilities</div><div style="font-size: 1.8rem; font-weight: 900; color:var(--m-orange)">$${totL.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>`;
+        // --- Logic ---
+        function autoSuggestCategory() {
+            const desc = document.getElementById('desc').value.toLowerCase();
+            const catSelect = document.getElementById('cat-select');
+            for (let key in categoryRules) {
+                if (desc.includes(key)) {
+                    catSelect.value = categoryRules[key];
+                    break;
+                }
             }
+        }
 
-            let totalIncRem = 0;
-            planInc.forEach((p, idx) => { 
-                catSHTML += `<option value="${p.name}">${p.name}</option>`; 
-                const catTotal = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + t.amt, 0);
-                const remaining = p.amt - catTotal;
-                totalIncRem += remaining;
-                const statusClass = remaining < 0 ? 'pos' : '';
-                incHTML += `<div class="budget-row">
-                    <span style="font-weight:500;">${p.name}</span>
-                    <input type="number" value="${p.amt}" onchange="planInc[${idx}].amt=parseFloat(this.value)||0;saveInternal();">
-                    <span class="${statusClass}" style="text-align:right; font-weight:bold;">$${Math.abs(remaining).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
-                </div>`; 
+        function addTransaction() {
+            const d = document.getElementById('desc').value;
+            const c = document.getElementById('cat-select').value;
+            const a = parseFloat(document.getElementById('amt').value);
+            if(!d || isNaN(a)) return;
+
+            const isInc = state.planInc.some(p => p.name === c);
+            state.txns.unshift({
+                id: Date.now(),
+                desc: d,
+                cat: c,
+                date: document.getElementById('txn-date').value,
+                amt: isInc ? Math.abs(a) : -Math.abs(a)
             });
-            document.getElementById('sum-inc-text').innerHTML = `INCOME: $${budIncT.toLocaleString()} <span style="float:right; opacity:0.7; font-weight:normal;">Rem: $${Math.abs(totalIncRem).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>`;
-
-            let totalExpRem = 0;
-            planExp.forEach((p, idx) => { 
-                catSHTML += `<option value="${p.name}">${p.name}</option>`; 
-                const catSpent = monthTxns.filter(t => t.cat === p.name).reduce((sum, t) => sum + Math.abs(t.amt), 0);
-                const remaining = p.amt - catSpent;
-                totalExpRem += remaining;
-                const statusClass = remaining < 0 ? 'neg' : '';
-                expHTML += `<div class="budget-row">
-                    <span style="font-weight:500;">${p.name}</span>
-                    <input type="number" value="${p.amt}" onchange="planExp[${idx}].amt=parseFloat(this.value)||0;saveInternal();">
-                    <span class="${statusClass}" style="text-align:right; font-weight:bold;">$${Math.abs(remaining).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
-                </div>`; 
-            });
-            document.getElementById('sum-exp-text').innerHTML = `EXPENSES: $${budExpT.toLocaleString()} <span style="float:right; opacity:0.7; font-weight:normal;">Rem: $${totalExpRem.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>`;
-
-            assets.forEach((a, idx) => invHTML += `<div class="cf-row"><span>${a.name}</span><input type="number" style="width:100px;" value="${a.amt}" onchange="assets[${idx}].amt=parseFloat(this.value)||0;saveInternal();"></div>`);
-            liabs.forEach((l, idx) => liabHTML += `<div class="cf-row"><span>${l.name}</span><input type="number" style="width:100px;" value="${l.amt}" onchange="liabs[${idx}].amt=parseFloat(this.value)||0;saveInternal();"></div>`);
             
-            monthTxns.forEach((t) => {
-                txnHTML += `<article class="card" style="display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:5px;">
-                    <div style="font-size:13px;"><b>${t.cat}</b>: ${t.desc}</div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div class="${t.amt < 0 ? 'neg' : 'pos'}" style="font-size:13px; font-weight:bold;">$${Math.abs(t.amt).toFixed(2)}</div>
-                        <button class="del-btn" onclick="editTxn('${t.id}')">✎</button>
+            document.getElementById('desc').value = '';
+            document.getElementById('amt').value = '';
+            save();
+        }
+
+        function updateUI() {
+            const month = document.getElementById('month-filter').value;
+            const monthTxns = state.txns.filter(t => t.date.split('-')[1] === month);
+            
+            renderHeader(monthTxns);
+            renderBudget(monthTxns);
+            renderList('asset-list', state.assets, 'assets');
+            renderList('liab-list', state.liabs, 'liabs');
+            renderTransactions(monthTxns);
+            updateChart(monthTxns);
+        }
+
+        function renderHeader(txns) {
+            const spent = txns.filter(t => t.amt < 0).reduce((s, t) => s + Math.abs(t.amt), 0);
+            const income = txns.filter(t => t.amt > 0).reduce((s, t) => s + t.amt, 0);
+            const budgetTotal = state.planExp.reduce((s, p) => s + p.amt, 0);
+
+            document.getElementById('header-content').innerHTML = `
+                <div style="font-size: 14px; color: #94a3b8;">${state.activeTab === 'budget' ? 'Total Spending' : 'Net Worth'}</div>
+                <div class="header-main money">$${(state.activeTab === 'budget' ? spent : calculateNetWorth()).toLocaleString()}</div>
+                <div style="font-size: 12px; opacity: 0.8;">
+                    ${state.activeTab === 'budget' ? `of $${budgetTotal.toLocaleString()} budget` : `Liabilities: $${calculateTotalLiabs().toLocaleString()}`}
+                </div>
+            `;
+        }
+
+        function renderBudget(monthTxns) {
+            const container = document.getElementById('budget-sections');
+            let html = `<h4>Income</h4>`;
+            
+            state.planInc.forEach(p => html += renderCatRow(p, monthTxns, 'pos'));
+            html += `<h4 style="margin-top:20px">Expenses</h4>`;
+            state.planExp.forEach(p => html += renderCatRow(p, monthTxns, 'neg'));
+            
+            container.innerHTML = html;
+            
+            // Sync cat-select
+            const sel = document.getElementById('cat-select');
+            const options = [...state.planInc, ...state.planExp].map(c => `<option value="${c.name}">${c.name}</option>`);
+            sel.innerHTML = options.join('');
+        }
+
+        function renderCatRow(plan, txns, theme) {
+            const actual = txns.filter(t => t.cat === plan.name).reduce((s, t) => s + Math.abs(t.amt), 0);
+            const percent = plan.amt > 0 ? Math.min((actual / plan.amt) * 100, 100) : 0;
+            const overBudget = actual > plan.amt && plan.amt > 0;
+
+            return `
+                <div style="margin-bottom: 15px;">
+                    <div style="display:flex; justify-content:space-between; font-size: 13px; font-weight:600;">
+                        <span>${plan.name}</span>
+                        <span class="money">$${actual.toFixed(0)} <span style="font-weight:400; color:#94a3b8">/ $${plan.amt}</span></span>
                     </div>
-                </article>`;
+                    <div class="cat-progress-wrapper">
+                        <div class="progress-bg">
+                            <div class="progress-fill" style="width: ${percent}%; background: ${overBudget ? 'var(--m-red)' : 'var(--m-teal)'}"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTransactions(txns) {
+            const list = document.getElementById('txn-list');
+            list.innerHTML = txns.map(t => `
+                <div class="txn-item">
+                    <div class="txn-info">
+                        <span style="font-weight:600; font-size:14px;">${t.desc}</span>
+                        <span class="txn-meta">${t.cat} • ${t.date}</span>
+                    </div>
+                    <span class="money ${t.amt > 0 ? 'pos' : ''}" style="font-weight:800;">
+                        ${t.amt > 0 ? '+' : ''}$${Math.abs(t.amt).toFixed(2)}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        function updateChart(txns) {
+            const data = {};
+            txns.filter(t => t.amt < 0).forEach(t => {
+                data[t.cat] = (data[t.cat] || 0) + Math.abs(t.amt);
             });
 
-            incL.innerHTML = incHTML;
-            expL.innerHTML = expHTML;
-            txnL.innerHTML = txnHTML;
-            invL.innerHTML = invHTML;
-            liabL.innerHTML = liabHTML;
-            catS.innerHTML = catSHTML;
+            const ctx = document.getElementById('spendingChart').getContext('2d');
+            if(spendingChart) spendingChart.destroy();
+            
+            spendingChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        data: Object.values(data),
+                        backgroundColor: ['#17e9e1', '#34d399', '#fbbf24', '#fb7185', '#818cf8', '#a78bfa'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { cutout: '70%', plugins: { legend: { display: false } } }
+            });
         }
 
-        function closeModal() { document.getElementById('startup-modal').style.display = 'none'; }
-        function showWizard() { document.getElementById('initial-choice').style.display = 'none'; document.getElementById('wizard-view').style.display = 'block'; }
+        // --- Helpers ---
+        function calculateNetWorth() {
+            const a = state.assets.reduce((s, i) => s + i.amt, 0);
+            const l = state.liabs.reduce((s, i) => s + i.amt, 0);
+            return a - l;
+        }
+
+        function calculateTotalLiabs() { return state.liabs.reduce((s, i) => s + i.amt, 0); }
+
+        function switchTab(tab, el) {
+            state.activeTab = tab;
+            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('view-budget').classList.toggle('hidden', tab !== 'budget');
+            document.getElementById('view-invest').classList.toggle('hidden', tab !== 'invest');
+            document.getElementById('view-liab').classList.toggle('hidden', tab !== 'liab');
+            updateUI();
+        }
+
+        function closeModal() { document.getElementById('startup-modal').classList.add('hidden'); }
         
-        function finishWizard() { 
-            planInc = []; planExp = []; txns = []; 
-            document.querySelectorAll('#wizard-list input:checked').forEach(c => { 
-                const n = c.getAttribute('data-cat'), type = c.getAttribute('data-type');
-                if(type === 'inc') planInc.push({name:n, amt: 0}); else planExp.push({name:n, amt: 0});
-            }); 
-            curFile = "Fresh Session";
-            saveInternal(); closeModal(); 
+        function showWizard() { 
+            document.getElementById('initial-choice').classList.add('hidden');
+            document.getElementById('wizard-view').classList.remove('hidden');
         }
 
+        function initWizardList() {
+            const cats = [
+                {n: "💵 Paychecks", t: "inc"}, {n: "🛒 Groceries", t: "exp"},
+                {n: "🏠 Rent/Mortgage", t: "exp"}, {n: "🎬 Entertainment", t: "exp"},
+                {n: "🚗 Gas & Auto", t: "exp"}, {n: "📱 Utilities", t: "exp"}
+            ];
+            document.getElementById('wizard-list').innerHTML = cats.map(c => `
+                <label style="display:block; padding:10px; border-bottom:1px solid #334155;">
+                    <input type="checkbox" checked data-cat="${c.n}" data-type="${c.t}" style="width:auto;"> ${c.n}
+                </label>
+            `).join('');
+        }
+
+        function finishWizard() {
+            state.planInc = []; state.planExp = [];
+            document.querySelectorAll('#wizard-list input:checked').forEach(i => {
+                const item = {name: i.dataset.cat, amt: 0};
+                if(i.dataset.type === 'inc') state.planInc.push(item);
+                else state.planExp.push(item);
+            });
+            save(); closeModal();
+        }
+
+        function renderList(id, data, key) {
+            document.getElementById(id).innerHTML = data.map((item, idx) => `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span>${item.name}</span>
+                    <input type="number" value="${item.amt}" style="width:120px; margin:0;" 
+                        onchange="state.${key}[${idx}].amt = parseFloat(this.value); save();">
+                </div>
+            `).join('');
+        }
+
+        function addItem(key) {
+            const n = prompt("Name:");
+            if(n) { state[key].push({name: n, amt: 0}); save(); }
+        }
+
+        function clearAllData() { if(confirm("Erase everything?")) { localStorage.clear(); location.reload(); } }
+        
         function exportToFile() {
-            const fileName = `monarch_backup_${new Date().toISOString().split('T')[0]}.json`;
-            const data = { txns, planInc, planExp, assets, liabs };
-            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify(state)], {type: 'application/json'});
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = fileName;
+            a.download = `monarch_pro_backup.json`;
             a.click();
-            curFile = fileName;
-            localStorage.setItem('m_cur_file', curFile);
-            localStorage.setItem('m_last_saved', new Date().toLocaleTimeString());
-            document.getElementById('save-btn').classList.remove('pulse');
-            updateMetaHeader();
-        }
-
-        function syncFromFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const d = JSON.parse(e.target.result);
-                txns = d.txns || []; planInc = d.planInc || []; planExp = d.planExp || []; assets = d.assets || []; liabs = d.liabs || [];
-                curFile = file.name;
-                saveInternal(); updateMetaHeader(); closeModal();
-            };
-            reader.readAsText(file);
-        }
-
-        function switchTab(t) { activeTab = t; ['budget', 'invest', 'liab'].forEach(tab => { document.getElementById(`tab-${tab}`).className = (t === tab) ? 'tab active' : 'tab'; document.getElementById(`view-${tab}`).style.display = (t === tab) ? 'block' : 'none'; }); updateUI(); }
-        
-        function addTransaction() { 
-            const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, aV = parseFloat(document.getElementById('amt').value); 
-            if(!d || isNaN(aV)) return; 
-            const isInc = planInc.some(p => p.name === c); 
-            const newId = (typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : Date.now().toString();
-            txns.unshift({ id: newId, desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(aV) : -Math.abs(aV) }); 
-            document.getElementById('desc').value = ''; document.getElementById('amt').value = ''; 
-            saveInternal(); 
-        }
-
-        function editTxn(id) {
-            const idx = txns.findIndex(t => t.id === id);
-            if (idx === -1) return;
-            const t = txns[idx];
-            const action = prompt(`Edit "${t.desc}"?\nType 'delete' to remove, or enter a new amount:`, Math.abs(t.amt));
-            if (action === null) return;
-            if (action.toLowerCase() === 'delete') {
-                if(confirm("Delete this transaction?")) txns.splice(idx, 1);
-            } else {
-                const newAmt = parseFloat(action);
-                if (!isNaN(newAmt)) txns[idx].amt = t.amt < 0 ? -Math.abs(newAmt) : Math.abs(newAmt);
-            }
-            saveInternal();
-        }
-        
-        function addCustomCat(type) {
-            const action = prompt("Type 'add' to create a new category or 'remove' to delete one:").toLowerCase();
-            if (action === 'add') {
-                const n = prompt("Category Name:");
-                if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); saveInternal(); }
-            } else if (action === 'remove') {
-                const list = type === 'inc' ? planInc : planExp;
-                const n = prompt("Enter the exact name of the category to remove:");
-                const index = list.findIndex(cat => cat.name === n);
-                if (index !== -1 && confirm(`Delete "${n}"?`)) { list.splice(index, 1); saveInternal(); }
-            }
-        }
-
-        function addItem(key) { const n = prompt("Name:"); if(n) { if(key==='assets') assets.push({name:n, amt:0}); else liabs.push({name:n, amt:0}); saveInternal(); } }
-        function clearAllData() { if(confirm("Reset everything?")) { localStorage.clear(); location.reload(); } }
-        
-        function calcInterest() {
-            const P = parseFloat(document.getElementById('calc-bal').value) || 0, 
-                  annualRate = parseFloat(document.getElementById('calc-rate').value) || 0, 
-                  years = parseFloat(document.getElementById('calc-term').value) || 0,
-                  isAccel = document.getElementById('accel-toggle').checked;
-            
-            const tableBody = document.getElementById('amortization-body');
-            tableBody.innerHTML = "";
-
-            if (P <= 0 || annualRate <= 0) {
-                const z = "$0.00";
-                document.getElementById('res-day').innerText = z; document.getElementById('res-mo').innerText = z;
-                document.getElementById('res-yr').innerText = z; document.getElementById('res-pmt').innerText = z;
-                document.getElementById('res-bi').innerText = z; document.getElementById('res-total-int').innerText = z;
-                return;
-            }
-
-            const monthlyRate = (annualRate / 100) / 12;
-            const totalMonths = years * 12;
-            let monthlyPmt = 0;
-
-            if (years > 0) {
-                const ratePower = Math.pow(1 + monthlyRate, totalMonths);
-                monthlyPmt = isFinite(ratePower) && ratePower > 1 ? P * (monthlyRate * ratePower) / (ratePower - 1) : (P / totalMonths) + (P * monthlyRate);
-            }
-
-            document.getElementById('amort-period-label').innerText = isAccel ? "Period (2w)" : "Month";
-
-            const yearlyInt = P * (annualRate / 100);
-            document.getElementById('res-day').innerText = `$${(yearlyInt / 365).toFixed(2)}`;
-            document.getElementById('res-mo').innerText = `$${(yearlyInt / 12).toFixed(2)}`;
-            document.getElementById('res-yr').innerText = `$${yearlyInt.toFixed(2)}`;
-            
-            if (years > 0 && monthlyPmt > 0) {
-                document.getElementById('res-pmt').innerText = `$${monthlyPmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                
-                const biWeeklyPmt = isAccel ? (monthlyPmt / 2) : (monthlyPmt * 12 / 26);
-                document.getElementById('res-bi').innerText = `$${biWeeklyPmt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                
-                let currentBal = P;
-                let html = "";
-                
-                const periodsPerYear = isAccel ? 26 : 12;
-                const periodicRate = (annualRate / 100) / periodsPerYear;
-                const periodicPmt = isAccel ? biWeeklyPmt : monthlyPmt;
-                let totalInterestPaid = 0;
-                let periodCounter = 1;
-
-                while (currentBal > 0.01 && periodCounter <= (years * periodsPerYear * 2)) {
-                    const interestPortion = currentBal * periodicRate;
-                    let principalPortion = periodicPmt - interestPortion;
-                    
-                    if (principalPortion > currentBal) principalPortion = currentBal;
-                    
-                    totalInterestPaid += interestPortion;
-                    currentBal -= principalPortion;
-
-                    html += `<tr>
-                        <td>${periodCounter}</td>
-                        <td>$${principalPortion.toFixed(2)}</td>
-                        <td>$${interestPortion.toFixed(2)}</td>
-                        <td style="color:var(--m-teal)">$${Math.max(0, currentBal).toLocaleString(undefined, {maximumDigits: 0})}</td>
-                    </tr>`;
-                    
-                    periodCounter++;
-                }
-                
-                document.getElementById('res-total-int').innerText = `$${totalInterestPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                tableBody.innerHTML = html;
-            }
         }
     </script>
 </body>
