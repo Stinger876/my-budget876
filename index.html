@@ -2,396 +2,319 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monarch-Pro v21.0</title>
+    <title>Monarch Pro v22.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
             --m-blue: #0a192f; 
             --m-teal: #17e9e1; 
-            --m-bg: #0f172a; 
-            --m-card: #1e293b; 
-            --m-red: #fb7185; 
-            --m-green: #34d399; 
-            --m-orange: #fbbf24; 
-            --m-text: #f8fafc; 
-            --m-border: #334155;
+            --m-bg: #121212; 
+            --m-card: #1e1e1e; 
+            --m-red: #ff5252; 
+            --m-green: #2ecc71; 
+            --m-header-green: #1b4d3e; 
+            --m-header-liab: #3d2b1f;
+            --m-orange: #ff9f43; 
+            --m-text: #ffffff; 
+            --m-border: #333;
         }
         
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--m-bg); 
-            margin: 0; 
-            padding: 15px; 
-            color: var(--m-text); 
-            padding-bottom: 100px;
-            line-height: 1.5;
-        }
+        body { font-family: 'Inter', sans-serif; background: var(--m-bg); margin: 0; padding: 10px; color: var(--m-text); padding-bottom: 80px; }
+        
+        /* Headers - Restored specific theme colors */
+        .budget-header { padding: 20px; border-radius: 16px; margin-bottom: 12px; text-align: center; border: 1px solid transparent; transition: background 0.3s; }
+        .bg-spending { background: var(--m-header-green); border-color: var(--m-green); }
+        .bg-invest { background: var(--m-blue); border-color: var(--m-teal); }
+        .bg-liab { background: var(--m-header-liab); border-color: var(--m-orange); }
 
-        /* Monarch-Style Layout */
-        .dashboard-grid { display: grid; gap: 20px; }
-        .card { background: var(--m-card); border-radius: 16px; padding: 20px; border: 1px solid var(--m-border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        
-        /* Headers */
-        .budget-header { 
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            padding: 24px; border-radius: 20px; margin-bottom: 20px; 
-            border: 1px solid var(--m-teal); text-align: center;
-        }
-        .header-main { font-size: 1.8rem; font-weight: 800; margin: 10px 0; }
+        .header-main { font-size: 1.5rem; font-weight: 800; }
         .money { font-family: 'Roboto Mono', monospace; }
 
         /* Navigation */
-        .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; background: #1e293b; padding: 5px; border-radius: 12px; }
-        .tab { flex: 1; padding: 10px; border-radius: 8px; border: none; background: transparent; color: #94a3b8; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .tab.active { background: var(--m-teal); color: var(--m-blue); }
+        .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab { flex: 1; padding: 12px; text-align: center; background: #222; border-radius: 10px; font-weight: bold; cursor: pointer; color: white; border: none; opacity: 0.6; }
+        .tab.active { background: var(--m-teal) !important; color: var(--m-blue) !important; opacity: 1; }
+
+        /* Cards */
+        .card { background: var(--m-card); padding: 15px; border-radius: 16px; margin-bottom: 15px; border: 1px solid var(--m-border); }
+        
+        /* Form Elements */
+        input, select { width: 100%; padding: 10px; border: 1px solid #333; background: #2a2a2a; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; margin-bottom: 8px; }
+        .btn-track { width: 100%; padding: 16px; background: var(--m-teal); color: var(--m-blue); border-radius: 12px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+        .btn-mgmt { flex: 1; background: #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; border: 1px solid #555; text-align: center; }
+        .btn-add-cat { background: none; border: 1px dashed #555; color: #888; width: 100%; padding: 10px; border-radius: 8px; margin: 10px 0; cursor: pointer; }
 
         /* Progress Bars */
-        .cat-progress-wrapper { margin-top: 8px; }
-        .progress-bg { background: #334155; height: 6px; border-radius: 10px; overflow: hidden; }
-        .progress-fill { height: 100%; transition: width 0.4s ease; }
+        .progress-bg { background: rgba(255,255,255,0.1); height: 8px; border-radius: 10px; margin: 8px 0; overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 0.5s; }
 
-        /* Form Elements */
-        input, select { 
-            background: #0f172a; border: 1px solid var(--m-border); color: white; 
-            padding: 12px; border-radius: 10px; width: 100%; box-sizing: border-box; margin-bottom: 10px;
-        }
-        .btn-track { 
-            background: var(--m-teal); color: var(--m-blue); border: none; 
-            padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; width: 100%;
-        }
-
-        /* Transaction List */
-        .txn-item { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 12px; border-bottom: 1px solid var(--m-border); 
-        }
-        .txn-info { display: flex; flex-direction: column; }
-        .txn-meta { font-size: 11px; color: #94a3b8; }
+        /* Transactions */
+        .txn-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #2a2a2a; }
+        .del-btn { color: var(--m-teal); background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; }
 
         /* Modal */
-        #startup-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; display: flex; align-items: center; justify-content: center; }
-        
+        #startup-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 999; display: flex; align-items: center; justify-content: center; }
         .hidden { display: none !important; }
         .pos { color: var(--m-green); }
         .neg { color: var(--m-red); }
-        
-        canvas { max-height: 200px; margin: 10px auto; }
+        canvas { max-height: 180px; margin: 0 auto; }
     </style>
 </head>
 <body>
 
     <div id="startup-modal">
-        <div class="card" id="initial-choice" style="width: 90%; max-width: 400px; text-align: center;">
+        <div class="card" id="initial-choice" style="width: 80%; text-align: center;">
             <h2 style="color:var(--m-teal)">Monarch Pro</h2>
-            <button class="btn-track" onclick="closeModal()">Open Dashboard</button>
-            <button class="tab" onclick="showWizard()" style="margin-top:10px; width:100%">Setup New Budget</button>
-        </div>
-
-        <div class="card hidden" id="wizard-view" style="width: 90%; max-width: 400px;">
-            <h3>Select Categories</h3>
-            <div id="wizard-list" style="max-height: 300px; overflow-y: auto; text-align: left;">
-                </div>
-            <button class="btn-track" style="margin-top:20px;" onclick="finishWizard()">Complete Setup</button>
+            <button class="btn-track" onclick="closeModal()">Continue Session</button>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn-mgmt" onclick="showWizard()" style="color:var(--m-red)">Start Fresh</button>
+            </div>
         </div>
     </div>
 
-    <div class="budget-header" id="main-header">
+    <div class="budget-header bg-spending" id="main-header">
         <div id="header-content"></div>
         <canvas id="spendingChart"></canvas>
     </div>
 
-    <div class="tab-bar">
-        <button class="tab active" onclick="switchTab('budget', this)">Budget</button>
-        <button class="tab" onclick="switchTab('invest', this)">Net Worth</button>
-        <button class="tab" onclick="switchTab('liab', this)">Debts</button>
-    </div>
+    <select id="month-filter" onchange="updateUI()">
+        <option value="01">January</option><option value="02">February</option><option value="03">March</option>
+        <option value="04">April</option><option value="05">May</option><option value="06">June</option>
+        <option value="07">July</option><option value="08">August</option><option value="09">September</option>
+        <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+    </select>
+
+    <nav class="tab-bar">
+        <button class="tab active" id="tab-budget" onclick="switchTab('budget')">Budget</button>
+        <button class="tab" id="tab-invest" onclick="switchTab('invest')">Investments</button>
+        <button class="tab" id="tab-liab" onclick="switchTab('liab')">Liabilities</button>
+    </nav>
 
     <div id="view-budget">
-        <div class="card" style="margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin:0">Add Transaction</h3>
-                <select id="month-filter" onchange="updateUI()" style="width: auto; margin:0; padding: 5px;">
-                    <option value="01">Jan</option><option value="02">Feb</option><option value="03">Mar</option>
-                    <option value="04">Apr</option><option value="05">May</option><option value="06">Jun</option>
-                    <option value="07">Jul</option><option value="08">Aug</option><option value="09">Sep</option>
-                    <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
-                </select>
-            </div>
-            <input type="text" id="desc" placeholder="Merchant (e.g., Walmart, Netflix)" onblur="autoSuggestCategory()">
+        <div id="budget-content"></div>
+        
+        <div class="card">
+            <b style="display:block; margin-bottom:10px;">Add Transaction</b>
+            <input type="text" id="desc" placeholder="Merchant" oninput="autoSuggestCat()">
+            <select id="cat-select"></select>
             <div style="display:flex; gap:10px;">
-                <select id="cat-select"></select>
-                <input type="text" inputmode="decimal" id="amt" placeholder="0.00" style="flex: 0.5;">
+                <input type="date" id="txn-date" style="flex:1">
+                <input type="text" inputmode="decimal" id="amt" placeholder="Amount" style="flex:1">
             </div>
-            <input type="date" id="txn-date">
             <button class="btn-track" onclick="addTransaction()">Track Transaction</button>
         </div>
 
-        <div id="budget-sections">
-            </div>
-
-        <details class="card" style="margin-top: 20px;">
-            <summary style="cursor:pointer; font-weight:600;">Transaction History</summary>
-            <div id="txn-list" style="margin-top:15px;"></div>
+        <details class="card">
+            <summary>Transaction History (<span id="txn-count">0</span>)</summary>
+            <div id="txn-list"></div>
         </details>
     </div>
 
     <div id="view-invest" class="hidden">
-        <div class="card" id="asset-list"></div>
-        <button class="btn-track" style="margin-top:10px" onclick="addItem('assets')">+ Add Asset Account</button>
+        <div class="card" id="invest-list"></div>
+        <button class="btn-track" onclick="addItem('assets')">+ New Asset Account</button>
     </div>
 
     <div id="view-liab" class="hidden">
         <div class="card" id="liab-list"></div>
-        <button class="btn-track" style="margin-top:10px; background: var(--m-orange);" onclick="addItem('liabs')">+ Add Liability</button>
+        <button class="btn-track" style="background:var(--m-orange); color:var(--m-blue);" onclick="addItem('liabs')">+ New Liability</button>
     </div>
 
-    <div class="card" style="margin-top: 30px; opacity: 0.8;">
-        <h4 style="margin-top:0">System</h4>
-        <div style="display:flex; gap:10px;">
-            <button class="tab" style="background:#334155" onclick="exportToFile()">Backup JSON</button>
-            <button class="tab" style="background:#450a0a; color: var(--m-red)" onclick="clearAllData()">Reset</button>
+    <div class="card">
+        <b>Data Management</b>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="btn-mgmt" onclick="exportToFile()">💾 Backup</button>
+            <button class="btn-mgmt" onclick="clearAllData()" style="color:var(--m-red)">🗑️ Reset</button>
         </div>
     </div>
 
     <script>
-        // --- State Management ---
-        let state = {
-            txns: JSON.parse(localStorage.getItem('m_txns')) || [],
-            planInc: JSON.parse(localStorage.getItem('m_p_inc')) || [],
-            planExp: JSON.parse(localStorage.getItem('m_p_exp')) || [],
-            assets: JSON.parse(localStorage.getItem('m_assets')) || [],
-            liabs: JSON.parse(localStorage.getItem('m_liabs')) || [],
-            activeTab: 'budget'
-        };
+        let txns = JSON.parse(localStorage.getItem('m_txns')) || [];
+        let planInc = JSON.parse(localStorage.getItem('m_p_inc')) || [{name: "💵 Paychecks", amt: 5000}];
+        let planExp = JSON.parse(localStorage.getItem('m_p_exp')) || [{name: "🛒 Groceries", amt: 500}];
+        let assets = JSON.parse(localStorage.getItem('m_assets')) || [];
+        let liabs = JSON.parse(localStorage.getItem('m_liabs')) || [];
+        let activeTab = 'budget';
+        let chart = null;
 
-        const categoryRules = {
-            "walmart": "🛒 Groceries", "amazon": "🛒 Groceries",
-            "netflix": "🎬 Entertainment", "spotify": "🎬 Entertainment",
-            "shell": "🚗 Gas", "chevron": "🚗 Gas", "uber": "🚗 Gas"
-        };
-
-        let spendingChart = null;
+        const rules = { "walmart": "🛒 Groceries", "netflix": "🎬 Entertainment", "shell": "🚗 Gas", "uber": "🚗 Gas" };
 
         window.onload = () => {
-            const today = new Date();
-            document.getElementById('month-filter').value = String(today.getMonth() + 1).padStart(2, '0');
-            document.getElementById('txn-date').valueAsDate = today;
-            initWizardList();
+            document.getElementById('month-filter').value = String(new Date().getMonth() + 1).padStart(2, '0');
+            document.getElementById('txn-date').valueAsDate = new Date();
             updateUI();
         };
 
         function save() {
-            Object.keys(state).forEach(key => {
-                if(key !== 'activeTab') localStorage.setItem(`m_${key}`, JSON.stringify(state[key]));
-            });
+            localStorage.setItem('m_txns', JSON.stringify(txns));
+            localStorage.setItem('m_p_inc', JSON.stringify(planInc));
+            localStorage.setItem('m_p_exp', JSON.stringify(planExp));
+            localStorage.setItem('m_assets', JSON.stringify(assets));
+            localStorage.setItem('m_liabs', JSON.stringify(liabs));
             updateUI();
         }
 
-        // --- Logic ---
-        function autoSuggestCategory() {
-            const desc = document.getElementById('desc').value.toLowerCase();
-            const catSelect = document.getElementById('cat-select');
-            for (let key in categoryRules) {
-                if (desc.includes(key)) {
-                    catSelect.value = categoryRules[key];
-                    break;
-                }
-            }
-        }
-
-        function addTransaction() {
-            const d = document.getElementById('desc').value;
-            const c = document.getElementById('cat-select').value;
-            const a = parseFloat(document.getElementById('amt').value);
-            if(!d || isNaN(a)) return;
-
-            const isInc = state.planInc.some(p => p.name === c);
-            state.txns.unshift({
-                id: Date.now(),
-                desc: d,
-                cat: c,
-                date: document.getElementById('txn-date').value,
-                amt: isInc ? Math.abs(a) : -Math.abs(a)
-            });
+        function switchTab(t) {
+            activeTab = t;
+            const header = document.getElementById('main-header');
+            header.className = 'budget-header ' + (t === 'budget' ? 'bg-spending' : t === 'invest' ? 'bg-invest' : 'bg-liab');
             
-            document.getElementById('desc').value = '';
-            document.getElementById('amt').value = '';
-            save();
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.toggle('active', btn.id === 'tab-'+t));
+            document.getElementById('view-budget').classList.toggle('hidden', t !== 'budget');
+            document.getElementById('view-invest').classList.toggle('hidden', t !== 'invest');
+            document.getElementById('view-liab').classList.toggle('hidden', t !== 'liab');
+            updateUI();
         }
 
         function updateUI() {
             const month = document.getElementById('month-filter').value;
-            const monthTxns = state.txns.filter(t => t.date.split('-')[1] === month);
+            const monthTxns = txns.filter(t => t.date.split('-')[1] === month);
             
             renderHeader(monthTxns);
-            renderBudget(monthTxns);
-            renderList('asset-list', state.assets, 'assets');
-            renderList('liab-list', state.liabs, 'liabs');
+            renderBudgetView(monthTxns);
+            renderAssetLiab();
             renderTransactions(monthTxns);
             updateChart(monthTxns);
         }
 
-        function renderHeader(txns) {
-            const spent = txns.filter(t => t.amt < 0).reduce((s, t) => s + Math.abs(t.amt), 0);
-            const income = txns.filter(t => t.amt > 0).reduce((s, t) => s + t.amt, 0);
-            const budgetTotal = state.planExp.reduce((s, p) => s + p.amt, 0);
+        function renderHeader(mTxns) {
+            const spent = mTxns.filter(t => t.amt < 0).reduce((s, t) => s + Math.abs(t.amt), 0);
+            const budgetTotal = planExp.reduce((s, p) => s + p.amt, 0);
+            const totA = assets.reduce((s, a) => s + a.amt, 0);
+            const totL = liabs.reduce((s, l) => s + l.amt, 0);
 
-            document.getElementById('header-content').innerHTML = `
-                <div style="font-size: 14px; color: #94a3b8;">${state.activeTab === 'budget' ? 'Total Spending' : 'Net Worth'}</div>
-                <div class="header-main money">$${(state.activeTab === 'budget' ? spent : calculateNetWorth()).toLocaleString()}</div>
-                <div style="font-size: 12px; opacity: 0.8;">
-                    ${state.activeTab === 'budget' ? `of $${budgetTotal.toLocaleString()} budget` : `Liabilities: $${calculateTotalLiabs().toLocaleString()}`}
-                </div>
-            `;
+            let html = "";
+            if(activeTab === 'budget') {
+                html = `<div class="header-main">Monthly Spending</div>
+                        <div class="money" style="font-size:1.2rem">$${spent.toLocaleString()} / $${budgetTotal.toLocaleString()}</div>`;
+            } else if(activeTab === 'invest') {
+                html = `<div class="header-main">Net Worth</div>
+                        <div class="money" style="font-size:1.8rem; color:var(--m-teal)">$${(totA - totL).toLocaleString()}</div>`;
+            } else {
+                html = `<div class="header-main">Total Liabilities</div>
+                        <div class="money" style="font-size:1.8rem; color:var(--m-orange)">$${totL.toLocaleString()}</div>`;
+            }
+            document.getElementById('header-content').innerHTML = html;
         }
 
-        function renderBudget(monthTxns) {
-            const container = document.getElementById('budget-sections');
-            let html = `<h4>Income</h4>`;
+        function renderBudgetView(mTxns) {
+            let html = `<div class="card"><b>Income</b>`;
+            planInc.forEach((p, i) => {
+                const act = mTxns.filter(t => t.cat === p.name).reduce((s, t) => s + t.amt, 0);
+                html += renderRow(p, act, i, 'inc', 'var(--m-green)');
+            });
+            html += `<button class="btn-add-cat" onclick="addCat('inc')">+ Add Income Category</button></div>`;
+
+            html += `<div class="card"><b>Expenses</b>`;
+            planExp.forEach((p, i) => {
+                const act = mTxns.filter(t => t.cat === p.name).reduce((s, t) => s + Math.abs(t.amt), 0);
+                html += renderRow(p, act, i, 'exp', 'var(--m-teal)');
+            });
+            html += `<button class="btn-add-cat" onclick="addCat('exp')">+ Add Expense Category</button></div>`;
             
-            state.planInc.forEach(p => html += renderCatRow(p, monthTxns, 'pos'));
-            html += `<h4 style="margin-top:20px">Expenses</h4>`;
-            state.planExp.forEach(p => html += renderCatRow(p, monthTxns, 'neg'));
+            document.getElementById('budget-content').innerHTML = html;
             
-            container.innerHTML = html;
-            
-            // Sync cat-select
             const sel = document.getElementById('cat-select');
-            const options = [...state.planInc, ...state.planExp].map(c => `<option value="${c.name}">${c.name}</option>`);
-            sel.innerHTML = options.join('');
+            sel.innerHTML = [...planInc, ...planExp].map(c => `<option value="${c.name}">${c.name}</option>`).join('');
         }
 
-        function renderCatRow(plan, txns, theme) {
-            const actual = txns.filter(t => t.cat === plan.name).reduce((s, t) => s + Math.abs(t.amt), 0);
-            const percent = plan.amt > 0 ? Math.min((actual / plan.amt) * 100, 100) : 0;
-            const overBudget = actual > plan.amt && plan.amt > 0;
-
-            return `
-                <div style="margin-bottom: 15px;">
-                    <div style="display:flex; justify-content:space-between; font-size: 13px; font-weight:600;">
-                        <span>${plan.name}</span>
-                        <span class="money">$${actual.toFixed(0)} <span style="font-weight:400; color:#94a3b8">/ $${plan.amt}</span></span>
-                    </div>
-                    <div class="cat-progress-wrapper">
-                        <div class="progress-bg">
-                            <div class="progress-fill" style="width: ${percent}%; background: ${overBudget ? 'var(--m-red)' : 'var(--m-teal)'}"></div>
-                        </div>
-                    </div>
+        function renderRow(p, act, i, type, color) {
+            const perc = p.amt > 0 ? Math.min((act/p.amt)*100, 100) : 0;
+            const barColor = (type === 'exp' && act > p.amt) ? 'var(--m-red)' : color;
+            return `<div style="margin-top:12px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px;">
+                    <span>${p.name}</span>
+                    <span class="money">$${act.toFixed(0)} / <input type="number" value="${p.amt}" style="width:60px; display:inline; padding:2px; margin:0;" onchange="updatePlan('${type}', ${i}, this.value)"></span>
                 </div>
-            `;
+                <div class="progress-bg"><div class="progress-fill" style="width:${perc}%; background:${barColor}"></div></div>
+            </div>`;
         }
 
-        function renderTransactions(txns) {
-            const list = document.getElementById('txn-list');
-            list.innerHTML = txns.map(t => `
-                <div class="txn-item">
-                    <div class="txn-info">
-                        <span style="font-weight:600; font-size:14px;">${t.desc}</span>
-                        <span class="txn-meta">${t.cat} • ${t.date}</span>
+        function renderAssetLiab() {
+            document.getElementById('invest-list').innerHTML = `<b>Assets</b>` + assets.map((a, i) => `
+                <div class="txn-row"><span>${a.name}</span><input type="number" value="${a.amt}" style="width:100px; margin:0;" onchange="assets[${i}].amt=parseFloat(this.value);save()"></div>
+            `).join('');
+            document.getElementById('liab-list').innerHTML = `<b>Debts</b>` + liabs.map((l, i) => `
+                <div class="txn-row"><span>${l.name}</span><input type="number" value="${l.amt}" style="width:100px; margin:0;" onchange="liabs[${i}].amt=parseFloat(this.value);save()"></div>
+            `).join('');
+        }
+
+        function renderTransactions(mTxns) {
+            document.getElementById('txn-count').innerText = mTxns.length;
+            document.getElementById('txn-list').innerHTML = mTxns.map(t => `
+                <div class="txn-row">
+                    <div><b>${t.desc}</b><br><small>${t.cat}</small></div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="money ${t.amt > 0 ? 'pos' : 'neg'}">$${Math.abs(t.amt).toFixed(2)}</span>
+                        <button class="del-btn" onclick="editTxn('${t.id}')">✎</button>
                     </div>
-                    <span class="money ${t.amt > 0 ? 'pos' : ''}" style="font-weight:800;">
-                        ${t.amt > 0 ? '+' : ''}$${Math.abs(t.amt).toFixed(2)}
-                    </span>
                 </div>
             `).join('');
         }
 
-        function updateChart(txns) {
+        function updateChart(mTxns) {
             const data = {};
-            txns.filter(t => t.amt < 0).forEach(t => {
-                data[t.cat] = (data[t.cat] || 0) + Math.abs(t.amt);
-            });
-
+            mTxns.filter(t => t.amt < 0).forEach(t => data[t.cat] = (data[t.cat] || 0) + Math.abs(t.amt));
             const ctx = document.getElementById('spendingChart').getContext('2d');
-            if(spendingChart) spendingChart.destroy();
-            
-            spendingChart = new Chart(ctx, {
+            if(chart) chart.destroy();
+            if(activeTab !== 'budget') return;
+            chart = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: Object.keys(data),
-                    datasets: [{
-                        data: Object.values(data),
-                        backgroundColor: ['#17e9e1', '#34d399', '#fbbf24', '#fb7185', '#818cf8', '#a78bfa'],
-                        borderWidth: 0
-                    }]
-                },
-                options: { cutout: '70%', plugins: { legend: { display: false } } }
+                data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: ['#17e9e1', '#2ecc71', '#ff9f43', '#ff5252', '#8e44ad'], borderWidth: 0 }] },
+                options: { cutout: '80%', plugins: { legend: { display: false } } }
             });
         }
 
-        // --- Helpers ---
-        function calculateNetWorth() {
-            const a = state.assets.reduce((s, i) => s + i.amt, 0);
-            const l = state.liabs.reduce((s, i) => s + i.amt, 0);
-            return a - l;
+        function addTransaction() {
+            const d = document.getElementById('desc').value, c = document.getElementById('cat-select').value, a = parseFloat(document.getElementById('amt').value);
+            if(!d || isNaN(a)) return;
+            const isInc = planInc.some(p => p.name === c);
+            txns.unshift({ id: Date.now().toString(), desc: d, cat: c, date: document.getElementById('txn-date').value, amt: isInc ? Math.abs(a) : -Math.abs(a) });
+            document.getElementById('desc').value = ""; document.getElementById('amt').value = "";
+            save();
         }
 
-        function calculateTotalLiabs() { return state.liabs.reduce((s, i) => s + i.amt, 0); }
-
-        function switchTab(tab, el) {
-            state.activeTab = tab;
-            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('view-budget').classList.toggle('hidden', tab !== 'budget');
-            document.getElementById('view-invest').classList.toggle('hidden', tab !== 'invest');
-            document.getElementById('view-liab').classList.toggle('hidden', tab !== 'liab');
-            updateUI();
+        function editTxn(id) {
+            const i = txns.findIndex(t => t.id === id);
+            const act = prompt("Type 'delete' or enter new amount:", Math.abs(txns[i].amt));
+            if(!act) return;
+            if(act === 'delete') txns.splice(i, 1);
+            else {
+                const n = parseFloat(act);
+                txns[i].amt = txns[i].amt < 0 ? -n : n;
+            }
+            save();
         }
 
-        function closeModal() { document.getElementById('startup-modal').classList.add('hidden'); }
-        
-        function showWizard() { 
-            document.getElementById('initial-choice').classList.add('hidden');
-            document.getElementById('wizard-view').classList.remove('hidden');
+        function autoSuggestCat() {
+            const d = document.getElementById('desc').value.toLowerCase();
+            for(let key in rules) if(d.includes(key)) document.getElementById('cat-select').value = rules[key];
         }
 
-        function initWizardList() {
-            const cats = [
-                {n: "💵 Paychecks", t: "inc"}, {n: "🛒 Groceries", t: "exp"},
-                {n: "🏠 Rent/Mortgage", t: "exp"}, {n: "🎬 Entertainment", t: "exp"},
-                {n: "🚗 Gas & Auto", t: "exp"}, {n: "📱 Utilities", t: "exp"}
-            ];
-            document.getElementById('wizard-list').innerHTML = cats.map(c => `
-                <label style="display:block; padding:10px; border-bottom:1px solid #334155;">
-                    <input type="checkbox" checked data-cat="${c.n}" data-type="${c.t}" style="width:auto;"> ${c.n}
-                </label>
-            `).join('');
+        function updatePlan(type, i, val) {
+            if(type === 'inc') planInc[i].amt = parseFloat(val);
+            else planExp[i].amt = parseFloat(val);
+            save();
         }
 
-        function finishWizard() {
-            state.planInc = []; state.planExp = [];
-            document.querySelectorAll('#wizard-list input:checked').forEach(i => {
-                const item = {name: i.dataset.cat, amt: 0};
-                if(i.dataset.type === 'inc') state.planInc.push(item);
-                else state.planExp.push(item);
-            });
-            save(); closeModal();
-        }
-
-        function renderList(id, data, key) {
-            document.getElementById(id).innerHTML = data.map((item, idx) => `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <span>${item.name}</span>
-                    <input type="number" value="${item.amt}" style="width:120px; margin:0;" 
-                        onchange="state.${key}[${idx}].amt = parseFloat(this.value); save();">
-                </div>
-            `).join('');
+        function addCat(type) {
+            const n = prompt("Category Name:");
+            if(n) { if(type==='inc') planInc.push({name:n, amt:0}); else planExp.push({name:n, amt:0}); save(); }
         }
 
         function addItem(key) {
             const n = prompt("Name:");
-            if(n) { state[key].push({name: n, amt: 0}); save(); }
+            if(n) { if(key==='assets') assets.push({name:n, amt:0}); else liabs.push({name:n, amt:0}); save(); }
         }
 
-        function clearAllData() { if(confirm("Erase everything?")) { localStorage.clear(); location.reload(); } }
-        
+        function closeModal() { document.getElementById('startup-modal').classList.add('hidden'); }
+        function showWizard() { if(confirm("Clear everything for a fresh start?")) { localStorage.clear(); location.reload(); } }
+        function clearAllData() { if(confirm("Reset all data?")) { localStorage.clear(); location.reload(); } }
         function exportToFile() {
-            const blob = new Blob([JSON.stringify(state)], {type: 'application/json'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `monarch_pro_backup.json`;
-            a.click();
+            const data = { txns, planInc, planExp, assets, liabs };
+            const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'monarch_backup.json'; a.click();
         }
     </script>
 </body>
